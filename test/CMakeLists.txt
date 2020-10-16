@@ -6,3 +6,10 @@ add_executable (testcolortwist testcolortwist.cpp)
 # public include directories we will use those link directories when building
 # helloDemo
 target_link_libraries (testcolortwist LINK_PUBLIC libcolortwist)
+
+#message(STATUS "IPP-Libraries: ${IPP_LIBRARIES}")
+
+if(IPP_FOUND)
+ target_link_libraries (testcolortwist LINK_PUBLIC "${IPP_LIB_SEARCHPATH}/ippccmt.lib" "${IPP_LIB_SEARCHPATH}/ippcoremt.lib")
+ # Linux/OSX would be "libipp<domain>.a" -> libippcc.a
+endif()

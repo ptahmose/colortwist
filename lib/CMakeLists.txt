@@ -4,9 +4,34 @@ project(libcolortwist VERSION 0.1.0)
 #include(CTest)
 #enable_testing()
 
+#FIND_PACKAGE (IPP REQUIRED )
+set (LIBCOLORTWIST_SOURCES  colortwist.h
+                            colortwist.cpp
+                            colortwist_ipp.cpp
+                            colortwist_avx.cpp)
+
+#[[
 add_library(libcolortwist 
                 colortwist.h
-                colortwist.cpp)
+                colortwist.cpp
+                colortwist_ipp.cpp
+                colortwist_avx.cpp)
+]]                
+
+add_library(libcolortwist 
+                ${LIBCOLORTWIST_SOURCES})
+
+if(IPP_FOUND)
+ set(COLORTWIST_HAS_IPP 1)
+ target_include_directories(libcolortwist PRIVATE ${IPP_INCLUDE_DIRS})
+else()
+ set(COLORTWIST_HAS_IPP 0)
+endif()
+
+configure_file (
+  "${CMAKE_CURRENT_SOURCE_DIR}/colortwist_config.h.in"
+  "${CMAKE_CURRENT_SOURCE_DIR}/colortwist_config.h"
+	ESCAPE_QUOTES @ONLY)                
 
 #set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 #set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
@@ -15,3 +40,8 @@ add_library(libcolortwist
 # Make sure the compiler can find include files for our Hello library
 # when other libraries or executables link to Hello
 target_include_directories (libcolortwist PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+# this is necessary so that we can find "colortwist_config.h" which we created above
+target_include_directories(libcolortwist PRIVATE  ${CMAKE_CURRENT_BINARY_DIR})  
+
+set_source_files_properties(colortwist_avx.cpp PROPERTIES COMPILE_FLAGS /arch:AVX2)

@@ -7,10 +7,10 @@ template <typename t>
 static t floatToInteger(float f)
 {
     if (f > numeric_limits<t>::max())
-        return 255;
+        return numeric_limits<t>::max();
 
     if (f < numeric_limits<t>::min())
-        return 0;
+        return numeric_limits<t>::min();
 
     return (t)(f + 0.5f);
 }
@@ -20,8 +20,8 @@ bool colorTwistRGB_Generic(const void *pSrc, std::uint32_t width, std::uint32_t 
 {
     for (size_t y = 0; y < height; ++y)
     {
-        const t *ps = ((const t *)pSrc) + y * strideSrc;
-        t *pd = ((t *)pDst) + y * strideDst;
+        const t *ps = (const t*)(((const uint8_t*)pSrc) + y * strideSrc);
+        t *pd = (t*)(((uint8_t *)pDst) + y * strideDst);
         for (size_t x = 0; x < width; ++x)
         {
             float r = *ps++;
@@ -48,6 +48,6 @@ bool colorTwistRGB24_C(const void *pSrc, std::uint32_t width, std::uint32_t heig
 
 bool colorTwistRGB48_C(const void *pSrc, std::uint32_t width, std::uint32_t height, std::int32_t strideSrc, void *pDst, int strideDst, const float *twistMatrix)
 {
-    return colorTwistRGB_Generic<uint8_t>(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
+    return colorTwistRGB_Generic<uint16_t>(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
 }
 
