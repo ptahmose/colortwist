@@ -1,5 +1,7 @@
 #include <iostream>
+#include <memory>
 #include <chrono>
+#include <cstring>
 #include <colortwist.h>
 
 using namespace std;

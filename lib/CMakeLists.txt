@@ -44,4 +44,9 @@ target_include_directories (libcolortwist PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 # this is necessary so that we can find "colortwist_config.h" which we created above
 target_include_directories(libcolortwist PRIVATE  ${CMAKE_CURRENT_BINARY_DIR})  
 
-set_source_files_properties(colortwist_avx.cpp PROPERTIES COMPILE_FLAGS /arch:AVX2)
+if (MSVC)
+ set_source_files_properties(colortwist_avx.cpp PROPERTIES COMPILE_FLAGS /arch:AVX2)
+endif()
+if (CMAKE_COMPILER_IS_GNUCXX)
+ set_source_files_properties(colortwist_avx.cpp PROPERTIES COMPILE_FLAGS -mfma)
+endif()

@@ -2,7 +2,7 @@
 #include <limits>
 #include <immintrin.h>  // ->  AVX, AVX2, FMA
 
-#if !defined(__AVX2__)
+#if defined(_MSC_VER) && !defined(__AVX2__)
  #error "Must be compiled with option /arch:AVX2"
 #endif
 
