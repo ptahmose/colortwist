@@ -19,13 +19,16 @@ bool colorTwistRGB48_NEON(const void* pSrc, uint32_t width, uint32_t height, int
         uint16_t* d = (uint16_t*)(((uint8_t*)pDst) + y * strideDst);
         for (size_t x = 0; x < width; ++x)
         {
-            uint16x4_t data = vld1_u16((const uint16_t*)p);
+            /*uint16x4_t data = vld1_u16((const uint16_t*)p);
             uint32x4_t dataint32 = vmovl_u16(data);
             float32x4_t dataFloat = vcvtq_f32_u32(dataint32);
 
             float32x4_t r = vdupq_lane_f32(vget_low_f32(dataFloat), 0);
             float32x4_t g = vdupq_lane_f32(vget_low_f32(dataFloat), 1);
-            float32x4_t b = vdupq_lane_f32(vget_high_f32(dataFloat), 0);
+            float32x4_t b = vdupq_lane_f32(vget_high_f32(dataFloat), 0);*/
+            float32x4_t r = vmovq_n_f32(*p);
+            float32x4_t g = vmovq_n_f32(*(p+1));
+            float32x4_t b = vmovq_n_f32(*(p+2));
             float32x4_t m1 = vmlaq_f32(c3, r, c0);
             float32x4_t m2 = vmlaq_f32(m1, g, c1);
             float32x4_t m3 = vmlaq_f32(m2, b, c2);
