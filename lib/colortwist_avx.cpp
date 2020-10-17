@@ -1,4 +1,6 @@
 #include "colortwist.h"
+#include "colortwist_config.h"
+#if COLORTWISTLIB_HASAVX
 #include <limits>
 #include <immintrin.h>  // ->  AVX, AVX2, FMA
 
@@ -43,3 +45,4 @@ bool colorTwistRGB48_AVX(const void* pSrc, uint32_t width, uint32_t height, int 
 
     return true;
 }
+#endif

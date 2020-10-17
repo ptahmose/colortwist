@@ -74,6 +74,27 @@
       "remoteCopySourcesMethod": "rsync",
       "addressSanitizerRuntimeFlags": "detect_leaks=0",
       "variables": []
+    },
+    {
+      "name": "Linux-GCC-Release",
+      "generator": "Ninja",
+      "configurationType": "RelWithDebInfo",
+      "cmakeExecutable": "cmake",
+      "remoteCopySourcesExclusionList": [ ".vs", ".git", "out" ],
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [ "linux_x64" ],
+      "remoteMachineName": "-472786134;192.168.2.13 (username=pi, port=22, authentication=Password)",
+      "remoteCMakeListsRoot": "$HOME/.vs/${projectDirName}/${workspaceHash}/src",
+      "remoteBuildRoot": "$HOME/.vs/${projectDirName}/${workspaceHash}/out/build/${name}",
+      "remoteInstallRoot": "$HOME/.vs/${projectDirName}/${workspaceHash}/out/install/${name}",
+      "remoteCopySources": true,
+      "rsyncCommandArgs": "-t --delete --delete-excluded",
+      "remoteCopyBuildOutput": false,
+      "remoteCopySourcesMethod": "rsync",
+      "addressSanitizerRuntimeFlags": "detect_leaks=0",
+      "variables": []
     }
   ]
 }

@@ -3,6 +3,7 @@
 #include "colortwist_config.h"
 #include "colortwist_avx.h"
 #include "colortwist_ipp.h"
+#include "colortwist_neon.h"
 
 using namespace std;
 
@@ -68,6 +69,10 @@ bool colortwist::colorTwistRGB48(ImplementationType type, const void* pSrc, std:
     case ImplementationType::IPP:
         return colorTwistRGB48_IPP(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
 #endif
+#if COLORTWISTLIB_HASNEON
+    case ImplementationType::ARM_NEON:
+        return colorTwistRGB48_NEON(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
+#endif
     }
 
     return false;
@@ -85,6 +90,10 @@ bool colortwist::isAvailable(ImplementationType type)
 #endif
 #if COLORTWISTLIB_HASIPP
     case ImplementationType::IPP:
+        return true;
+#endif
+#if COLORTWISTLIB_HASNEON
+    case ImplementationType::ARM_NEON:
         return true;
 #endif
     }

@@ -9,13 +9,36 @@ using namespace colortwist;
 
 static void TestBgr48();
 static void Compare(const char* functionName, const void* ptr1, const void* ptr2, size_t size);
+static void Test();
+
 
 int main(int argc, char** argv)
 {
+    Test();
     TestBgr48();
     //bool b = colorTwistRGB24_C(nullptr, 10, 11, 12, nullptr, 13, nullptr);
     cout << "Hello World" << endl;
     return 0;
+}
+
+void Test()
+{
+    size_t bitmapSize = 32;
+    std::unique_ptr<uint16_t, void (*)(uint16_t*)> upSrc((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
+    for (size_t i=0;i<bitmapSize/2;++i)
+    {
+        upSrc.get()[i] = (uint16_t)(1 + i);
+    }
+    std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDst((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
+
+    static const float twistMatrix[4 * 3] =
+    {
+        1, 2, 3, 4,
+        5, 6, 7, 8,
+        1.1f, 1.2f, 1.3f, 1.4f
+    };
+
+    colorTwistRGB48(ImplementationType::ARM_NEON, upSrc.get(), 16, 2, 32, upDst.get(), 32, twistMatrix);
 }
 
 void FillWithRandom(void* p, size_t size)
@@ -75,6 +98,13 @@ void TestBgr48()
         std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstAvx((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
         TestBgr48("colorTwistRGB48_AVX", ImplementationType::X64_AVX, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstAvx.get(), StrideDst);
         Compare("colorTwistRGB48: C vs AVX", upDstC.get(), upDstAvx.get(), bitmapSize);
+    }
+
+    if (isAvailable(ImplementationType::X64_AVX))
+    {
+        std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstNeon((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
+        TestBgr48("colorTwistRGB48_NEON", ImplementationType::ARM_NEON, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstNeon.get(), StrideDst);
+        Compare("colorTwistRGB48: C vs NEON", upDstC.get(), upDstNeon.get(), bitmapSize);
     }
 
     //#if COLORTWISTLIB_HASIPP

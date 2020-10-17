@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(libcolortwist VERSION 0.1.0)
 
+INCLUDE(CheckIncludeFiles)
+
 #include(CTest)
 #enable_testing()
 
@@ -10,7 +12,9 @@ set (LIBCOLORTWIST_SOURCES  colortwist.h
                             colortwist_ipp.h
                             colortwist_ipp.cpp
                             colortwist_avx.h
-                            colortwist_avx.cpp)
+                            colortwist_avx.cpp
+                            colortwist_neon.h
+                            colortwist_neon.cpp)
 
 #[[
 add_library(libcolortwist 
@@ -28,6 +32,14 @@ if(IPP_FOUND)
  target_include_directories(libcolortwist PRIVATE ${IPP_INCLUDE_DIRS})
 else()
  set(COLORTWIST_HAS_IPP 0)
+endif()
+
+# check whether we can use AVX2-instructions -> we check for the presence of the file
+CHECK_INCLUDE_FILES(immintrin.h IMMINTRINFOUND)
+if (IMMINTRINFOUND)
+ set(COLORTWISE_HAS_AVX 1)
+else()
+ set(COLORTWISE_HAS_AVX 0)
 endif()
 
 configure_file (
@@ -55,4 +67,10 @@ if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "AMD64" OR ${CMAKE_SYSTEM_PROCESSOR} MATCHE
   if (CMAKE_COMPILER_IS_GNUCXX)
    set_source_files_properties(colortwist_avx.cpp PROPERTIES COMPILE_FLAGS -mfma)
   endif()
+endif()
+
+if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv7l") 
+ set_target_properties(libcolortwist PROPERTIES COMPILE_FLAGS -mfpu=neon)
+ #set_source_files_properties(colortwist_neon.cpp PROPERTIES COMPILE_FLAGS -mfpu=neon)
+ #set_source_files_properties(colortwist_neon.cpp PROPERTIES COMPILE_FLAGS -march=armv7-a)
 endif()
