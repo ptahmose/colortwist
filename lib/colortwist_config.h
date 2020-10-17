@@ -1,5 +1,0 @@
-#pragma once
-
-#define COLORTWISTLIB_HASIPP  0
-
-#define COLORTWISTLIB_HASAVX  1

@@ -1,4 +1,5 @@
 #include "colortwist.h"
+#include "colortwist_config.h"
 
 #if COLORTWISTLIB_HASIPP
 #include <ipp.h>

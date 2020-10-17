@@ -1,5 +1,8 @@
 #include "colortwist.h"
 #include <limits>
+#include "colortwist_config.h"
+#include "colortwist_avx.h"
+#include "colortwist_ipp.h"
 
 using namespace std;
 
@@ -51,3 +54,41 @@ bool colorTwistRGB48_C(const void *pSrc, std::uint32_t width, std::uint32_t heig
     return colorTwistRGB_Generic<uint16_t>(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
 }
 
+bool colortwist::colorTwistRGB48(ImplementationType type, const void* pSrc, std::uint32_t width, std::uint32_t height, int strideSrc, void* pDst, std::int32_t strideDst, const float* twistMatrix)
+{
+    switch (type)
+    {
+    case ImplementationType::PlainC:
+        return colorTwistRGB48_C(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
+#if COLORTWISTLIB_HASAVX
+    case ImplementationType::X64_AVX:
+        return colorTwistRGB48_AVX(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
+#endif
+#if COLORTWISTLIB_HASIPP
+    case ImplementationType::IPP:
+        return colorTwistRGB48_IPP(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
+#endif
+    }
+
+    return false;
+}
+
+bool colortwist::isAvailable(ImplementationType type)
+{
+    switch (type)
+    {
+    case ImplementationType::PlainC:
+        return true;
+#if COLORTWISTLIB_HASAVX
+    case ImplementationType::X64_AVX:
+        return true;
+#endif
+#if COLORTWISTLIB_HASIPP
+    case ImplementationType::IPP:
+        return true;
+#endif
+    }
+
+    return false;
+
+}
