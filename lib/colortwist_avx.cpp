@@ -126,6 +126,7 @@ bool colorTwistRGB48_AVX2(const void* pSrc, uint32_t width, uint32_t height, int
             /*int xx = _mm_extract_epi32(resultUShorts2, 0);
             __m128i r = _mm_insert_epi32(resultUShorts2_1, xx, 3);*/
 
+            // it seems there is no "_m128i-intrinsic" corresponding to _mm_insert_ps, so we have a lot of casts here - however, those are "free"
             __m128i r = _mm_castps_si128(_mm_insert_ps(_mm_castsi128_ps(resultUShorts2_1), _mm_castsi128_ps(resultUShorts2), 0x30));
 
             _mm_storeu_si128((__m128i*)d, r);
