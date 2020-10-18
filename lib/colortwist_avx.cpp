@@ -53,10 +53,19 @@ bool colorTwistRGB48_AVX2(const void* pSrc, uint32_t width, uint32_t height, int
     __m128 t13t23t33 = _mm_setr_ps(twistMatrix[2], twistMatrix[6], twistMatrix[10], 0);
     __m128 t14t24t34 = _mm_setr_ps(twistMatrix[3], twistMatrix[7], twistMatrix[11], 0);*/
 
-    const __m256 t11t21t31 = _mm256_setr_ps(twistMatrix[0], twistMatrix[4], twistMatrix[8], 0, twistMatrix[0], twistMatrix[4], twistMatrix[8], 0);
+    /*const __m256 t11t21t31 = _mm256_setr_ps(twistMatrix[0], twistMatrix[4], twistMatrix[8], 0, twistMatrix[0], twistMatrix[4], twistMatrix[8], 0);
     const __m256 t12t22t32 = _mm256_setr_ps(twistMatrix[1], twistMatrix[5], twistMatrix[9], 0, twistMatrix[1], twistMatrix[5], twistMatrix[9], 0);
     const __m256 t13t23t33 = _mm256_setr_ps(twistMatrix[2], twistMatrix[6], twistMatrix[10], 0, twistMatrix[2], twistMatrix[6], twistMatrix[10], 0);
-    const __m256 t14t24t34 = _mm256_setr_ps(twistMatrix[3], twistMatrix[7], twistMatrix[11], 0, twistMatrix[3], twistMatrix[7], twistMatrix[11], 0);
+    const __m256 t14t24t34 = _mm256_setr_ps(twistMatrix[3], twistMatrix[7], twistMatrix[11], 0, twistMatrix[3], twistMatrix[7], twistMatrix[11], 0);*/
+    __m128 t11t12t13t14 = _mm_loadu_ps(twistMatrix + 0);// _mm_setr_ps(twistMatrix[0], twistMatrix[1], twistMatrix[2], twistMatrix[3]);
+    __m128 t21t212t23t24 = _mm_loadu_ps(twistMatrix + 4); //_mm_setr_ps(twistMatrix[4], twistMatrix[5], twistMatrix[6], twistMatrix[7]);
+    __m128 t31t32t33t34 = _mm_loadu_ps(twistMatrix + 8); //_mm_setr_ps(twistMatrix[8], twistMatrix[9], twistMatrix[10], twistMatrix[11]);
+    __m128 t41t42t43t44 = _mm_setzero_ps();
+    _MM_TRANSPOSE4_PS(t11t12t13t14, t21t212t23t24, t31t32t33t34, t41t42t43t44);
+    const __m256 t11t21t31 = _mm256_castsi256_ps(_mm256_broadcastsi128_si256(_mm_castps_si128(t11t12t13t14)));
+    const __m256 t12t22t32 = _mm256_castsi256_ps(_mm256_broadcastsi128_si256(_mm_castps_si128(t21t212t23t24)));
+    const __m256 t13t23t33 = _mm256_castsi256_ps(_mm256_broadcastsi128_si256(_mm_castps_si128(t31t32t33t34)));
+    const __m256 t14t24t34 = _mm256_castsi256_ps(_mm256_broadcastsi128_si256(_mm_castps_si128(t41t42t43t44)));
 
     static const __m256i shuffleConst1 = _mm256_setr_epi32(0, 0, 0, 0, 3, 3, 3, 3);
     static const __m256i shuffleConst2 = _mm256_setr_epi32(1, 1, 1, 1, 4, 4, 4, 4);
