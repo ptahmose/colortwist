@@ -14,7 +14,7 @@ static void Test();
 
 int main(int argc, char** argv)
 {
-   // Test();
+    Test();
     TestBgr48();
     //bool b = colorTwistRGB24_C(nullptr, 10, 11, 12, nullptr, 13, nullptr);
     cout << "Hello World" << endl;

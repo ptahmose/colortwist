@@ -75,10 +75,10 @@ bool colorTwistRGB48_AVX2(const void* pSrc, uint32_t width, uint32_t height, int
             __m256i src1Int32 = _mm256_cvtepu16_epi32(src1);
             __m256 src1Float = _mm256_cvtepi32_ps(src1Int32);
 
-            int rg = _mm_extract_epi32(src1, 3);
+            __m128i src1r = _mm_bsrli_si128(src1, 12);
             __m128i src2 = _mm_loadu_si64((const __m128i*)(p + 8));
             __m128i src2_ = _mm_bslli_si128(src2, 4);
-            __m128i src2__ = _mm_insert_epi32(src2_, rg, 0);
+            __m128i src2__ = _mm_or_si128(src1r, src2_);
             __m256i src2Int32 = _mm256_cvtepu16_epi32(src2__);
             __m256 src2Float = _mm256_cvtepi32_ps(src2Int32);
 
