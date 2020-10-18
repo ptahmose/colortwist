@@ -73,7 +73,7 @@ bool colorTwistRGB48_AVX2(const void* pSrc, uint32_t width, uint32_t height, int
             __m256 src1Float = _mm256_cvtepi32_ps(src1Int32);                        // convert to float
 
             __m128i src1r3g3 = _mm_bsrli_si128(src1, 12);                            // shift so that we have R3 G3 00 00 | 00 00 00 00
-            __m128i src2 = _mm_loadu_si64((const __m128i*)(p + 8));                  // load 4 words -> B3 R4 G4 B4
+            __m128i src2 = _mm_loadu_si64(reinterpret_cast<const __m128i*>(p + 8));  // load 4 words -> B3 R4 G4 B4
             __m128i src2Shifted = _mm_bslli_si128(src2, 4);                          // shift so that we have 00 00 B3 R4 | G4 B4 xx xx
             __m128i src2Ored = _mm_or_si128(src1r3g3, src2Shifted);                  // or to get R3 G3 B3 R4 | G4 B4 xx xx
             __m128i src2Shuffled = _mm_shuffle_epi8(src2Ored, shuffleConst6);        // shuffle to R3 G3 B3 xx | R4 G4 B4 xx
