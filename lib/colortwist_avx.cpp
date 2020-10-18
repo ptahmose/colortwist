@@ -123,8 +123,11 @@ bool colorTwistRGB48_AVX2(const void* pSrc, uint32_t width, uint32_t height, int
             resultUShorts = _mm256_packus_epi32(resultInteger, /*_mm256_permute2f128_si256(resultInteger, resultInteger, 0x55)*/_mm256_castsi128_si256(_mm256_extracti128_si256(resultInteger, 1)));
             __m128i resultUShorts2 = _mm_shuffle_epi8(_mm256_castsi256_si128(resultUShorts), shuffleConst4);
 
-            int xx = _mm_extract_epi32(resultUShorts2, 0);
-            __m128i r = _mm_insert_epi32(resultUShorts2_1, xx, 3);
+            /*int xx = _mm_extract_epi32(resultUShorts2, 0);
+            __m128i r = _mm_insert_epi32(resultUShorts2_1, xx, 3);*/
+
+            __m128i r = _mm_castps_si128(_mm_insert_ps(_mm_castsi128_ps(resultUShorts2_1), _mm_castsi128_ps(resultUShorts2), 0x30));
+
             _mm_storeu_si128((__m128i*)d, r);
             __m128i r2 = _mm_bsrli_si128(resultUShorts2, 4);
             _mm_storel_epi64((__m128i*)(d + 8), r2);
