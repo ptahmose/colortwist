@@ -19,8 +19,8 @@ bool colorTwistRGB48_AVX(const void* pSrc, uint32_t width, uint32_t height, int 
 
     for (size_t y = 0; y < height; ++y)
     {
-        const uint16_t* p = (const uint16_t*)(((const uint8_t*)pSrc) + y * strideSrc);
-        uint16_t* d = (uint16_t*)(((uint8_t*)pDst) + y * strideDst);
+        const uint16_t* p = reinterpret_cast<const uint16_t*>(static_cast<const uint8_t*>(pSrc) + y * strideSrc);
+        uint16_t* d = reinterpret_cast<uint16_t*>(static_cast<uint8_t*>(pDst) + y * strideDst);
         for (size_t x = 0; x < width; ++x)
         {
             __m128 r_src = _mm_set1_ps(p[0]);
@@ -35,8 +35,8 @@ bool colorTwistRGB48_AVX(const void* pSrc, uint32_t width, uint32_t height, int 
             __m128i resultShort = _mm_packus_epi32(resultInteger, resultInteger);
 
             uint64_t _3words = _mm_cvtsi128_si64(resultShort);
-            *((uint32_t*)d) = (uint32_t)_3words;
-            *(d + 2) = (uint16_t)(_3words >> 32);
+            *reinterpret_cast<uint32_t*>(d) = static_cast<uint32_t>(_3words);
+            *(d + 2) = static_cast<uint16_t>(_3words >> 32);
 
             p += 3;
             d += 3;
@@ -141,8 +141,8 @@ bool colorTwistRGB48_AVX2(const void* pSrc, uint32_t width, uint32_t height, int
             __m128i resultShort = _mm_packus_epi32(resultInteger, resultInteger);
 
             uint64_t _3words = _mm_cvtsi128_si64(resultShort);
-            *((uint32_t*)d) = (uint32_t)_3words;
-            *(d + 2) = (uint16_t)(_3words >> 32);
+            *reinterpret_cast<uint32_t*>(d) = static_cast<uint32_t>(_3words);
+            *(d + 2) = static_cast<uint16_t>(_3words >> 32);
 
             p += 3;
             d += 3;
