@@ -73,7 +73,7 @@ if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "AMD64" OR ${CMAKE_SYSTEM_PROCESSOR} MATCHE
    set_source_files_properties(colortwist_avx.cpp PROPERTIES COMPILE_FLAGS /arch:AVX2)
   endif()
   if (CMAKE_COMPILER_IS_GNUCXX)
-   set_source_files_properties(colortwist_avx.cpp PROPERTIES COMPILE_FLAGS -mfma)
+   set_source_files_properties(colortwist_avx.cpp PROPERTIES COMPILE_FLAGS "-mfma -mavx2")
   endif()
 endif()
 

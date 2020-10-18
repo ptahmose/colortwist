@@ -14,7 +14,7 @@ static void Test();
 
 int main(int argc, char** argv)
 {
-    Test();
+   // Test();
     TestBgr48();
     //bool b = colorTwistRGB24_C(nullptr, 10, 11, 12, nullptr, 13, nullptr);
     cout << "Hello World" << endl;
@@ -59,7 +59,7 @@ void Test()
         1.1f, 1.2f, 1.3f, 1.4f
     };
     colorTwistRGB48(ImplementationType::PlainC, upSrc.get(), 16, 1, 32*3, upDst.get(), 32*3, twistMatrix);
-    colorTwistRGB48(ImplementationType::X64_AVX, upSrc.get(), 16, 1, 32*3, upDstAvx.get(), 32*3, twistMatrix);
+    colorTwistRGB48(ImplementationType::X64_AVX2, upSrc.get(), 16, 1, 32*3, upDstAvx.get(), 32*3, twistMatrix);
 }
 
 
