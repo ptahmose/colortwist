@@ -64,6 +64,8 @@ bool colortwist::colorTwistRGB48(ImplementationType type, const void* pSrc, std:
 #if COLORTWISTLIB_HASAVX
     case ImplementationType::X64_AVX:
         return colorTwistRGB48_AVX(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
+    case ImplementationType::X64_AVX2:
+        return colorTwistRGB48_AVX2(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
 #endif
 #if COLORTWISTLIB_HASIPP
     case ImplementationType::IPP:
@@ -86,6 +88,7 @@ bool colortwist::isAvailable(ImplementationType type)
         return true;
 #if COLORTWISTLIB_HASAVX
     case ImplementationType::X64_AVX:
+    case ImplementationType::X64_AVX2:
         return true;
 #endif
 #if COLORTWISTLIB_HASIPP

@@ -42,6 +42,14 @@ else()
  set(COLORTWISE_HAS_AVX 0)
 endif()
 
+# check whether we can use ARM-Neon-instructions -> we check for the presence of the file
+CHECK_INCLUDE_FILES(arm_neon.h ARMNEONFOUND)
+if (ARMNEONFOUND)
+ set(COLORTWIST_HAS_NEON 1)
+else()
+ set(COLORTWIST_HAS_NEON 0)
+endif()
+
 configure_file (
   "${CMAKE_CURRENT_SOURCE_DIR}/colortwist_config.h.in"
   "${CMAKE_CURRENT_BINARY_DIR}/colortwist_config.h"
