@@ -74,6 +74,8 @@ bool colortwist::colorTwistRGB48(ImplementationType type, const void* pSrc, std:
 #if COLORTWISTLIB_HASNEON
     case ImplementationType::ARM_NEON:
         return colorTwistRGB48_NEON(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
+    case ImplementationType::ARM_NEON2:
+        return colorTwistRGB48_NEON2(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
 #endif
     }
 
@@ -97,6 +99,7 @@ bool colortwist::isAvailable(ImplementationType type)
 #endif
 #if COLORTWISTLIB_HASNEON
     case ImplementationType::ARM_NEON:
+    case ImplementationType::ARM_NEON2:
         return true;
 #endif
     }

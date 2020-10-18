@@ -10,7 +10,8 @@ namespace colortwist
         IPP,
         X64_AVX,
         X64_AVX2,
-        ARM_NEON
+        ARM_NEON,
+        ARM_NEON2
     };
 
     bool colorTwistRGB48(ImplementationType type, const void* pSrc, std::uint32_t width, std::uint32_t height, int strideSrc, void* pDst, std::int32_t strideDst, const float* twistMatrix);

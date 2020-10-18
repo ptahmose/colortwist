@@ -21,14 +21,37 @@ int main(int argc, char** argv)
     return 0;
 }
 
+void Test()
+{
+    size_t bitmapSize = 32*3;
+    std::unique_ptr<uint16_t, void (*)(uint16_t*)> upSrc((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
+    for (size_t i=0;i<bitmapSize/2;++i)
+    {
+        upSrc.get()[i] = (uint16_t)(1 + i);
+    }
+    std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDst((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
+    std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstC((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
+
+    static const float twistMatrix[4 * 3] =
+    {
+        1, 2, 3, 4,
+        5, 6, 7, 8,
+        1.1f, 1.2f, 1.3f, 1.4f
+    };
+
+    colorTwistRGB48(ImplementationType::PlainC, upSrc.get(), 16, 1, 32 * 3, upDstC.get(), 32 * 3, twistMatrix);
+    colorTwistRGB48(ImplementationType::ARM_NEON2, upSrc.get(), 16, 1, 32*3, upDst.get(), 32*3, twistMatrix);
+}
+
 //void Test()
 //{
-//    size_t bitmapSize = 32;
+//    size_t bitmapSize = 32 * 3;
 //    std::unique_ptr<uint16_t, void (*)(uint16_t*)> upSrc((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
-//    for (size_t i=0;i<bitmapSize/2;++i)
+//    for (size_t i = 0; i < bitmapSize / 2; ++i)
 //    {
 //        upSrc.get()[i] = (uint16_t)(1 + i);
 //    }
+//    std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstAvx((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
 //    std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDst((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
 //
 //    static const float twistMatrix[4 * 3] =
@@ -37,30 +60,9 @@ int main(int argc, char** argv)
 //        5, 6, 7, 8,
 //        1.1f, 1.2f, 1.3f, 1.4f
 //    };
-//
-//    colorTwistRGB48(ImplementationType::ARM_NEON, upSrc.get(), 16, 1, 32, upDst.get(), 32, twistMatrix);
+//    colorTwistRGB48(ImplementationType::PlainC, upSrc.get(), 16, 1, 32 * 3, upDst.get(), 32 * 3, twistMatrix);
+//    colorTwistRGB48(ImplementationType::X64_AVX2, upSrc.get(), 16, 1, 32 * 3, upDstAvx.get(), 32 * 3, twistMatrix);
 //}
-
-void Test()
-{
-    size_t bitmapSize = 32 * 3;
-    std::unique_ptr<uint16_t, void (*)(uint16_t*)> upSrc((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
-    for (size_t i = 0; i < bitmapSize / 2; ++i)
-    {
-        upSrc.get()[i] = (uint16_t)(1 + i);
-    }
-    std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstAvx((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
-    std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDst((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
-
-    static const float twistMatrix[4 * 3] =
-    {
-        1, 2, 3, 4,
-        5, 6, 7, 8,
-        1.1f, 1.2f, 1.3f, 1.4f
-    };
-    colorTwistRGB48(ImplementationType::PlainC, upSrc.get(), 16, 1, 32 * 3, upDst.get(), 32 * 3, twistMatrix);
-    colorTwistRGB48(ImplementationType::X64_AVX2, upSrc.get(), 16, 1, 32 * 3, upDstAvx.get(), 32 * 3, twistMatrix);
-}
 
 
 void FillWithRandom(void* p, size_t size)
@@ -134,6 +136,13 @@ void TestBgr48()
         std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstNeon((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
         TestBgr48("colorTwistRGB48_NEON", ImplementationType::ARM_NEON, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstNeon.get(), StrideDst);
         CompareUint16("colorTwistRGB48: C vs NEON", upDstC.get(), upDstNeon.get(), bitmapSize / 2);
+    }
+
+    if (isAvailable(ImplementationType::ARM_NEON2))
+    {
+        std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstNeon2((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
+        TestBgr48("colorTwistRGB48_NEON2", ImplementationType::ARM_NEON2, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstNeon2.get(), StrideDst);
+        CompareUint16("colorTwistRGB48: C vs NEON2", upDstC.get(), upDstNeon2.get(), bitmapSize / 2);
     }
 
     //#if COLORTWISTLIB_HASIPP
