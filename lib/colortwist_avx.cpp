@@ -61,11 +61,13 @@ bool colorTwistRGB48_AVX2(const void* pSrc, uint32_t width, uint32_t height, int
     const __m256 t13t23t33 = _mm256_castsi256_ps(_mm256_broadcastsi128_si256(_mm_castps_si128(t31t32t33t34)));
     const __m256 t14t24t34 = _mm256_castsi256_ps(_mm256_broadcastsi128_si256(_mm_castps_si128(t41t42t43t44)));
 
+    const size_t widthRemainder = width % 4;
+    const size_t widthOver4 = width / 4;
     for (size_t y = 0; y < height; ++y)
     {
-        const uint16_t* p = (const uint16_t*)(((const uint8_t*)pSrc) + y * strideSrc);
-        uint16_t* d = (uint16_t*)(((uint8_t*)pDst) + y * strideDst);
-        for (size_t x = 0; x < width / 4; ++x)
+        const uint16_t* p = reinterpret_cast<const uint16_t*>(static_cast<const uint8_t*>(pSrc) + y * strideSrc);
+        uint16_t* d = reinterpret_cast<uint16_t*>(static_cast<uint8_t*>(pDst) + y * strideDst);
+        for (size_t x = 0; x < widthOver4; ++x)
         {
             __m128i src1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(p));     // load 8 words -> R1 G1 B1 R2 | G2 B2 R3 G3
             __m128i src1Shuffled = _mm_shuffle_epi8(src1, shuffleConst6);            // shuffle to      R1 G1 B1 xx | R2 G2 B2 xx
@@ -94,7 +96,7 @@ bool colorTwistRGB48_AVX2(const void* pSrc, uint32_t width, uint32_t height, int
                 resultInteger,
                 _mm256_castsi128_si256(_mm256_extracti128_si256(resultInteger, 1)));
 
-            __m128i resultUShortsShuffled = _mm_shuffle_epi8(                       // shuffle to get R'1 G'1 B'1 R'2 | G'2 B'2 xx xx (words)
+            __m128i resultUShortsShuffled = _mm_shuffle_epi8(                        // shuffle to get R'1 G'1 B'1 R'2 | G'2 B'2 xx xx (words)
                 _mm256_castsi256_si128(resultUShorts),
                 shuffleConst4);
 
@@ -112,7 +114,7 @@ bool colorTwistRGB48_AVX2(const void* pSrc, uint32_t width, uint32_t height, int
             __m128i result2UShortsShuffled = _mm_shuffle_epi8(_mm256_castsi256_si128(resultUShorts), shuffleConst4);
 
             // we combine resultUShortsShuffled with result2UShortsShuffled to get: R'1 G'1 B'1 R'2 | G'2 B'2 R'3 G'3
-            // it seems there is no "_m128i-intrinsic" corresponding to _mm_insert_ps, so we have a lot of casts here - however, those are "free"
+            // it seems there is no "_m128i-intrinsic" corresponding to _mm_insert_ps, so we have a lot of casts here - however, those are "free" (no runtime-costs)
             __m128i r = _mm_castps_si128(_mm_insert_ps(_mm_castsi128_ps(resultUShortsShuffled), _mm_castsi128_ps(result2UShortsShuffled), 0x30));
             _mm_storeu_si128(reinterpret_cast<__m128i*>(d), r);
 
@@ -122,6 +124,28 @@ bool colorTwistRGB48_AVX2(const void* pSrc, uint32_t width, uint32_t height, int
 
             p += 6 * 2;
             d += 6 * 2;
+        }
+
+        // we do 4 RGB-triples per loop above, here we deal with remaining pixels in a line
+        for (size_t r = 0; r < widthRemainder; ++r)
+        {
+            __m128 r_src = _mm_set1_ps(p[0]);
+            __m128 g_src = _mm_set1_ps(p[1]);
+            __m128 b_src = _mm_set1_ps(p[2]);
+
+            __m128 result = _mm_fmadd_ps(r_src, _mm256_castps256_ps128(t11t21t31), _mm256_castps256_ps128(t14t24t34));
+            result = _mm_fmadd_ps(g_src, _mm256_castps256_ps128(t12t22t32), result);
+            result = _mm_fmadd_ps(b_src, _mm256_castps256_ps128(t13t23t33), result);
+
+            __m128i resultInteger = _mm_cvtps_epi32(result);
+            __m128i resultShort = _mm_packus_epi32(resultInteger, resultInteger);
+
+            uint64_t _3words = _mm_cvtsi128_si64(resultShort);
+            *((uint32_t*)d) = (uint32_t)_3words;
+            *(d + 2) = (uint16_t)(_3words >> 32);
+
+            p += 3;
+            d += 3;
         }
     }
 
