@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <arm_neon.h>
 
+// > https://developer.arm.com/documentation/dui0491/c/using-neon-support/store-a-single-vector-or-lane?lang=en
 
 bool colorTwistRGB48_NEON(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
@@ -55,11 +56,14 @@ bool colorTwistRGB48_NEON2(const void* pSrc, uint32_t width, uint32_t height, in
     float32x4_t c2 = { twistMatrix[2],twistMatrix[6],twistMatrix[10],0 };
     float32x4_t c3 = { twistMatrix[3] + 0.5f,twistMatrix[7] + 0.5f,twistMatrix[11] + 0.5f,0 };
 
+    /*static const uint8x8_t tbl1{ 0,1,2,3,4,5,8,9 };
+    static const uint8x8_t tbl2{ 2,3,4,5,8,9,10,11 };
+    static const uint8x8_t tbl3{ 4,5,8,9,10,11,12,13 };*/
     for (size_t y = 0; y < height; ++y)
     {
         const uint16_t* p = (const uint16_t*)(((const uint8_t*)pSrc) + y * strideSrc);
         uint16_t* d = (uint16_t*)(((uint8_t*)pDst) + y * strideDst);
-        for (size_t x = 0; x < width/4; ++x)
+        for (size_t x = 0; x < width / 4; ++x)
         {
             uint16x4x3_t data = vld3_u16((const uint16_t*)p);
             uint32x4_t dataint32R = vmovl_u16(data.val[0]);
@@ -99,18 +103,24 @@ bool colorTwistRGB48_NEON2(const void* pSrc, uint32_t width, uint32_t height, in
             uint16x4_t x3 = vreinterpret_u16_u32(tt2.val[0]);
             vst3_u16(d, uint16x4x3_t{ x1,x3,x2 });*/
 
+            /*uint16x4_t x1 = vreinterpret_u16_u8(vtbl2_u8(uint8x8x2_t{ vreinterpret_u8_u16(rShortPixel1),vreinterpret_u8_u16(rShortPixel2) }, tbl1));
+            vst1_u16(d, x1);
+            uint16x4_t x2 = vreinterpret_u16_u8(vtbl2_u8(uint8x8x2_t{ vreinterpret_u8_u16(rShortPixel2),vreinterpret_u8_u16(rShortPixel3) }, tbl2));
+            vst1_u16(d + 4, x2);
+            uint16x4_t x3 = vreinterpret_u16_u8(vtbl2_u8(uint8x8x2_t{ vreinterpret_u8_u16(rShortPixel3),vreinterpret_u8_u16(rShortPixel4) }, tbl3));
+            vst1_u16(d+8, x3);*/
+
             vst1_lane_u32((uint32_t*)d, vreinterpret_u32_u16(rShortPixel1), 0);
             vst1_lane_u16((uint16_t*)(2 + d), rShortPixel1, 2);
-            vst1_lane_u32((uint32_t*)(3+d), vreinterpret_u32_u16(rShortPixel2), 0);
+            vst1_lane_u32((uint32_t*)(3 + d), vreinterpret_u32_u16(rShortPixel2), 0);
             vst1_lane_u16((uint16_t*)(5 + d), rShortPixel2, 2);
             vst1_lane_u32((uint32_t*)(6 + d), vreinterpret_u32_u16(rShortPixel3), 0);
             vst1_lane_u16((uint16_t*)(8 + d), rShortPixel3, 2);
             vst1_lane_u32((uint32_t*)(9 + d), vreinterpret_u32_u16(rShortPixel4), 0);
             vst1_lane_u16((uint16_t*)(11 + d), rShortPixel4, 2);
 
-
-            p += 3*4;
-            d += 3*4;
+            p += 3 * 4;
+            d += 3 * 4;
         }
     }
 
