@@ -14,7 +14,7 @@ static void Test();
 
 int main(int argc, char** argv)
 {
-    //Test();
+    Test();
     TestBgr48();
     //bool b = colorTwistRGB24_C(nullptr, 10, 11, 12, nullptr, 13, nullptr);
     cout << "Hello World" << endl;
@@ -40,7 +40,8 @@ void Test()
     };
 
     colorTwistRGB48(ImplementationType::PlainC, upSrc.get(), 16, 1, 32 * 3, upDstC.get(), 32 * 3, twistMatrix);
-    colorTwistRGB48(ImplementationType::ARM_NEON2, upSrc.get(), 16, 1, 32 * 3, upDst.get(), 32 * 3, twistMatrix);
+    //colorTwistRGB48(ImplementationType::ARM_NEON2, upSrc.get(), 16, 1, 32 * 3, upDst.get(), 32 * 3, twistMatrix);
+    colorTwistRGB48(ImplementationType::X64_AVX3, upSrc.get(), 16, 1, 32 * 3, upDst.get(), 32 * 3, twistMatrix);
 }
 
 //void Test()
@@ -129,6 +130,13 @@ void TestBgr48()
         std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstAvx2((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
         TestBgr48("colorTwistRGB48_AVX2", ImplementationType::X64_AVX2, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstAvx2.get(), StrideDst);
         CompareUint16("colorTwistRGB48: C vs AVX2", upDstC.get(), upDstAvx2.get(), bitmapSize / 2);
+    }
+
+    if (isAvailable(ImplementationType::X64_AVX3))
+    {
+        std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstAvx3((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
+        TestBgr48("colorTwistRGB48_AVX3", ImplementationType::X64_AVX2, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstAvx3.get(), StrideDst);
+        CompareUint16("colorTwistRGB48: C vs AVX3", upDstC.get(), upDstAvx3.get(), bitmapSize / 2);
     }
 
     if (isAvailable(ImplementationType::ARM_NEON))

@@ -10,6 +10,7 @@ namespace colortwist
         IPP,
         X64_AVX,
         X64_AVX2,
+        X64_AVX3,
         ARM_NEON,
         ARM_NEON2
     };
