@@ -52,12 +52,25 @@ bool colorTwistRGB48_NEON(const void* pSrc, uint32_t width, uint32_t height, int
 
 bool colorTwistRGB48_NEON2(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
+    // yes, we are using here 20 (of 32) qword-register - but we still have enough left for the
+    //  calculation itself to be efficient (-> 12 are left)
     float32x4_t c0 = { twistMatrix[0],twistMatrix[4],twistMatrix[8],0 };
     float32x4_t c1 = { twistMatrix[1],twistMatrix[5],twistMatrix[9],0 };
     float32x4_t c2 = { twistMatrix[2],twistMatrix[6],twistMatrix[10],0 };
     float32x4_t c3 = { twistMatrix[3] + 0.5f,twistMatrix[7] + 0.5f,twistMatrix[11] + 0.5f,0 };  // we add 0.5 here for rounding - because the instrinsic vcvtnq_u32_f32 is missing,
                                                                                                 //  -> https://patchwork.ozlabs.org/project/gcc/patch/1601891882-13015-1-git-send-email-christophe.lyon@linaro.org/
-
+    float32x4_t t11 = vdupq_n_f32(twistMatrix[0]);
+    float32x4_t t12 = vdupq_n_f32(twistMatrix[1]);
+    float32x4_t t13 = vdupq_n_f32(twistMatrix[2]);
+    float32x4_t t14 = vdupq_n_f32(twistMatrix[3] + .5f);
+    float32x4_t t21 = vdupq_n_f32(twistMatrix[4]);
+    float32x4_t t22 = vdupq_n_f32(twistMatrix[5]);
+    float32x4_t t23 = vdupq_n_f32(twistMatrix[6]);
+    float32x4_t t24 = vdupq_n_f32(twistMatrix[7] + .5f);
+    float32x4_t t31 = vdupq_n_f32(twistMatrix[8]);
+    float32x4_t t32 = vdupq_n_f32(twistMatrix[9]);
+    float32x4_t t33 = vdupq_n_f32(twistMatrix[10]);
+    float32x4_t t34 = vdupq_n_f32(twistMatrix[11] + .5f);
     const size_t widthRemainder = width % 4;
     const size_t widthOver4 = width / 4;
     for (size_t y = 0; y < height; ++y)
@@ -67,42 +80,37 @@ bool colorTwistRGB48_NEON2(const void* pSrc, uint32_t width, uint32_t height, in
         for (size_t x = 0; x < widthOver4; ++x)
         {
             uint16x4x3_t data = vld3_u16(static_cast<const uint16_t*>(p));
-            uint32x4_t dataInt32R = vmovl_u16(data.val[0]);
-            float32x4_t dataFloatR = vcvtq_f32_u32(dataInt32R);
-            uint32x4_t dataInt32G = vmovl_u16(data.val[1]);
-            float32x4_t dataFloatG = vcvtq_f32_u32(dataInt32G);
-            uint32x4_t dataInt32B = vmovl_u16(data.val[2]);
-            float32x4_t dataFloatB = vcvtq_f32_u32(dataInt32B);
+            float32x4_t dataFloatR = vcvtq_f32_u32(vmovl_u16(data.val[0]));
+            float32x4_t dataFloatG = vcvtq_f32_u32(vmovl_u16(data.val[1]));
+            float32x4_t dataFloatB = vcvtq_f32_u32(vmovl_u16(data.val[2]));
 
-            float32x4_t m1 = vmlaq_f32(c3, vdupq_lane_f32(vget_low_f32(dataFloatR), 0), c0);
-            float32x4_t m2 = vmlaq_f32(m1, vdupq_lane_f32(vget_low_f32(dataFloatG), 0), c1);
-            float32x4_t pixel1 = vmlaq_f32(m2, vdupq_lane_f32(vget_low_f32(dataFloatB), 0), c2);
+            float32x4_t resultR = vmlaq_f32(vmlaq_f32(vmlaq_f32(t14, dataFloatR, t11), dataFloatG, t12), dataFloatB, t13);
+            float32x4_t resultG = vmlaq_f32(vmlaq_f32(vmlaq_f32(t24, dataFloatR, t21), dataFloatG, t22), dataFloatB, t23);
+            float32x4_t resultB = vmlaq_f32(vmlaq_f32(vmlaq_f32(t34, dataFloatR, t31), dataFloatG, t32), dataFloatB, t33);
+            /*
+            #define t11 vdupq_lane_f32(vget_low_f32(c0), 0)
+            #define t12 vdupq_lane_f32(vget_low_f32(c1), 0)
+            #define t13 vdupq_lane_f32(vget_low_f32(c2), 0)
+            #define t14 vdupq_lane_f32(vget_low_f32(c3), 0)
 
-            m1 = vmlaq_f32(c3, vdupq_lane_f32(vget_low_f32(dataFloatR), 1), c0);
-            m2 = vmlaq_f32(m1, vdupq_lane_f32(vget_low_f32(dataFloatG), 1), c1);
-            float32x4_t pixel2 = vmlaq_f32(m2, vdupq_lane_f32(vget_low_f32(dataFloatB), 1), c2);
+            #define t21 vdupq_lane_f32(vget_low_f32(c0), 1)
+            #define t22 vdupq_lane_f32(vget_low_f32(c1), 1)
+            #define t23 vdupq_lane_f32(vget_low_f32(c2), 1)
+            #define t24 vdupq_lane_f32(vget_low_f32(c3), 1)
 
-            m1 = vmlaq_f32(c3, vdupq_lane_f32(vget_high_f32(dataFloatR), 0), c0);
-            m2 = vmlaq_f32(m1, vdupq_lane_f32(vget_high_f32(dataFloatG), 0), c1);
-            float32x4_t pixel3 = vmlaq_f32(m2, vdupq_lane_f32(vget_high_f32(dataFloatB), 0), c2);
+            #define t31 vdupq_lane_f32(vget_high_f32(c0), 0)
+            #define t32 vdupq_lane_f32(vget_high_f32(c1), 0)
+            #define t33 vdupq_lane_f32(vget_high_f32(c2), 0)
+            #define t34 vdupq_lane_f32(vget_high_f32(c3), 0)
+                        float32x4_t resultR = vmlaq_f32(vmlaq_f32(vmlaq_f32(t14, dataFloatR, t11), dataFloatG, t12), dataFloatB, t13);
+                        float32x4_t resultG = vmlaq_f32(vmlaq_f32(vmlaq_f32(t24, dataFloatR, t21), dataFloatG, t22), dataFloatB, t23);
+                        float32x4_t resultB = vmlaq_f32(vmlaq_f32(vmlaq_f32(t34, dataFloatR, t31), dataFloatG, t32), dataFloatB, t33); */
 
-            m1 = vmlaq_f32(c3, vdupq_lane_f32(vget_high_f32(dataFloatR), 1), c0);
-            m2 = vmlaq_f32(m1, vdupq_lane_f32(vget_high_f32(dataFloatG), 1), c1);
-            float32x4_t pixel4 = vmlaq_f32(m2, vdupq_lane_f32(vget_high_f32(dataFloatB), 1), c2);
+            uint16x4_t rShortPixelR = vqmovn_u32(vcvtq_u32_f32(resultR));
+            uint16x4_t rShortPixelG = vqmovn_u32(vcvtq_u32_f32(resultG));
+            uint16x4_t rShortPixelB = vqmovn_u32(vcvtq_u32_f32(resultB));
 
-            uint16x4_t rShortPixel1 = vqmovn_u32(vcvtq_u32_f32(pixel1));
-            uint16x4_t rShortPixel2 = vqmovn_u32(vcvtq_u32_f32(pixel2));
-            uint16x4_t rShortPixel3 = vqmovn_u32(vcvtq_u32_f32(pixel3));
-            uint16x4_t rShortPixel4 = vqmovn_u32(vcvtq_u32_f32(pixel4));
-
-            vst1_lane_u32(reinterpret_cast<uint32_t*>(d), vreinterpret_u32_u16(rShortPixel1), 0);
-            vst1_lane_u16(2 + d, rShortPixel1, 2);
-            vst1_lane_u32(reinterpret_cast<uint32_t*>(3 + d), vreinterpret_u32_u16(rShortPixel2), 0);
-            vst1_lane_u16(5 + d, rShortPixel2, 2);
-            vst1_lane_u32(reinterpret_cast<uint32_t*>(6 + d), vreinterpret_u32_u16(rShortPixel3), 0);
-            vst1_lane_u16(8 + d, rShortPixel3, 2);
-            vst1_lane_u32(reinterpret_cast<uint32_t*>(9 + d), vreinterpret_u32_u16(rShortPixel4), 0);
-            vst1_lane_u16(11 + d, rShortPixel4, 2);
+            vst3_u16(d, uint16x4x3_t{ rShortPixelR,rShortPixelG,rShortPixelB });
 
             p += 3 * 4;
             d += 3 * 4;
