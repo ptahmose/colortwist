@@ -54,16 +54,11 @@ bool colorTwistRGB48_NEON2(const void* pSrc, uint32_t width, uint32_t height, in
 {
     // yes, we are using here 20 (of 32) qword-register - but we still have enough left for the
     //  calculation itself to be efficient (-> 12 are left)
-    float32x4_t c0 = { twistMatrix[0],twistMatrix[4],twistMatrix[8],0 };
-    float32x4_t c1 = { twistMatrix[1],twistMatrix[5],twistMatrix[9],0 };
-    float32x4_t c2 = { twistMatrix[2],twistMatrix[6],twistMatrix[10],0 };
-    float32x4_t c3 = { twistMatrix[3] + 0.5f,twistMatrix[7] + 0.5f,twistMatrix[11] + 0.5f,0 };  // we add 0.5 here for rounding - because the instrinsic vcvtnq_u32_f32 is missing,
-                                                                                                //  -> https://patchwork.ozlabs.org/project/gcc/patch/1601891882-13015-1-git-send-email-christophe.lyon@linaro.org/
     float32x4_t t11 = vdupq_n_f32(twistMatrix[0]);
     float32x4_t t12 = vdupq_n_f32(twistMatrix[1]);
     float32x4_t t13 = vdupq_n_f32(twistMatrix[2]);
-    float32x4_t t14 = vdupq_n_f32(twistMatrix[3] + .5f);
-    float32x4_t t21 = vdupq_n_f32(twistMatrix[4]);
+    float32x4_t t14 = vdupq_n_f32(twistMatrix[3] + .5f);    // we add 0.5 here for rounding - because the instrinsic vcvtnq_u32_f32 is missing,
+    float32x4_t t21 = vdupq_n_f32(twistMatrix[4]);          //  -> https://patchwork.ozlabs.org/project/gcc/patch/1601891882-13015-1-git-send-email-christophe.lyon@linaro.org/
     float32x4_t t22 = vdupq_n_f32(twistMatrix[5]);
     float32x4_t t23 = vdupq_n_f32(twistMatrix[6]);
     float32x4_t t24 = vdupq_n_f32(twistMatrix[7] + .5f);
@@ -71,8 +66,19 @@ bool colorTwistRGB48_NEON2(const void* pSrc, uint32_t width, uint32_t height, in
     float32x4_t t32 = vdupq_n_f32(twistMatrix[9]);
     float32x4_t t33 = vdupq_n_f32(twistMatrix[10]);
     float32x4_t t34 = vdupq_n_f32(twistMatrix[11] + .5f);
+
     const size_t widthRemainder = width % 4;
     const size_t widthOver4 = width / 4;
+
+    float32x4_t c0, c1, c2, c3;
+    if (widthRemainder > 0)
+    {
+        c0 = float32x4_t{ vget_lane_f32(vget_low_f32(t11), 0), vget_lane_f32(vget_low_f32(t21), 0),vget_lane_f32(vget_low_f32(t31), 0),0 };
+        c1 = float32x4_t{ vget_lane_f32(vget_low_f32(t12), 0), vget_lane_f32(vget_low_f32(t22), 0),vget_lane_f32(vget_low_f32(t32), 0),0 };
+        c2 = float32x4_t{ vget_lane_f32(vget_low_f32(t13), 0), vget_lane_f32(vget_low_f32(t23), 0),vget_lane_f32(vget_low_f32(t33), 0),0 };
+        c3 = float32x4_t{ vget_lane_f32(vget_low_f32(t14), 0), vget_lane_f32(vget_low_f32(t24), 0),vget_lane_f32(vget_low_f32(t34), 0),0 };
+    }
+
     for (size_t y = 0; y < height; ++y)
     {
         const uint16_t* p = reinterpret_cast<const uint16_t*>(static_cast<const uint8_t*>(pSrc) + y * strideSrc);

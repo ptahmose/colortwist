@@ -23,9 +23,9 @@ int main(int argc, char** argv)
 
 void Test()
 {
-    size_t bitmapSize = 32*3;
+    size_t bitmapSize = 32 * 3;
     std::unique_ptr<uint16_t, void (*)(uint16_t*)> upSrc((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
-    for (size_t i=0;i<bitmapSize/2;++i)
+    for (size_t i = 0; i < bitmapSize / 2; ++i)
     {
         upSrc.get()[i] = (uint16_t)(1 + i);
     }
@@ -40,7 +40,7 @@ void Test()
     };
 
     colorTwistRGB48(ImplementationType::PlainC, upSrc.get(), 16, 1, 32 * 3, upDstC.get(), 32 * 3, twistMatrix);
-    colorTwistRGB48(ImplementationType::ARM_NEON2, upSrc.get(), 16, 1, 32*3, upDst.get(), 32*3, twistMatrix);
+    colorTwistRGB48(ImplementationType::ARM_NEON2, upSrc.get(), 16, 1, 32 * 3, upDst.get(), 32 * 3, twistMatrix);
 }
 
 //void Test()
