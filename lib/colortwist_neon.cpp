@@ -87,24 +87,6 @@ bool colorTwistRGB48_NEON2(const void* pSrc, uint32_t width, uint32_t height, in
             float32x4_t resultR = vmlaq_f32(vmlaq_f32(vmlaq_f32(t14, dataFloatR, t11), dataFloatG, t12), dataFloatB, t13);
             float32x4_t resultG = vmlaq_f32(vmlaq_f32(vmlaq_f32(t24, dataFloatR, t21), dataFloatG, t22), dataFloatB, t23);
             float32x4_t resultB = vmlaq_f32(vmlaq_f32(vmlaq_f32(t34, dataFloatR, t31), dataFloatG, t32), dataFloatB, t33);
-            /*
-            #define t11 vdupq_lane_f32(vget_low_f32(c0), 0)
-            #define t12 vdupq_lane_f32(vget_low_f32(c1), 0)
-            #define t13 vdupq_lane_f32(vget_low_f32(c2), 0)
-            #define t14 vdupq_lane_f32(vget_low_f32(c3), 0)
-
-            #define t21 vdupq_lane_f32(vget_low_f32(c0), 1)
-            #define t22 vdupq_lane_f32(vget_low_f32(c1), 1)
-            #define t23 vdupq_lane_f32(vget_low_f32(c2), 1)
-            #define t24 vdupq_lane_f32(vget_low_f32(c3), 1)
-
-            #define t31 vdupq_lane_f32(vget_high_f32(c0), 0)
-            #define t32 vdupq_lane_f32(vget_high_f32(c1), 0)
-            #define t33 vdupq_lane_f32(vget_high_f32(c2), 0)
-            #define t34 vdupq_lane_f32(vget_high_f32(c3), 0)
-                        float32x4_t resultR = vmlaq_f32(vmlaq_f32(vmlaq_f32(t14, dataFloatR, t11), dataFloatG, t12), dataFloatB, t13);
-                        float32x4_t resultG = vmlaq_f32(vmlaq_f32(vmlaq_f32(t24, dataFloatR, t21), dataFloatG, t22), dataFloatB, t23);
-                        float32x4_t resultB = vmlaq_f32(vmlaq_f32(vmlaq_f32(t34, dataFloatR, t31), dataFloatG, t32), dataFloatB, t33); */
 
             uint16x4_t rShortPixelR = vqmovn_u32(vcvtq_u32_f32(resultR));
             uint16x4_t rShortPixelG = vqmovn_u32(vcvtq_u32_f32(resultG));
