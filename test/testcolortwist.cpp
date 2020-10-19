@@ -11,13 +11,11 @@ static void TestBgr48();
 static void CompareUint16(const char* functionName, const uint16_t* ptr1, const uint16_t* ptr2, size_t length);
 static void Test();
 
-
 int main(int argc, char** argv)
 {
-    Test();
+    //Test();
     TestBgr48();
     //bool b = colorTwistRGB24_C(nullptr, 10, 11, 12, nullptr, 13, nullptr);
-    cout << "Hello World" << endl;
     return 0;
 }
 
@@ -135,7 +133,7 @@ void TestBgr48()
     if (isAvailable(ImplementationType::X64_AVX3))
     {
         std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstAvx3((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
-        TestBgr48("colorTwistRGB48_AVX3", ImplementationType::X64_AVX2, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstAvx3.get(), StrideDst);
+        TestBgr48("colorTwistRGB48_AVX3", ImplementationType::X64_AVX3, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstAvx3.get(), StrideDst);
         CompareUint16("colorTwistRGB48: C vs AVX3", upDstC.get(), upDstAvx3.get(), bitmapSize / 2);
     }
 
