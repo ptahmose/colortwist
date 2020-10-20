@@ -76,6 +76,10 @@ static bool colorTwistRGB48_NEON2_Generic(const void* pSrc, size_t widthOver4, s
         uint16_t* d = reinterpret_cast<uint16_t*>(static_cast<uint8_t*>(pDst) + y * strideDst);
         for (size_t x = 0; x < widthOver4; ++x)
         {
+            // this will conveniently put the data in this order into the registers:
+            // [0] : R1 R2 R3 R4
+            // [1] : G1 G2 G3 G4
+            // [2] : B1 B2 B3 B4
             uint16x4x3_t data = vld3_u16(static_cast<const uint16_t*>(p));
             float32x4_t dataFloatR = vcvtq_f32_u32(vmovl_u16(data.val[0]));
             float32x4_t dataFloatG = vcvtq_f32_u32(vmovl_u16(data.val[1]));
@@ -89,6 +93,8 @@ static bool colorTwistRGB48_NEON2_Generic(const void* pSrc, size_t widthOver4, s
             uint16x4_t rShortPixelG = vqmovn_u32(vcvtq_u32_f32(resultG));
             uint16x4_t rShortPixelB = vqmovn_u32(vcvtq_u32_f32(resultB));
 
+            // and this conveniently will shuffle R, G and B into the correct order, i. e.
+            // R1 G1 B1 R2 G2 B2 R3 G3 B3 R4 G4 B4
             vst3_u16(d, uint16x4x3_t{ rShortPixelR,rShortPixelG,rShortPixelB });
 
             p += 3 * 4;
