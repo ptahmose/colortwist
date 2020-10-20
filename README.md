@@ -12,3 +12,5 @@ where
 <img src="https://render.githubusercontent.com/render/math?math=T=\begin{pmatrix}t_11 %26 t_12 %26 t_13 %26 t_14\\t_21 %26 t_22 %26 t_23 %26 t_24\\t_31 %26 t_32 %26 t_33 %26 t_34 \end{pmatrix} ">
 
 is the color twist matrix.
+
+There are SIMD-optimized versions leveraging [AVX-instructions](https://en.wikipedia.org/wiki/Advanced_Vector_Extensions) (for x86) and [Neon-instructions](https://en.wikipedia.org/wiki/ARM_architecture#Advanced_SIMD_(NEON)) (for ARM).
