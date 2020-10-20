@@ -88,9 +88,10 @@ static void TestBgr48(const string& name, ImplementationType type, int repeats, 
         colorTwistRGB48(type, pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
     }
 
+    size_t dataSize = height * strideSrc;
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_seconds = end - start;
-    cout << name << " -> " << elapsed_seconds.count() << "s" << endl;
+    cout << name << " -> " << elapsed_seconds.count() << "s, " << (repeats * dataSize / elapsed_seconds.count()) / 1e6 << "MB/s" << endl;
 }
 
 void TestBgr48()
