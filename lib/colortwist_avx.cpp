@@ -268,13 +268,12 @@ inline bool colorTwistRGB48_AVX3_MultipleOfEightAndRemainder(const void* pSrc, s
         __m128 t14t24t34;
     public:
         RemainingPixelsHandler() = delete;
-        RemainingPixelsHandler(const float* twistMatrix)
-        {
-            this->t11t21t31 = _mm_setr_ps(twistMatrix[0], twistMatrix[4], twistMatrix[8], 0);
-            this->t12t22t32 = _mm_setr_ps(twistMatrix[1], twistMatrix[5], twistMatrix[9], 0);
-            this->t13t23t33 = _mm_setr_ps(twistMatrix[2], twistMatrix[6], twistMatrix[10], 0);
-            this->t14t24t34 = _mm_setr_ps(twistMatrix[3], twistMatrix[7], twistMatrix[11], 0);
-        }
+        RemainingPixelsHandler(const float* twistMatrix) :
+            t11t21t31(_mm_setr_ps(twistMatrix[0], twistMatrix[4], twistMatrix[8], 0)),
+            t12t22t32(_mm_setr_ps(twistMatrix[1], twistMatrix[5], twistMatrix[9], 0)),
+            t13t23t33(_mm_setr_ps(twistMatrix[2], twistMatrix[6], twistMatrix[10], 0)),
+            t14t24t34(_mm_setr_ps(twistMatrix[3], twistMatrix[7], twistMatrix[11], 0))
+        {}
 
         inline void DoRemainingPixels(const uint16_t* pSrc, uint16_t* pDst, size_t remainingPixels)
         {
