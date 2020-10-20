@@ -95,7 +95,7 @@ static void TestBgr48(const string& name, ImplementationType type, int repeats, 
 
 void TestBgr48()
 {
-    const int Repeats = 100;
+    const int Repeats = 100;// 100;
     const int Width = 2048 + 3;
     const int Height = 2048;
 

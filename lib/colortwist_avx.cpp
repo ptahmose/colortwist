@@ -156,8 +156,7 @@ bool colorTwistRGB48_AVX2(const void* pSrc, uint32_t width, uint32_t height, int
 template <typename tUnevenWidthHandler>
 static bool colorTwistRGB48_AVX3_Generic(const void* pSrc, size_t widthOver8, size_t widthRemainder, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
-    static const __m128i shuffleConst1 = _mm_setr_epi8(0, 1, 6, 7, 12, 13, 2, 3, 8, 9, 14, 15, 4, 5, 10, 11);
-    static const __m128i shuffleConst2 = _mm_setr_epi8(2, 3, 8, 9, 14, 15, 4, 5, 10, 11, 0, 01, 6, 7, 12, 13);
+    static const __m256i shuffleConst256_12 = _mm256_setr_epi8(0, 1, 6, 7, 12, 13, 2, 3, 8, 9, 14, 15, 4, 5, 10, 11, 2, 3, 8, 9, 14, 15, 4, 5, 10, 11, 0, 1, 6, 7, 12, 13);
     static const __m128i shuffleConst3 = _mm_setr_epi8(4, 5, 10, 11, 0, 1, 6, 7, 12, 13, 2, 3, 8, 9, 14, 15);
     const float& t11 = twistMatrix[0];
     const float& t12 = twistMatrix[1];
@@ -188,13 +187,14 @@ static bool colorTwistRGB48_AVX3_Generic(const void* pSrc, size_t widthOver8, si
         uint16_t* d = reinterpret_cast<uint16_t*>(static_cast<uint8_t*>(pDst) + y * strideDst);
         for (size_t x = 0; x < widthOver8; ++x)
         {
-            __m128i src1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(p));     // load 8 words -> R1 G1 B1 R2 | G2 B2 R3 G3
-            __m128i src1Shuffled = _mm_shuffle_epi8(src1, shuffleConst1);            // shuffle to      R1 R2 R3 G1 | G2 G3 B1 B2
-            __m128i src2 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(p + 8)); // load 8 words -> B3 R4 G4 B4 | R5 G5 B5 R6
-            __m128i src2Shuffled = _mm_shuffle_epi8(src2, shuffleConst2);            // shuffle to      R4 R5 R6 G4 | G5 B3 B4 B5
-            __m128i src3 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(p + 16));// load 8 words -> G6 B6 R7 G7 | B7 R8 G8 B8
-            __m128i src3Shuffled = _mm_shuffle_epi8(src3, shuffleConst3);            // shuffle to      R7 R8 G6 G7 | G8 B6 B7 B8
+            __m256i src1src2 = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(p));     // load 16 words -> R1 G1 B1 R2 | G2 B2 R3 G3 | B3 R4 G4 B4 | R5 G5 B5 R6
+            __m256i src1src2Shuffled = _mm256_shuffle_epi8(src1src2, shuffleConst256_12);   // shuffle to       R1 R2 R3 G1 | G2 G3 B1 B2 | R4 R5 R6 G4 | G5 B3 B4 B5
+            __m128i src1Shuffled = _mm256_castsi256_si128(src1src2Shuffled);
+            __m128i src2Shuffled = _mm256_extracti128_si256(src1src2Shuffled, 1);
+            __m128i src3 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(p + 16));       // load 8 words -> G6 B6 R7 G7 | B7 R8 G8 B8
+            __m128i src3Shuffled = _mm_shuffle_epi8(src3, shuffleConst3);                   // shuffle to      R7 R8 G6 G7 | G8 B6 B7 B8
 
+            // now we prepare things in that order: R1 R2 R3 R4 R5 R6 R7 R8  (and similar for green and blue)
             __m128i redWords = _mm_blend_epi16(_mm_blend_epi16(src1Shuffled, _mm_bslli_si128(src2Shuffled, 6), 0x38), _mm_bslli_si128(src3Shuffled, 12), 0xc0);
             __m128i greenWords = _mm_blend_epi16(_mm_blend_epi16(_mm_bsrli_si128(src1Shuffled, 6), src2Shuffled, 0x38), _mm_bslli_si128(src3Shuffled, 6), 0xe0);
             __m128i blueWords = _mm_blend_epi16(_mm_blend_epi16(_mm_bsrli_si128(src1Shuffled, 12), _mm_bsrli_si128(src2Shuffled, 6), 0x3c), src3Shuffled, 0xe0);
@@ -322,96 +322,6 @@ bool colorTwistRGB48_AVX3(const void* pSrc, uint32_t width, uint32_t height, int
 
     _mm256_zeroupper();
     return b;
-
-    /*
-    static const __m128i shuffleConst1 = _mm_setr_epi8(0, 1, 6, 7, 12, 13, 2, 3, 8, 9, 14, 15, 4, 5, 10, 11);
-    static const __m128i shuffleConst2 = _mm_setr_epi8(2, 3, 8, 9, 14, 15, 4, 5, 10, 11, 0, 01, 6, 7, 12, 13);
-    static const __m128i shuffleConst3 = _mm_setr_epi8(4, 5, 10, 11, 0, 1, 6, 7, 12, 13, 2, 3, 8, 9, 14, 15);
-    const float& t11 = twistMatrix[0];
-    const float& t12 = twistMatrix[1];
-    const float& t13 = twistMatrix[2];
-    const float& t14 = twistMatrix[3];
-    const float& t21 = twistMatrix[4];
-    const float& t22 = twistMatrix[5];
-    const float& t23 = twistMatrix[6];
-    const float& t24 = twistMatrix[7];
-    const float& t31 = twistMatrix[8];
-    const float& t32 = twistMatrix[9];
-    const float& t33 = twistMatrix[10];
-    const float& t34 = twistMatrix[11];
-
-    static const __m128i shuffleConst10 = _mm_setr_epi8(-1, -1, -1, -1, 12, 13, -1, -1, -1, -1, 14, 15, -1, -1, -1, -1);
-    static const __m128i shuffleConst11 = _mm_setr_epi8(10, 11, -1, -1, -1, -1, 12, 13, -1, -1, -1, -1, 14, 15, -1, -1);
-    static const __m128i shuffleConst12 = _mm_setr_epi8(-1, -1, 10, 11, -1, -1, -1, -1, 12, 13, -1, -1, -1, -1, 14, 15);
-
-    static const __m256i shuffleConst256_1 = _mm256_setr_epi8(0, 1, -1, -1, -1, -1, 2, 3, -1, -1, -1, -1, 4, 5, -1, -1, -1, -1, 6, 7, -1, -1, -1, -1, 8, 9, -1, -1, -1, -1, 10, 11);
-    static const __m256i shuffleConst256_2 = _mm256_setr_epi8(-1, -1, 0, 1, -1, -1, -1, -1, 2, 3, -1, -1, -1, -1, 4, 5, -1, -1, -1, -1, 6, 7, -1, -1, -1, -1, 8, 9, -1, -1, -1, -1);
-    static const __m256i shuffleConst256_3 = _mm256_setr_epi8(-1, -1, -1, -1, 0, 1, -1, -1, -1, -1, 2, 3, -1, -1, -1, -1, 4, 5, -1, -1, -1, -1, 6, 7, -1, -1, -1, -1, 8, 9, -1, -1);
-
-    const size_t widthRemainder = width % 8;
-    const size_t widthOver8 = width / 8;
-    for (size_t y = 0; y < height; ++y)
-    {
-        const uint16_t* p = reinterpret_cast<const uint16_t*>(static_cast<const uint8_t*>(pSrc) + y * strideSrc);
-        uint16_t* d = reinterpret_cast<uint16_t*>(static_cast<uint8_t*>(pDst) + y * strideDst);
-        for (size_t x = 0; x < widthOver8; ++x)
-        {
-            __m128i src1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(p));     // load 8 words -> R1 G1 B1 R2 | G2 B2 R3 G3
-            __m128i src1Shuffled = _mm_shuffle_epi8(src1, shuffleConst1);            // shuffle to      R1 R2 R3 G1 | G2 G3 B1 B2
-            __m128i src2 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(p + 8)); // load 8 words -> B3 R4 G4 B4 | R5 G5 B5 R6
-            __m128i src2Shuffled = _mm_shuffle_epi8(src2, shuffleConst2);            // shuffle to      R4 R5 R6 G4 | G5 B3 B4 B5
-            __m128i src3 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(p + 16));// load 8 words -> G6 B6 R7 G7 | B7 R8 G8 B8
-            __m128i src3Shuffled = _mm_shuffle_epi8(src3, shuffleConst3);            // shuffle to      R7 R8 G6 G7 | G8 B6 B7 B8
-
-            __m128i redWords = _mm_blend_epi16(_mm_blend_epi16(src1Shuffled, _mm_bslli_si128(src2Shuffled, 6), 0x38), _mm_bslli_si128(src3Shuffled, 12), 0xc0);
-            __m128i greenWords = _mm_blend_epi16(_mm_blend_epi16(_mm_bsrli_si128(src1Shuffled, 6), src2Shuffled, 0x38), _mm_bslli_si128(src3Shuffled, 6), 0xe0);
-            __m128i blueWords = _mm_blend_epi16(_mm_blend_epi16(_mm_bsrli_si128(src1Shuffled, 12), _mm_bsrli_si128(src2Shuffled, 6), 0x3c), src3Shuffled, 0xe0);
-
-            __m256 redFloats = _mm256_cvtepi32_ps(_mm256_cvtepu16_epi32(redWords));
-            __m256 greenFloats = _mm256_cvtepi32_ps(_mm256_cvtepu16_epi32(greenWords));
-            __m256 blueFloats = _mm256_cvtepi32_ps(_mm256_cvtepu16_epi32(blueWords));
-
-            __m256 m1 = _mm256_fmadd_ps(redFloats, _mm256_set1_ps(t11), _mm256_set1_ps(t14));
-            __m256 m2 = _mm256_fmadd_ps(greenFloats, _mm256_set1_ps(t12), m1);
-            __m256 resultR = _mm256_fmadd_ps(blueFloats, _mm256_set1_ps(t13), m2);
-
-            m1 = _mm256_fmadd_ps(redFloats, _mm256_set1_ps(t21), _mm256_set1_ps(t24));
-            m2 = _mm256_fmadd_ps(greenFloats, _mm256_set1_ps(t22), m1);
-            __m256 resultG = _mm256_fmadd_ps(blueFloats, _mm256_set1_ps(t23), m2);
-
-            m1 = _mm256_fmadd_ps(redFloats, _mm256_set1_ps(t31), _mm256_set1_ps(t34));
-            m2 = _mm256_fmadd_ps(greenFloats, _mm256_set1_ps(t32), m1);
-            __m256 resultB = _mm256_fmadd_ps(blueFloats, _mm256_set1_ps(t33), m2);
-
-            __m256i resultInteger = _mm256_cvtps_epi32(resultR);                      // convert to int32, and then to words
-            __m256i resultRUShorts = _mm256_broadcastsi128_si256(_mm_packus_epi32(_mm256_castsi256_si128(resultInteger), _mm256_extracti128_si256(resultInteger, 1)));
-
-            resultInteger = _mm256_cvtps_epi32(resultG);
-            __m256i resultGUShorts = _mm256_broadcastsi128_si256(_mm_packus_epi32(_mm256_castsi256_si128(resultInteger), _mm256_extracti128_si256(resultInteger, 1)));
-
-            resultInteger = _mm256_cvtps_epi32(resultB);
-            __m256i resultBUShorts = _mm256_broadcastsi128_si256(_mm_packus_epi32(_mm256_castsi256_si128(resultInteger), _mm256_extracti128_si256(resultInteger, 1)));
-
-            __m256i resultRShuffled1_256 = _mm256_shuffle_epi8(resultRUShorts, shuffleConst256_1);
-            __m256i resultGShuffled2_256 = _mm256_shuffle_epi8(resultGUShorts, shuffleConst256_2);
-            __m256i resultBShuffled3_256 = _mm256_shuffle_epi8(resultBUShorts, shuffleConst256_3);
-            __m256i result256 = _mm256_or_si256(_mm256_or_si256(resultRShuffled1_256, resultGShuffled2_256), resultBShuffled3_256);
-            _mm256_storeu_si256(reinterpret_cast<__m256i*>(d), result256);
-
-            __m128i resultRShuffled3 = _mm_shuffle_epi8(_mm256_castsi256_si128(resultRUShorts), shuffleConst10);
-            __m128i resultGShuffled3 = _mm_shuffle_epi8(_mm256_castsi256_si128(resultGUShorts), shuffleConst11);
-            __m128i resultBShuffled3 = _mm_shuffle_epi8(_mm256_castsi256_si128(resultBUShorts), shuffleConst12);
-            __m128i result3 = _mm_or_si128(_mm_or_si128(resultRShuffled3, resultGShuffled3), resultBShuffled3);
-            _mm_storeu_si128(reinterpret_cast<__m128i*>(d + 16), result3);
-
-            p += 24;
-            d += 24;
-        }
-    }
-
-    _mm256_zeroupper();
-    return true;
-    */
 }
 
 #endif
