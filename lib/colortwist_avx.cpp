@@ -187,53 +187,53 @@ static bool colorTwistRGB48_AVX3_Generic(const void* pSrc, size_t widthOver8, si
         uint16_t* d = reinterpret_cast<uint16_t*>(static_cast<uint8_t*>(pDst) + y * strideDst);
         for (size_t x = 0; x < widthOver8; ++x)
         {
-            __m256i src1src2 = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(p));     // load 16 words -> R1 G1 B1 R2 | G2 B2 R3 G3 | B3 R4 G4 B4 | R5 G5 B5 R6
-            __m256i src1src2Shuffled = _mm256_shuffle_epi8(src1src2, shuffleConst256_12);   // shuffle to       R1 R2 R3 G1 | G2 G3 B1 B2 | R4 R5 R6 G4 | G5 B3 B4 B5
-            __m128i src1Shuffled = _mm256_castsi256_si128(src1src2Shuffled);
-            __m128i src2Shuffled = _mm256_extracti128_si256(src1src2Shuffled, 1);
-            __m128i src3 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(p + 16));       // load 8 words -> G6 B6 R7 G7 | B7 R8 G8 B8
-            __m128i src3Shuffled = _mm_shuffle_epi8(src3, shuffleConst3);                   // shuffle to      R7 R8 G6 G7 | G8 B6 B7 B8
+            const __m256i src1src2 = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(p));     // load 16 words -> R1 G1 B1 R2 | G2 B2 R3 G3 | B3 R4 G4 B4 | R5 G5 B5 R6
+            const __m256i src1src2Shuffled = _mm256_shuffle_epi8(src1src2, shuffleConst256_12);   // shuffle to       R1 R2 R3 G1 | G2 G3 B1 B2 | R4 R5 R6 G4 | G5 B3 B4 B5
+            const __m128i src1Shuffled = _mm256_castsi256_si128(src1src2Shuffled);
+            const __m128i src2Shuffled = _mm256_extracti128_si256(src1src2Shuffled, 1);
+            const __m128i src3 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(p + 16));       // load 8 words -> G6 B6 R7 G7 | B7 R8 G8 B8
+            const __m128i src3Shuffled = _mm_shuffle_epi8(src3, shuffleConst3);                   // shuffle to      R7 R8 G6 G7 | G8 B6 B7 B8
 
             // now we prepare things in that order: R1 R2 R3 R4 R5 R6 R7 R8  (and similar for green and blue)
-            __m128i redWords = _mm_blend_epi16(_mm_blend_epi16(src1Shuffled, _mm_bslli_si128(src2Shuffled, 6), 0x38), _mm_bslli_si128(src3Shuffled, 12), 0xc0);
-            __m128i greenWords = _mm_blend_epi16(_mm_blend_epi16(_mm_bsrli_si128(src1Shuffled, 6), src2Shuffled, 0x38), _mm_bslli_si128(src3Shuffled, 6), 0xe0);
-            __m128i blueWords = _mm_blend_epi16(_mm_blend_epi16(_mm_bsrli_si128(src1Shuffled, 12), _mm_bsrli_si128(src2Shuffled, 6), 0x3c), src3Shuffled, 0xe0);
+            const __m128i redWords = _mm_blend_epi16(_mm_blend_epi16(src1Shuffled, _mm_bslli_si128(src2Shuffled, 6), 0x38), _mm_bslli_si128(src3Shuffled, 12), 0xc0);
+            const __m128i greenWords = _mm_blend_epi16(_mm_blend_epi16(_mm_bsrli_si128(src1Shuffled, 6), src2Shuffled, 0x38), _mm_bslli_si128(src3Shuffled, 6), 0xe0);
+            const __m128i blueWords = _mm_blend_epi16(_mm_blend_epi16(_mm_bsrli_si128(src1Shuffled, 12), _mm_bsrli_si128(src2Shuffled, 6), 0x3c), src3Shuffled, 0xe0);
 
-            __m256 redFloats = _mm256_cvtepi32_ps(_mm256_cvtepu16_epi32(redWords));
-            __m256 greenFloats = _mm256_cvtepi32_ps(_mm256_cvtepu16_epi32(greenWords));
-            __m256 blueFloats = _mm256_cvtepi32_ps(_mm256_cvtepu16_epi32(blueWords));
+            const __m256 redFloats = _mm256_cvtepi32_ps(_mm256_cvtepu16_epi32(redWords));
+            const __m256 greenFloats = _mm256_cvtepi32_ps(_mm256_cvtepu16_epi32(greenWords));
+            const __m256 blueFloats = _mm256_cvtepi32_ps(_mm256_cvtepu16_epi32(blueWords));
 
             __m256 m1 = _mm256_fmadd_ps(redFloats, _mm256_set1_ps(t11), _mm256_set1_ps(t14));
             __m256 m2 = _mm256_fmadd_ps(greenFloats, _mm256_set1_ps(t12), m1);
-            __m256 resultR = _mm256_fmadd_ps(blueFloats, _mm256_set1_ps(t13), m2);
+            const __m256 resultR = _mm256_fmadd_ps(blueFloats, _mm256_set1_ps(t13), m2);
 
             m1 = _mm256_fmadd_ps(redFloats, _mm256_set1_ps(t21), _mm256_set1_ps(t24));
             m2 = _mm256_fmadd_ps(greenFloats, _mm256_set1_ps(t22), m1);
-            __m256 resultG = _mm256_fmadd_ps(blueFloats, _mm256_set1_ps(t23), m2);
+            const __m256 resultG = _mm256_fmadd_ps(blueFloats, _mm256_set1_ps(t23), m2);
 
             m1 = _mm256_fmadd_ps(redFloats, _mm256_set1_ps(t31), _mm256_set1_ps(t34));
             m2 = _mm256_fmadd_ps(greenFloats, _mm256_set1_ps(t32), m1);
-            __m256 resultB = _mm256_fmadd_ps(blueFloats, _mm256_set1_ps(t33), m2);
+            const __m256 resultB = _mm256_fmadd_ps(blueFloats, _mm256_set1_ps(t33), m2);
 
             __m256i resultInteger = _mm256_cvtps_epi32(resultR);                      // convert to int32, and then to words
-            __m256i resultRUShorts = _mm256_broadcastsi128_si256(_mm_packus_epi32(_mm256_castsi256_si128(resultInteger), _mm256_extracti128_si256(resultInteger, 1)));
+            const __m256i resultRUShorts = _mm256_broadcastsi128_si256(_mm_packus_epi32(_mm256_castsi256_si128(resultInteger), _mm256_extracti128_si256(resultInteger, 1)));
 
             resultInteger = _mm256_cvtps_epi32(resultG);
-            __m256i resultGUShorts = _mm256_broadcastsi128_si256(_mm_packus_epi32(_mm256_castsi256_si128(resultInteger), _mm256_extracti128_si256(resultInteger, 1)));
+            const __m256i resultGUShorts = _mm256_broadcastsi128_si256(_mm_packus_epi32(_mm256_castsi256_si128(resultInteger), _mm256_extracti128_si256(resultInteger, 1)));
 
             resultInteger = _mm256_cvtps_epi32(resultB);
-            __m256i resultBUShorts = _mm256_broadcastsi128_si256(_mm_packus_epi32(_mm256_castsi256_si128(resultInteger), _mm256_extracti128_si256(resultInteger, 1)));
+            const __m256i resultBUShorts = _mm256_broadcastsi128_si256(_mm_packus_epi32(_mm256_castsi256_si128(resultInteger), _mm256_extracti128_si256(resultInteger, 1)));
 
-            __m256i resultRShuffled1_256 = _mm256_shuffle_epi8(resultRUShorts, shuffleConst256_1);
-            __m256i resultGShuffled2_256 = _mm256_shuffle_epi8(resultGUShorts, shuffleConst256_2);
-            __m256i resultBShuffled3_256 = _mm256_shuffle_epi8(resultBUShorts, shuffleConst256_3);
-            __m256i result256 = _mm256_or_si256(_mm256_or_si256(resultRShuffled1_256, resultGShuffled2_256), resultBShuffled3_256);
+            const __m256i resultRShuffled1_256 = _mm256_shuffle_epi8(resultRUShorts, shuffleConst256_1);
+            const __m256i resultGShuffled2_256 = _mm256_shuffle_epi8(resultGUShorts, shuffleConst256_2);
+            const __m256i resultBShuffled3_256 = _mm256_shuffle_epi8(resultBUShorts, shuffleConst256_3);
+            const __m256i result256 = _mm256_or_si256(_mm256_or_si256(resultRShuffled1_256, resultGShuffled2_256), resultBShuffled3_256);
             _mm256_storeu_si256(reinterpret_cast<__m256i*>(d), result256);
 
-            __m128i resultRShuffled3 = _mm_shuffle_epi8(_mm256_castsi256_si128(resultRUShorts), shuffleConst10);
-            __m128i resultGShuffled3 = _mm_shuffle_epi8(_mm256_castsi256_si128(resultGUShorts), shuffleConst11);
-            __m128i resultBShuffled3 = _mm_shuffle_epi8(_mm256_castsi256_si128(resultBUShorts), shuffleConst12);
-            __m128i result3 = _mm_or_si128(_mm_or_si128(resultRShuffled3, resultGShuffled3), resultBShuffled3);
+            const __m128i resultRShuffled3 = _mm_shuffle_epi8(_mm256_castsi256_si128(resultRUShorts), shuffleConst10);
+            const __m128i resultGShuffled3 = _mm_shuffle_epi8(_mm256_castsi256_si128(resultGUShorts), shuffleConst11);
+            const __m128i resultBShuffled3 = _mm_shuffle_epi8(_mm256_castsi256_si128(resultBUShorts), shuffleConst12);
+            const __m128i result3 = _mm_or_si128(_mm_or_si128(resultRShuffled3, resultGShuffled3), resultBShuffled3);
             _mm_storeu_si128(reinterpret_cast<__m128i*>(d + 16), result3);
 
             p += 24;
@@ -279,18 +279,18 @@ inline bool colorTwistRGB48_AVX3_MultipleOfEightAndRemainder(const void* pSrc, s
         {
             for (size_t x = 0; x < remainingPixels; ++x)
             {
-                __m128 r_src = _mm_set1_ps(pSrc[0]);
-                __m128 g_src = _mm_set1_ps(pSrc[1]);
-                __m128 b_src = _mm_set1_ps(pSrc[2]);
+                const __m128 r_src = _mm_set1_ps(pSrc[0]);
+                const __m128 g_src = _mm_set1_ps(pSrc[1]);
+                const __m128 b_src = _mm_set1_ps(pSrc[2]);
 
                 __m128 result = _mm_fmadd_ps(r_src, this->t11t21t31, this->t14t24t34);
                 result = _mm_fmadd_ps(g_src, this->t12t22t32, result);
                 result = _mm_fmadd_ps(b_src, this->t13t23t33, result);
 
-                __m128i resultInteger = _mm_cvtps_epi32(result);
-                __m128i resultShort = _mm_packus_epi32(resultInteger, resultInteger);
+                const __m128i resultInteger = _mm_cvtps_epi32(result);
+                const __m128i resultShort = _mm_packus_epi32(resultInteger, resultInteger);
 
-                uint64_t _3words = _mm_cvtsi128_si64(resultShort);
+                const uint64_t _3words = _mm_cvtsi128_si64(resultShort);
                 *reinterpret_cast<uint32_t*>(pDst) = static_cast<uint32_t>(_3words);
                 *(pDst + 2) = static_cast<uint16_t>(_3words >> 32);
 
