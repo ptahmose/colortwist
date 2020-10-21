@@ -109,5 +109,4 @@ bool colortwist::isAvailable(ImplementationType type)
     }
 
     return false;
-
 }
