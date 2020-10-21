@@ -1,7 +1,7 @@
 #include "colortwist.h"
 #include "colortwist_config.h"
 #if COLORTWISTLIB_HASNEON
-
+#include "utils.h"
 #include <cstddef>
 #include <arm_neon.h>
 
@@ -10,7 +10,7 @@
 // https://developer.arm.com/architectures/instruction-sets/simd-isas/neon/neon-programmers-guide-for-armv8-a/coding-for-neon/single-page
 // https://developer.arm.com/architectures/instruction-sets/simd-isas/neon/intrinsics
 
-bool colorTwistRGB48_NEON(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
+void colorTwistRGB48_NEON(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
     // note: if adding "const" here, this produces incorrect results? Compiler-error or am I missing something? gcc 8.3 on Raspberry4
     float32x4_t c0{ twistMatrix[0],twistMatrix[4],twistMatrix[8],0 };
@@ -47,12 +47,10 @@ bool colorTwistRGB48_NEON(const void* pSrc, uint32_t width, uint32_t height, int
             d += 3;
         }
     }
-
-    return true;
 }
 
 template <typename tUnevenWidthHandler>
-static bool colorTwistRGB48_NEON2_Generic(const void* pSrc, size_t widthOver4, size_t widthRemainder, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
+static void colorTwistRGB48_NEON2_Generic(const void* pSrc, size_t widthOver4, size_t widthRemainder, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
     // yes, we are using here 16 (of 32) qword-register - but we still have enough left for the
     //  calculation itself to be efficient (-> 16 are left)
@@ -104,11 +102,9 @@ static bool colorTwistRGB48_NEON2_Generic(const void* pSrc, size_t widthOver4, s
 
         handler.DoRemainingPixels(p, d, widthRemainder);
     }
-
-    return true;
 }
 
-inline static bool colorTwistRGB48_NEON2_MultipleOfFour(const void* pSrc, size_t widthOver4, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
+inline static void colorTwistRGB48_NEON2_MultipleOfFour(const void* pSrc, size_t widthOver4, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
     struct NullHandler
     {
@@ -116,10 +112,10 @@ inline static bool colorTwistRGB48_NEON2_MultipleOfFour(const void* pSrc, size_t
         inline void DoRemainingPixels(const uint16_t* pSrc, uint16_t* pDst, size_t remainingPixels) {}
     };
 
-    return colorTwistRGB48_NEON2_Generic<NullHandler>(pSrc, widthOver4, 0, height, strideSrc, pDst, strideDst, twistMatrix);
+    colorTwistRGB48_NEON2_Generic<NullHandler>(pSrc, widthOver4, 0, height, strideSrc, pDst, strideDst, twistMatrix);
 }
 
-inline static bool colorTwistRGB48_NEON2_MultipleOfFourAndRemainder(const void* pSrc, size_t widthOver4, size_t widthRemainder, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
+inline static void colorTwistRGB48_NEON2_MultipleOfFourAndRemainder(const void* pSrc, size_t widthOver4, size_t widthRemainder, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
     class RemainingPixelsHandler
     {
@@ -165,23 +161,31 @@ inline static bool colorTwistRGB48_NEON2_MultipleOfFourAndRemainder(const void* 
         }
     };
 
-    return colorTwistRGB48_NEON2_Generic<RemainingPixelsHandler>(pSrc, widthOver4, widthRemainder, height, strideSrc, pDst, strideDst, twistMatrix);
+    colorTwistRGB48_NEON2_Generic<RemainingPixelsHandler>(pSrc, widthOver4, widthRemainder, height, strideSrc, pDst, strideDst, twistMatrix);
 }
 
-bool colorTwistRGB48_NEON2(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
+StatusCode colorTwistRGB48_NEON2(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
+    StatusCode rc = checkArgumentsRgb48(pSrc, width, strideSrc, pDst, strideDst, twistMatrix);
+    if (rc != StatusCode::OK)
+    {
+        return rc;
+    }
+
     const size_t widthRemainder = width % 4;
     const size_t widthOver4 = width / 4;
 
     // having two versions (with and without dealing with widths not a multiple of 4) here turned out to be a little bit faster
     if (widthRemainder == 0)
     {
-        return colorTwistRGB48_NEON2_MultipleOfFour(pSrc, widthOver4, height, strideSrc, pDst, strideDst, twistMatrix);
+        colorTwistRGB48_NEON2_MultipleOfFour(pSrc, widthOver4, height, strideSrc, pDst, strideDst, twistMatrix);
     }
     else
     {
-        return colorTwistRGB48_NEON2_MultipleOfFourAndRemainder(pSrc, widthOver4, widthRemainder, height, strideSrc, pDst, strideDst, twistMatrix);
+        colorTwistRGB48_NEON2_MultipleOfFourAndRemainder(pSrc, widthOver4, widthRemainder, height, strideSrc, pDst, strideDst, twistMatrix);
     }
+
+    return StatusCode::OK;
 }
 
 #endif

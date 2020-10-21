@@ -6,6 +6,7 @@
 #include "colortwist_neon.h"
 
 using namespace std;
+using namespace  colortwist;
 
 template <typename t>
 static t floatToInteger(float f)
@@ -20,7 +21,7 @@ static t floatToInteger(float f)
 }
 
 template <typename t>
-bool colorTwistRGB_Generic(const void *pSrc, std::uint32_t width, std::uint32_t height, std::int32_t strideSrc, void *pDst, int strideDst, const float *twistMatrix)
+StatusCode colorTwistRGB_Generic(const void *pSrc, std::uint32_t width, std::uint32_t height, std::int32_t strideSrc, void *pDst, int strideDst, const float *twistMatrix)
 {
     for (size_t y = 0; y < height; ++y)
     {
@@ -42,20 +43,20 @@ bool colorTwistRGB_Generic(const void *pSrc, std::uint32_t width, std::uint32_t 
         }
     }
 
-    return true;
+    return StatusCode::OK;
 }
 
-bool colorTwistRGB24_C(const void *pSrc, std::uint32_t width, std::uint32_t height, std::int32_t strideSrc, void *pDst, int strideDst, const float *twistMatrix)
+StatusCode colorTwistRGB24_C(const void *pSrc, std::uint32_t width, std::uint32_t height, std::int32_t strideSrc, void *pDst, int strideDst, const float *twistMatrix)
 {
     return colorTwistRGB_Generic<uint8_t>(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
 }
 
-bool colorTwistRGB48_C(const void *pSrc, std::uint32_t width, std::uint32_t height, std::int32_t strideSrc, void *pDst, int strideDst, const float *twistMatrix)
+StatusCode colorTwistRGB48_C(const void *pSrc, std::uint32_t width, std::uint32_t height, std::int32_t strideSrc, void *pDst, int strideDst, const float *twistMatrix)
 {
     return colorTwistRGB_Generic<uint16_t>(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
 }
 
-bool colortwist::colorTwistRGB48(ImplementationType type, const void* pSrc, std::uint32_t width, std::uint32_t height, int strideSrc, void* pDst, std::int32_t strideDst, const float* twistMatrix)
+StatusCode colortwist::colorTwistRGB48(ImplementationType type, const void* pSrc, std::uint32_t width, std::uint32_t height, int strideSrc, void* pDst, std::int32_t strideDst, const float* twistMatrix)
 {
     switch (type)
     {
@@ -81,7 +82,7 @@ bool colortwist::colorTwistRGB48(ImplementationType type, const void* pSrc, std:
 #endif
     }
 
-    return false;
+    return StatusCode::UnknownImplementation;
 }
 
 bool colortwist::isAvailable(ImplementationType type)

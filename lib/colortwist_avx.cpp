@@ -1,6 +1,7 @@
 #include "colortwist.h"
 #include "colortwist_config.h"
 #if COLORTWISTLIB_HASAVX
+#include "utils.h"
 #include <limits>
 #include <immintrin.h>  // ->  AVX, AVX2, FMA
 
@@ -9,9 +10,16 @@
 #endif
 
 using namespace std;
+using namespace colortwist;
 
-bool colorTwistRGB48_AVX(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
+StatusCode colorTwistRGB48_AVX(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
+    StatusCode rc = checkArgumentsRgb48(pSrc, width, strideSrc, pDst, strideDst, twistMatrix);
+    if (rc != StatusCode::OK)
+    {
+        return rc;
+    }
+
     __m128 t11t21t31 = _mm_setr_ps(twistMatrix[0], twistMatrix[4], twistMatrix[8], 0);
     __m128 t12t22t32 = _mm_setr_ps(twistMatrix[1], twistMatrix[5], twistMatrix[9], 0);
     __m128 t13t23t33 = _mm_setr_ps(twistMatrix[2], twistMatrix[6], twistMatrix[10], 0);
@@ -43,11 +51,17 @@ bool colorTwistRGB48_AVX(const void* pSrc, uint32_t width, uint32_t height, int 
         }
     }
 
-    return true;
+    return StatusCode::OK;
 }
 
-bool colorTwistRGB48_AVX2(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
+StatusCode colorTwistRGB48_AVX2(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
+    StatusCode rc = checkArgumentsRgb48(pSrc, width, strideSrc, pDst, strideDst, twistMatrix);
+    if (rc != StatusCode::OK)
+    {
+        return rc;
+    }
+
     static const __m128i shuffleConst4 = _mm_setr_epi8(0, 1, 2, 3, 4, 5, 8, 9, 10, 11, 12, 13, 0, 0, 0, 0);
     static const __m128i shuffleConst6 = _mm_setr_epi8(0, 1, 2, 3, 4, 5, -1, -1, 6, 7, 8, 9, 10, 11, -1, -1);
 
@@ -150,11 +164,11 @@ bool colorTwistRGB48_AVX2(const void* pSrc, uint32_t width, uint32_t height, int
     }
 
     _mm256_zeroupper();
-    return true;
+    return StatusCode::OK;
 }
 
 template <typename tUnevenWidthHandler>
-static bool colorTwistRGB48_AVX3_Generic(const void* pSrc, size_t widthOver8, size_t widthRemainder, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
+static void colorTwistRGB48_AVX3_Generic(const void* pSrc, size_t widthOver8, size_t widthRemainder, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
     static const __m256i shuffleConst256_12 = _mm256_setr_epi8(0, 1, 6, 7, 12, 13, 2, 3, 8, 9, 14, 15, 4, 5, 10, 11, 2, 3, 8, 9, 14, 15, 4, 5, 10, 11, 0, 1, 6, 7, 12, 13);
     static const __m128i shuffleConst3 = _mm_setr_epi8(4, 5, 10, 11, 0, 1, 6, 7, 12, 13, 2, 3, 8, 9, 14, 15);
@@ -242,11 +256,9 @@ static bool colorTwistRGB48_AVX3_Generic(const void* pSrc, size_t widthOver8, si
 
         handler.DoRemainingPixels(p, d, widthRemainder);
     }
-
-    return true;
 }
 
-inline bool colorTwistRGB48_AVX3_MultipleOfEight(const void* pSrc, size_t widthOver8, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
+inline void colorTwistRGB48_AVX3_MultipleOfEight(const void* pSrc, size_t widthOver8, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
     struct NullHandler
     {
@@ -254,10 +266,10 @@ inline bool colorTwistRGB48_AVX3_MultipleOfEight(const void* pSrc, size_t widthO
         inline void DoRemainingPixels(const uint16_t* pSrc, uint16_t* pDst, size_t remainingPixels) {}
     };
 
-    return colorTwistRGB48_AVX3_Generic<NullHandler>(pSrc, widthOver8, 0, height, strideSrc, pDst, strideDst, twistMatrix);
+    colorTwistRGB48_AVX3_Generic<NullHandler>(pSrc, widthOver8, 0, height, strideSrc, pDst, strideDst, twistMatrix);
 }
 
-inline bool colorTwistRGB48_AVX3_MultipleOfEightAndRemainder(const void* pSrc, size_t widthOver8, size_t widthRemainder, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
+inline void colorTwistRGB48_AVX3_MultipleOfEightAndRemainder(const void* pSrc, size_t widthOver8, size_t widthRemainder, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
     class RemainingPixelsHandler
     {
@@ -300,27 +312,32 @@ inline bool colorTwistRGB48_AVX3_MultipleOfEightAndRemainder(const void* pSrc, s
         }
     };
 
-    return colorTwistRGB48_AVX3_Generic<RemainingPixelsHandler>(pSrc, widthOver8, widthRemainder, height, strideSrc, pDst, strideDst, twistMatrix);
+    colorTwistRGB48_AVX3_Generic<RemainingPixelsHandler>(pSrc, widthOver8, widthRemainder, height, strideSrc, pDst, strideDst, twistMatrix);
 }
 
-bool colorTwistRGB48_AVX3(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
+colortwist::StatusCode colorTwistRGB48_AVX3(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
+    StatusCode rc = checkArgumentsRgb48(pSrc, width, strideSrc, pDst, strideDst, twistMatrix);
+    if (rc != StatusCode::OK)
+    {
+        return rc;
+    }
+
     const size_t widthRemainder = width % 8;
     const size_t widthOver8 = width / 8;
 
-    bool b;
     // having two versions (with and without dealing with widths not a multiple of 4) here turned out to be a little bit faster
     if (widthRemainder == 0)
     {
-        b = colorTwistRGB48_AVX3_MultipleOfEight(pSrc, widthOver8, height, strideSrc, pDst, strideDst, twistMatrix);
+        colorTwistRGB48_AVX3_MultipleOfEight(pSrc, widthOver8, height, strideSrc, pDst, strideDst, twistMatrix);
     }
     else
     {
-        b = colorTwistRGB48_AVX3_MultipleOfEightAndRemainder(pSrc, widthOver8, widthRemainder, height, strideSrc, pDst, strideDst, twistMatrix);
+        colorTwistRGB48_AVX3_MultipleOfEightAndRemainder(pSrc, widthOver8, widthRemainder, height, strideSrc, pDst, strideDst, twistMatrix);
     }
 
     _mm256_zeroupper();
-    return b;
+    return StatusCode::OK;
 }
 
 #endif
