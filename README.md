@@ -19,7 +19,7 @@ There are SIMD-optimized versions leveraging [AVX-instructions](https://en.wikip
 
 Here are some numbers (1MB = 1,000,000 bytes):
 
-Intel Core i7-8700K @ 3.70GHz, msvc 19.27.29112, x64 : 2048x2048 RGB48 bitmap
+[Intel Core i7-8700K @ 3.70GHz](https://ark.intel.com/content/www/us/en/ark/products/126684/intel-core-i7-8700k-processor-12m-cache-up-to-4-70-ghz.html), msvc 19.27.29112, x64 : 2048x2048 RGB48 bitmap
 
 | version                | performance in MB/s |
 | ---------------------- | ------------------- |
@@ -37,17 +37,6 @@ Intel Core i7-8700K @ 3.70GHz, gcc 10.2.0, x64 : 2048x2048 RGB48 bitmap
 | colorTwistRGB48_AVX    | 3334.76             |
 | colorTwistRGB48_AVX2   | 4315.26             |
 | colorTwistRGB48_AVX3   | 5011.39             |
-
-
-Intel Core i7-8700K @ 3.70GHz, cl 19.27.29112, x64 : 2048x2048 RGB48 bitmap
-
-| version                | performance in MB/s |
-| ---------------------- | ------------------- |
-| colorTwistRGB48_C      | 1226.24             |
-| [colorTwistRGB48_IPP](https://software.intel.com/content/www/us/en/develop/documentation/ipp-dev-reference/top/volume-2-image-processing/image-color-conversion/color-twist.html)  | 1720.98  |
-| colorTwistRGB48_AVX    | 3291.02             |
-| colorTwistRGB48_AVX2   | 4297.74             |
-| colorTwistRGB48_AVX3   | 5175.55             |
 
 Raspberry Pi 4, gcc 8.3.0-6, 32bit : 2048x2048 RGB48 bitmap
 
@@ -67,11 +56,11 @@ AMD Ryzen 7 4700U, msvc 19.27.29112, x64 : 2048x2048 RGB48 bitmap
 | colorTwistRGB48_AVX2   | 4970.00             |
 | colorTwistRGB48_AVX3   | 5572.38             |
 
-Intel m3, msvc 19.27.29112, x64 : 2048x2048 RGB48 bitmap
+[Intel Core m3-6Y30 @ 0.9GHz](https://ark.intel.com/content/www/us/en/ark/products/88198/intel-core-m3-6y30-processor-4m-cache-up-to-2-20-ghz.html), msvc 19.27.29112, x64 : 2048x2048 RGB48 bitmap
 
 | version                | performance in MB/s |
 | ---------------------- | ------------------- |
-| colorTwistRGB48_C      | 650.32             |
+| colorTwistRGB48_C      | 650.32              |
 | [colorTwistRGB48_IPP](https://software.intel.com/content/www/us/en/develop/documentation/ipp-dev-reference/top/volume-2-image-processing/image-color-conversion/color-twist.html)  | 935.62  |
 | colorTwistRGB48_AVX    | 1769.30             |
 | colorTwistRGB48_AVX2   | 2370.21             |
