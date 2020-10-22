@@ -51,6 +51,7 @@ StatusCode colorTwistRGB48_AVX(const void* pSrc, uint32_t width, uint32_t height
         }
     }
 
+    _mm256_zeroupper();
     return StatusCode::OK;
 }
 
@@ -326,7 +327,7 @@ colortwist::StatusCode colorTwistRGB48_AVX3(const void* pSrc, uint32_t width, ui
     const size_t widthRemainder = width % 8;
     const size_t widthOver8 = width / 8;
 
-    // having two versions (with and without dealing with widths not a multiple of 4) here turned out to be a little bit faster
+    // having two versions (with and without dealing with widths not a multiple of 8) here turned out to be a little bit faster
     if (widthRemainder == 0)
     {
         colorTwistRGB48_AVX3_MultipleOfEight(pSrc, widthOver8, height, strideSrc, pDst, strideDst, twistMatrix);
