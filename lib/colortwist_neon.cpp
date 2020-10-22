@@ -5,6 +5,8 @@
 #include <cstddef>
 #include <arm_neon.h>
 
+using namespace colortwist;
+
 // references:
 // https://developer.arm.com/documentation/dui0491/c/using-neon-support/store-a-single-vector-or-lane?lang=en
 // https://developer.arm.com/architectures/instruction-sets/simd-isas/neon/neon-programmers-guide-for-armv8-a/coding-for-neon/single-page

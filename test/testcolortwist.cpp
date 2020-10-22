@@ -9,7 +9,7 @@ using namespace colortwist;
 
 static void TestBgr48();
 static void CompareUint16(const char* functionName, const uint16_t* ptr1, const uint16_t* ptr2, size_t length);
-static void Test();
+//static void Test();
 
 int main(int argc, char** argv)
 {
@@ -19,28 +19,28 @@ int main(int argc, char** argv)
     return 0;
 }
 
-void Test()
-{
-    size_t bitmapSize = 32 * 3;
-    std::unique_ptr<uint16_t, void (*)(uint16_t*)> upSrc((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
-    for (size_t i = 0; i < bitmapSize / 2; ++i)
-    {
-        upSrc.get()[i] = (uint16_t)(1 + i);
-    }
-    std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDst((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
-    std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstC((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
-
-    static const float twistMatrix[4 * 3] =
-    {
-        1, 2, 3, 4,
-        5, 6, 7, 8,
-        1.1f, 1.2f, 1.3f, 1.4f
-    };
-
-    colorTwistRGB48(ImplementationType::PlainC, upSrc.get(), 16, 1, 32 * 3, upDstC.get(), 32 * 3, twistMatrix);
-    //colorTwistRGB48(ImplementationType::ARM_NEON2, upSrc.get(), 16, 1, 32 * 3, upDst.get(), 32 * 3, twistMatrix);
-    colorTwistRGB48(ImplementationType::X64_AVX3, upSrc.get(), 16, 1, 32 * 3, upDst.get(), 32 * 3, twistMatrix);
-}
+//void Test()
+//{
+//    size_t bitmapSize = 32 * 3;
+//    std::unique_ptr<uint16_t, void (*)(uint16_t*)> upSrc((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
+//    for (size_t i = 0; i < bitmapSize / 2; ++i)
+//    {
+//        upSrc.get()[i] = (uint16_t)(1 + i);
+//    }
+//    std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDst((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
+//    std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstC((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
+//
+//    static const float twistMatrix[4 * 3] =
+//    {
+//        1, 2, 3, 4,
+//        5, 6, 7, 8,
+//        1.1f, 1.2f, 1.3f, 1.4f
+//    };
+//
+//    colorTwistRGB48(ImplementationType::PlainC, upSrc.get(), 16, 1, 32 * 3, upDstC.get(), 32 * 3, twistMatrix);
+//    //colorTwistRGB48(ImplementationType::ARM_NEON2, upSrc.get(), 16, 1, 32 * 3, upDst.get(), 32 * 3, twistMatrix);
+//    colorTwistRGB48(ImplementationType::X64_AVX3, upSrc.get(), 16, 1, 32 * 3, upDst.get(), 32 * 3, twistMatrix);
+//}
 
 //void Test()
 //{
