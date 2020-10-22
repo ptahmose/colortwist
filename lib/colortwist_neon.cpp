@@ -54,8 +54,9 @@ void colorTwistRGB48_NEON(const void* pSrc, uint32_t width, uint32_t height, int
 template <typename tUnevenWidthHandler>
 static void colorTwistRGB48_NEON2_Generic(const void* pSrc, size_t widthOver4, size_t widthRemainder, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
-    // yes, we are using here 16 (of 32) qword-register - but we still have enough left for the
-    //  calculation itself to be efficient (-> 16 are left)
+    // Yes, we are using here 16 (of 32) qword-registers - but we still have enough left for the
+    //  calculation itself to be efficient (-> 16 are left). This way it is faster than using "vdupq_lane_f32"
+    //  in the matrix-multiplication code (from a neon-register).
     const float32x4_t t11 = vdupq_n_f32(twistMatrix[0]);
     const float32x4_t t12 = vdupq_n_f32(twistMatrix[1]);
     const float32x4_t t13 = vdupq_n_f32(twistMatrix[2]);
