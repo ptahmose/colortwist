@@ -17,7 +17,7 @@ static t floatToInteger(float f)
     if (f < numeric_limits<t>::min())
         return numeric_limits<t>::min();
 
-    return (t)(f + 0.5f);
+    return (t)(f/* + 0.5f*/);
 }
 
 template <typename t>
@@ -79,6 +79,31 @@ StatusCode colortwist::colorTwistRGB48(ImplementationType type, const void* pSrc
         return colorTwistRGB48_NEON(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
     case ImplementationType::ARM_NEON2:
         return colorTwistRGB48_NEON2(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
+#endif
+    }
+
+    return StatusCode::UnknownImplementation;
+}
+
+StatusCode colortwist::colorTwistRGB24(ImplementationType type, const void* pSrc, std::uint32_t width, std::uint32_t height, int strideSrc, void* pDst, std::int32_t strideDst, const float* twistMatrix)
+{
+    switch (type)
+    {
+    case ImplementationType::PlainC:
+        return colorTwistRGB24_C(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
+#if COLORTWISTLIB_HASAVX
+    case ImplementationType::X64_AVX3:
+        return colorTwistRGB24_AVX3(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
+#endif
+#if COLORTWISTLIB_HASIPP
+    case ImplementationType::IPP:
+        return colorTwistRGB24_IPP(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
+#endif
+#if COLORTWISTLIB_HASNEON
+    //case ImplementationType::ARM_NEON:
+    //    return colorTwistRGB48_NEON(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
+    //case ImplementationType::ARM_NEON2:
+    //    return colorTwistRGB48_NEON2(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
 #endif
     }
 
