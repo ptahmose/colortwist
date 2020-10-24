@@ -2,6 +2,7 @@
 #include <cmath>
 #include <cinttypes>
 #include "colortwist.h"
+#include "colortwist_config.h"
 
 inline colortwist::StatusCode checkArgumentsRgb48(const void* pSrc, std::uint32_t width, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
@@ -32,3 +33,7 @@ inline colortwist::StatusCode checkArgumentsRgb24(const void* pSrc, std::uint32_
 
     return colortwist::StatusCode::OK;
 }
+
+#if COLORTWISTLIB_HASAVX
+bool CheckWhetherCpuSupportsAVX2();
+#endif

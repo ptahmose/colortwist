@@ -4,9 +4,25 @@
 #include "colortwist_c.h"
 #include "colortwist_ipp.h"
 #include "colortwist_neon.h"
+#include "utils.h"
 
 using namespace std;
 using namespace  colortwist;
+
+#if COLORTWISTLIB_HASAVX
+static int hasAvx = -1;
+
+bool CanAvx()
+{
+    if (hasAvx >= 0)
+    {
+        return hasAvx > 0;
+    }
+
+    hasAvx = CheckWhetherCpuSupportsAVX2() ? 1 : 0;
+    return hasAvx;
+}
+#endif
 
 StatusCode colortwist::colorTwistRGB48(ImplementationType type, const void* pSrc, std::uint32_t width, std::uint32_t height, int strideSrc, void* pDst, std::int32_t strideDst, const float* twistMatrix)
 {
@@ -16,19 +32,19 @@ StatusCode colortwist::colorTwistRGB48(ImplementationType type, const void* pSrc
         return colorTwistRGB48_C(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
     case ImplementationType::X64_AVX:
 #if COLORTWISTLIB_HASAVX
-        return colorTwistRGB48_AVX(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
+        return CanAvx() ? colorTwistRGB48_AVX(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
 #else
         return StatusCode::InvalidISA;
 #endif
     case ImplementationType::X64_AVX2:
 #if COLORTWISTLIB_HASAVX
-        return colorTwistRGB48_AVX2(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
+        return CanAvx() ? colorTwistRGB48_AVX2(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
 #else
         return StatusCode::InvalidISA;
 #endif
     case ImplementationType::X64_AVX3:
 #if COLORTWISTLIB_HASAVX
-        return colorTwistRGB48_AVX3(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
+        return CanAvx() ? colorTwistRGB48_AVX3(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
 #else
         return StatusCode::InvalidISA;
 #endif
@@ -63,7 +79,7 @@ StatusCode colortwist::colorTwistRGB24(ImplementationType type, const void* pSrc
         return colorTwistRGB24_C(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
     case ImplementationType::X64_AVX3:
 #if COLORTWISTLIB_HASAVX
-        return colorTwistRGB24_AVX3(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
+        return CanAvx() ? colorTwistRGB24_AVX3(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
 #else
         return StatusCode::InvalidISA;
 #endif

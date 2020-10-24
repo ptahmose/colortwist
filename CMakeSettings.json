@@ -50,7 +50,7 @@
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
       "inheritEnvironments": [ "linux_x64" ],
-      "wslPath": "${defaultWSLPath}",
+      "wslPath": "C:\\Users\\jbohl\\AppData\\Local\\Microsoft\\WindowsApps\\ubuntu2004.exe",
       "addressSanitizerRuntimeFlags": "detect_leaks=0",
       "variables": []
     },

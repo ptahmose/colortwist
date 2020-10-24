@@ -16,7 +16,9 @@ set (LIBCOLORTWIST_SOURCES  colortwist.h
                             colortwist_avx.h
                             colortwist_avx.cpp
                             colortwist_neon.h
-                            colortwist_neon.cpp)
+                            colortwist_neon.cpp
+                            utils.h
+                            utils.cpp)
 
 #[[
 add_library(libcolortwist 
