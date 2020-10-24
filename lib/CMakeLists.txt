@@ -9,6 +9,8 @@ INCLUDE(CheckIncludeFiles)
 #FIND_PACKAGE (IPP REQUIRED )
 set (LIBCOLORTWIST_SOURCES  colortwist.h
                             colortwist.cpp
+                            colortwist_c.h
+                            colortwist_c.cpp
                             colortwist_ipp.h
                             colortwist_ipp.cpp
                             colortwist_avx.h

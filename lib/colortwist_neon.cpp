@@ -1,6 +1,7 @@
-#include "colortwist.h"
 #include "colortwist_config.h"
 #if COLORTWISTLIB_HASNEON
+#include "colortwist_neon.h"
+#include "colortwist_c.h"
 #include "utils.h"
 #include <cstddef>
 #include <arm_neon.h>
@@ -13,8 +14,14 @@ using namespace colortwist;
 // https://developer.arm.com/architectures/instruction-sets/simd-isas/neon/intrinsics
 // https://github.com/thenifty/neon-guide
 
-void colorTwistRGB48_NEON(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
+colortwist::StatusCode colorTwistRGB48_NEON(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
+    StatusCode rc = checkArgumentsRgb48(pSrc, width, strideSrc, pDst, strideDst, twistMatrix);
+    if (rc != StatusCode::OK)
+    {
+        return rc;
+    }
+
     // note: if adding "const" here, this produces incorrect results? Compiler-error or am I missing something? gcc 8.3 on Raspberry4
     float32x4_t c0{ twistMatrix[0],twistMatrix[4],twistMatrix[8],0 };
     float32x4_t c1{ twistMatrix[1],twistMatrix[5],twistMatrix[9],0 };
@@ -50,6 +57,8 @@ void colorTwistRGB48_NEON(const void* pSrc, uint32_t width, uint32_t height, int
             d += 3;
         }
     }
+
+    return StatusCode::OK;
 }
 
 template <typename tUnevenWidthHandler>
@@ -194,45 +203,6 @@ StatusCode colorTwistRGB48_NEON2(const void* pSrc, uint32_t width, uint32_t heig
 
 //-------------------------------------------------------------------------------------------------
 
-void colorTwistRGB24_NEON(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
-{
-    // note: if adding "const" here, this produces incorrect results? Compiler-error or am I missing something? gcc 8.3 on Raspberry4
-    float32x4_t c0{ twistMatrix[0],twistMatrix[4],twistMatrix[8],0 };
-    float32x4_t c1{ twistMatrix[1],twistMatrix[5],twistMatrix[9],0 };
-    float32x4_t c2{ twistMatrix[2],twistMatrix[6],twistMatrix[10],0 };
-    float32x4_t c3{ twistMatrix[3] + 0.5f,twistMatrix[7] + 0.5f,twistMatrix[11] + 0.5f,0 };
-
-    for (size_t y = 0; y < height; ++y)
-    {
-        const uint8_t* p = static_cast<const uint8_t*>(pSrc) + y * strideSrc;
-        uint8_t* d = static_cast<uint8_t*>(pDst) + y * strideDst;
-        for (size_t x = 0; x < width; ++x)
-        {
-            //const uint16x4_t data = vld1_u8(p);
-            //const uint32x4_t dataInt32 = vmovl_u16(data);
-            //const float32x4_t dataFloat = vcvtq_f32_u32(dataInt32);
-
-            //const float32x4_t r = vdupq_lane_f32(vget_low_f32(dataFloat), 0);
-            //const float32x4_t g = vdupq_lane_f32(vget_low_f32(dataFloat), 1);
-            //const float32x4_t b = vdupq_lane_f32(vget_high_f32(dataFloat), 0);
-
-            //const float32x4_t m1 = vmlaq_f32(c3, r, c0);
-            //const float32x4_t m2 = vmlaq_f32(m1, g, c1);
-            //const float32x4_t m3 = vmlaq_f32(m2, b, c2);
-
-            //// conversion to int with rounding -> the intrinsic is missing, was added here -> https://patchwork.ozlabs.org/project/gcc/patch/1601891882-13015-1-git-send-email-christophe.lyon@linaro.org/
-            ////uint32x4_t rInt = vcvtnq_u32_f32(m3);
-            //const uint32x4_t rInt = vcvtq_u32_f32(m3);
-            //const uint16x4_t rShort = vqmovn_u32(rInt);
-
-            //vst1_lane_u32(reinterpret_cast<uint32_t*>(d), vreinterpret_u32_u16(rShort), 0);
-            //vst1_lane_u16(2 + d, rShort, 2);
-            p += 3;
-            d += 3;
-        }
-    }
-}
-
 template <typename tUnevenWidthHandler>
 static void colorTwistRGB24_NEON2_Generic(const void* pSrc, size_t widthOver8, size_t widthRemainder, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
@@ -313,53 +283,21 @@ inline static void colorTwistRGB24_NEON2_MultipleOfEight(const void* pSrc, size_
     colorTwistRGB24_NEON2_Generic<NullHandler>(pSrc, widthOver8, 0, height, strideSrc, pDst, strideDst, twistMatrix);
 }
 
-inline static void colorTwistRGB24_NEON2_MultipleOfFourAndRemainder(const void* pSrc, size_t widthOver4, size_t widthRemainder, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
+inline static void colorTwistRGB24_NEON2_MultipleOfFourAndRemainder(const void* pSrc, size_t widthOver8, size_t widthRemainder, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
-   /* class RemainingPixelsHandler
+    class RemainingPixelsHandler
     {
     private:
-        float32x4_t c0;
-        float32x4_t c1;
-        float32x4_t c2;
-        float32x4_t c3;
+        const float* twistMatrix;
     public:
-        RemainingPixelsHandler() = delete;
-        RemainingPixelsHandler(const float* twistMatrix)
-            : c0{ twistMatrix[0],twistMatrix[4],twistMatrix[8],0 },
-            c1{ twistMatrix[1],twistMatrix[5],twistMatrix[9],0 },
-            c2{ twistMatrix[2],twistMatrix[6],twistMatrix[10],0 },
-            c3{ twistMatrix[3] + 0.5f,twistMatrix[7] + 0.5f,twistMatrix[11] + 0.5f,0 }    // we add 0.5 here for rounding - because the instrinsic vcvtnq_u32_f32 is missing,
-        {}
-
-        inline void DoRemainingPixels(const uint16_t* pSrc, uint16_t* pDst, size_t remainingPixels)
+        RemainingPixelsHandler(const float* twistMatrix):twistMatrix(twistMatrix) {}
+        inline void DoRemainingPixels(const uint8_t* pSrc, uint8_t* pDst, size_t remainingPixels)
         {
-            for (size_t i = 0; i < remainingPixels; ++i)
-            {
-                const uint16x4_t data = vld1_u16(static_cast<const uint16_t*>(pSrc));
-                const uint32x4_t dataint32 = vmovl_u16(data);
-                const float32x4_t dataFloat = vcvtq_f32_u32(dataint32);
-
-                const float32x4_t r = vdupq_lane_f32(vget_low_f32(dataFloat), 0);
-                const float32x4_t g = vdupq_lane_f32(vget_low_f32(dataFloat), 1);
-                const float32x4_t b = vdupq_lane_f32(vget_high_f32(dataFloat), 0);
-                const float32x4_t m1 = vmlaq_f32(this->c3, r, this->c0);
-                const float32x4_t m2 = vmlaq_f32(m1, g, this->c1);
-                const float32x4_t m3 = vmlaq_f32(m2, b, this->c2);
-
-                // conversion to int with rounding -> the intrinsic is missing, was added here -> https://patchwork.ozlabs.org/project/gcc/patch/1601891882-13015-1-git-send-email-christophe.lyon@linaro.org/
-                //uint32x4_t rInt = vcvtnq_u32_f32(m3);
-                const uint32x4_t rInt = vcvtq_u32_f32(m3);
-                const uint16x4_t rShort = vqmovn_u32(rInt);
-
-                vst1_lane_u32(reinterpret_cast<uint32_t*>(pDst), vreinterpret_u32_u16(rShort), 0);
-                vst1_lane_u16(2 + pDst, rShort, 2);
-                pSrc += 3;
-                pDst += 3;
-            }
+            colorTwistRGB24_C(pSrc, remainingPixels, 1, remainingPixels, pDst, remainingPixels, this->twistMatrix);
         }
     };
 
-    colorTwistRGB24_NEON2_Generic<RemainingPixelsHandler>(pSrc, widthOver4, widthRemainder, height, strideSrc, pDst, strideDst, twistMatrix);*/
+    colorTwistRGB24_NEON2_Generic<RemainingPixelsHandler>(pSrc, widthOver8, widthRemainder, height, strideSrc, pDst, strideDst, twistMatrix);
 }
 
 StatusCode colorTwistRGB24_NEON2(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
@@ -373,7 +311,7 @@ StatusCode colorTwistRGB24_NEON2(const void* pSrc, uint32_t width, uint32_t heig
     const size_t widthRemainder = width % 8;
     const size_t widthOver8 = width / 8;
 
-    // having two versions (with and without dealing with widths not a multiple of 4) here turned out to be a little bit faster
+    // having two versions (with and without dealing with widths not a multiple of 8) here turned out to be a little bit faster
     if (widthRemainder == 0)
     {
         colorTwistRGB24_NEON2_MultipleOfEight(pSrc, widthOver8, height, strideSrc, pDst, strideDst, twistMatrix);

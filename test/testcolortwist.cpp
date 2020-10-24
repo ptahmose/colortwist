@@ -219,7 +219,7 @@ void TestBgr48()
 void TestBgr24()
 {
     const int Repeats = 50;
-    const int Width = 2048;
+    const int Width = 2048+3;
     const int Height = 2048;
 
     const size_t StrideSrc = Width * 3;
