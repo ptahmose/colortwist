@@ -42,8 +42,8 @@ void Test()
     };
 
     colorTwistRGB24(ImplementationType::PlainC, upSrc.get(), 32, 1, 32 * 3, upDstC.get(), 32 * 1, twistMatrix);
-    //colorTwistRGB48(ImplementationType::ARM_NEON2, upSrc.get(), 16, 1, 32 * 3, upDst.get(), 32 * 3, twistMatrix);
-    colorTwistRGB24(ImplementationType::X64_AVX3, upSrc.get(), 32, 1, 32 * 3, upDst.get(), 32 * 3, twistMatrix);
+    colorTwistRGB24(ImplementationType::ARM_NEON2, upSrc.get(), 32, 1, 32 * 3, upDst.get(), 32 * 3, twistMatrix);
+    //colorTwistRGB24(ImplementationType::X64_AVX3, upSrc.get(), 32, 1, 32 * 3, upDst.get(), 32 * 3, twistMatrix);
 }
 
 
@@ -177,48 +177,48 @@ void TestBgr48()
     {
         std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstIpp((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
         TestBgr48("colorTwistRGB48_IPP", ImplementationType::IPP, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstIpp.get(), StrideDst);
-        CompareUint16("colorTwistRGB48- C vs IPP", upDstC.get(), upDstIpp.get(), bitmapSize / 2,1);
+        CompareUint16("colorTwistRGB48- C vs IPP", upDstC.get(), upDstIpp.get(), bitmapSize / 2, 1);
     }
 
     if (isAvailable(ImplementationType::X64_AVX))
     {
         std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstAvx((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
         TestBgr48("colorTwistRGB48_AVX", ImplementationType::X64_AVX, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstAvx.get(), StrideDst);
-        CompareUint16("colorTwistRGB48: C vs AVX", upDstC.get(), upDstAvx.get(), bitmapSize / 2,1);
+        CompareUint16("colorTwistRGB48: C vs AVX", upDstC.get(), upDstAvx.get(), bitmapSize / 2, 1);
     }
 
     if (isAvailable(ImplementationType::X64_AVX2))
     {
         std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstAvx2((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
         TestBgr48("colorTwistRGB48_AVX2", ImplementationType::X64_AVX2, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstAvx2.get(), StrideDst);
-        CompareUint16("colorTwistRGB48: C vs AVX2", upDstC.get(), upDstAvx2.get(), bitmapSize / 2,1);
+        CompareUint16("colorTwistRGB48: C vs AVX2", upDstC.get(), upDstAvx2.get(), bitmapSize / 2, 1);
     }
 
     if (isAvailable(ImplementationType::X64_AVX3))
     {
         std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstAvx3((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
         TestBgr48("colorTwistRGB48_AVX3", ImplementationType::X64_AVX3, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstAvx3.get(), StrideDst);
-        CompareUint16("colorTwistRGB48: C vs AVX3", upDstC.get(), upDstAvx3.get(), bitmapSize / 2,1);
+        CompareUint16("colorTwistRGB48: C vs AVX3", upDstC.get(), upDstAvx3.get(), bitmapSize / 2, 1);
     }
 
     if (isAvailable(ImplementationType::ARM_NEON))
     {
         std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstNeon((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
         TestBgr48("colorTwistRGB48_NEON", ImplementationType::ARM_NEON, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstNeon.get(), StrideDst);
-        CompareUint16("colorTwistRGB48: C vs NEON", upDstC.get(), upDstNeon.get(), bitmapSize / 2,1);
+        CompareUint16("colorTwistRGB48: C vs NEON", upDstC.get(), upDstNeon.get(), bitmapSize / 2, 1);
     }
 
     if (isAvailable(ImplementationType::ARM_NEON2))
     {
         std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstNeon2((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
         TestBgr48("colorTwistRGB48_NEON2", ImplementationType::ARM_NEON2, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstNeon2.get(), StrideDst);
-        CompareUint16("colorTwistRGB48: C vs NEON2", upDstC.get(), upDstNeon2.get(), bitmapSize / 2,1);
+        CompareUint16("colorTwistRGB48: C vs NEON2", upDstC.get(), upDstNeon2.get(), bitmapSize / 2, 1);
     }
 }
 
 void TestBgr24()
 {
-    const int Repeats = 100;
+    const int Repeats = 50;
     const int Width = 2048;
     const int Height = 2048;
 
@@ -236,7 +236,7 @@ void TestBgr24()
     {
         std::unique_ptr<uint8_t, void (*)(uint8_t*)> upDstIpp((uint8_t*)malloc(bitmapSize), [](uint8_t* p) -> void { free(p); });
         TestBgr24("colorTwistRGB24_IPP", ImplementationType::IPP, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstIpp.get(), StrideDst);
-        CompareUint8("colorTwistRGB24- C vs IPP", upDstC.get(), upDstIpp.get(), bitmapSize,1);
+        CompareUint8("colorTwistRGB24- C vs IPP", upDstC.get(), upDstIpp.get(), bitmapSize, 1);
     }
 
     /* if (isAvailable(ImplementationType::X64_AVX))
@@ -257,7 +257,7 @@ void TestBgr24()
     {
         std::unique_ptr<uint8_t, void (*)(uint8_t*)> upDstAvx3((uint8_t*)malloc(bitmapSize), [](uint8_t* p) -> void { free(p); });
         TestBgr24("colorTwistRGB24_AVX3", ImplementationType::X64_AVX3, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstAvx3.get(), StrideDst);
-        CompareUint8("colorTwistRGB24: C vs AVX3", upDstC.get(), upDstAvx3.get(), bitmapSize ,1);
+        CompareUint8("colorTwistRGB24: C vs AVX3", upDstC.get(), upDstAvx3.get(), bitmapSize, 1);
     }
 
     /* if (isAvailable(ImplementationType::ARM_NEON))
@@ -265,14 +265,14 @@ void TestBgr24()
          std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstNeon((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
          TestBgr48("colorTwistRGB48_NEON", ImplementationType::ARM_NEON, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstNeon.get(), StrideDst);
          CompareUint16("colorTwistRGB48: C vs NEON", upDstC.get(), upDstNeon.get(), bitmapSize / 2);
-     }
-
-     if (isAvailable(ImplementationType::ARM_NEON2))
-     {
-         std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstNeon2((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
-         TestBgr48("colorTwistRGB48_NEON2", ImplementationType::ARM_NEON2, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstNeon2.get(), StrideDst);
-         CompareUint16("colorTwistRGB48: C vs NEON2", upDstC.get(), upDstNeon2.get(), bitmapSize / 2);
      }*/
+
+    if (isAvailable(ImplementationType::ARM_NEON2))
+    {
+        std::unique_ptr<uint8_t, void (*)(uint8_t*)> upDstNeon2((uint8_t*)malloc(bitmapSize), [](uint8_t* p) -> void { free(p); });
+        TestBgr24("colorTwistRGB24_NEON2", ImplementationType::ARM_NEON2, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstNeon2.get(), StrideDst);
+        CompareUint8("colorTwistRGB24: C vs NEON2", upDstC.get(), upDstNeon2.get(), bitmapSize, 1);
+    }
 }
 
 void CompareUint16(const char* functionName, const uint16_t* ptr1, const uint16_t* ptr2, size_t length, uint8_t maxDiff)
