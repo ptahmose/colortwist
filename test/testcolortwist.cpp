@@ -160,7 +160,7 @@ static void TestBgr24(const string& name, ImplementationType type, int repeats, 
 
 void TestBgr48()
 {
-    const int Repeats =  100;
+    const int Repeats = 100;
     const int Width = 2048;
     const int Height = 2048;
 
@@ -219,7 +219,7 @@ void TestBgr48()
 
 void TestBgr24()
 {
-    const int Repeats =  50;
+    const int Repeats = 50;
     const int Width = 2048;
     const int Height = 2048;
 
@@ -240,7 +240,7 @@ void TestBgr24()
         CompareUint8("colorTwistRGB24- C vs IPP", upDstC.get(), upDstIpp.get(), bitmapSize, 1);
     }
 
-    /* if (isAvailable(ImplementationType::X64_AVX))
+     /*if (isAvailable(ImplementationType::X64_AVX))
      {
          std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstAvx((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
          TestBgr48("colorTwistRGB48_AVX", ImplementationType::X64_AVX, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstAvx.get(), StrideDst);
