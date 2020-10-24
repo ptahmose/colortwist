@@ -28,6 +28,9 @@ Here are some numbers (1MB = 1,000,000 bytes):
 | colorTwistRGB48_AVX    | 3291.02             |
 | colorTwistRGB48_AVX2   | 4297.74             |
 | colorTwistRGB48_AVX3   | 5175.55             |
+| colorTwistRGB24_C      | 318.01              |
+| colorTwistRGB24_IPP    | 892.93              |
+| colorTwistRGB24_AVX3   | 2966.55             |
 
 Intel Core i7-8700K @ 3.70GHz, gcc 10.2.0, x64 : 2048x2048 RGB48 bitmap
 
@@ -37,6 +40,8 @@ Intel Core i7-8700K @ 3.70GHz, gcc 10.2.0, x64 : 2048x2048 RGB48 bitmap
 | colorTwistRGB48_AVX    | 3334.76             |
 | colorTwistRGB48_AVX2   | 4315.26             |
 | colorTwistRGB48_AVX3   | 5011.39             |
+| colorTwistRGB24_C      | 328.43              |
+| colorTwistRGB24_AVX3   | 2998.93             |
 
 Raspberry Pi 4, gcc 8.3.0-6, 32bit : 2048x2048 RGB48 bitmap
 
@@ -44,7 +49,9 @@ Raspberry Pi 4, gcc 8.3.0-6, 32bit : 2048x2048 RGB48 bitmap
 | ---------------------- | ------------------- |
 | colorTwistRGB48_C      | 366.99              |
 | colorTwistRGB48_NEON   | 410.42              |
-| colorTwistRGB48_NEON2  | 940.71              |
+| colorTwistRGB48_NEON2  | 1009.3              |
+| colorTwistRGB24_C      | 96.14               |
+| colorTwistRGB24_NEON2  | 480.69              |
 
 AMD Ryzen 7 4700U, msvc 19.27.29112, x64 : 2048x2048 RGB48 bitmap
 
@@ -55,6 +62,9 @@ AMD Ryzen 7 4700U, msvc 19.27.29112, x64 : 2048x2048 RGB48 bitmap
 | colorTwistRGB48_AVX    | 3810.53             |
 | colorTwistRGB48_AVX2   | 4970.00             |
 | colorTwistRGB48_AVX3   | 5572.38             |
+| colorTwistRGB24_C      | 297.13              |
+| colorTwistRGB24_IPP    | 920.24              |
+| colorTwistRGB24_AVX3   | 2548.42             |
 
 [Intel Core m3-6Y30 @ 0.9GHz](https://ark.intel.com/content/www/us/en/ark/products/88198/intel-core-m3-6y30-processor-4m-cache-up-to-2-20-ghz.html), msvc 19.27.29112, x64 : 2048x2048 RGB48 bitmap
 
