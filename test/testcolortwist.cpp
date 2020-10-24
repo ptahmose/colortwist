@@ -101,13 +101,14 @@ void FillWithRandom(void* p, size_t size)
      }*/
     uint8_t* dst = (uint8_t*)p;
     std::random_device rd;
+    std::mt19937 gen(rd()); //seed for rd(Mersenne twister)
     std::uniform_int_distribution<uint32_t> dist(0, 0xFFFFFFFFu);
     uint32_t bits = 0;
     for (size_t i = 0; i < size; ++i)
     {
         if ((i % 4) == 0)
         {
-            bits = dist(rd);
+            bits = dist(gen);
         }
 
         *dst++ = (uint8_t)bits;

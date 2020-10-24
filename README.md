@@ -75,3 +75,6 @@ AMD Ryzen 7 4700U, msvc 19.27.29112, x64 : 2048x2048 RGB48 bitmap
 | colorTwistRGB48_AVX    | 1769.30             |
 | colorTwistRGB48_AVX2   | 2370.21             |
 | colorTwistRGB48_AVX3   | 2943.29             |
+| colorTwistRGB24_C      | 157.44              |
+| colorTwistRGB24_IPP    | 466.74              |
+| colorTwistRGB24_AVX3   | 1793.66             |
