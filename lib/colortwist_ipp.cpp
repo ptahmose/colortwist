@@ -20,4 +20,17 @@ StatusCode colorTwistRGB48_IPP(const void* pSrc, std::uint32_t width, std::uint3
     return (status == ippStsNoErr || status == ippStsNoOperation) ? StatusCode::OK : StatusCode::UnspecifiedError;
 }
 
+colortwist::StatusCode colorTwistRGB24_IPP(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
+{
+    StatusCode rc = checkArgumentsRgb24(pSrc, width, strideSrc, pDst, strideDst, twistMatrix);
+    if (rc != colortwist::StatusCode::OK)
+    {
+        return rc;
+    }
+
+    IppStatus status = ippiColorTwist32f_8u_C3R((const Ipp8u*)pSrc, strideSrc, (Ipp8u*)pDst, strideDst, IppiSize{ (int)width,(int)height }, (const Ipp32f(*)[4]) twistMatrix);
+
+    return (status == ippStsNoErr || status == ippStsNoOperation) ? StatusCode::OK : StatusCode::UnspecifiedError;
+}
+
 #endif 
