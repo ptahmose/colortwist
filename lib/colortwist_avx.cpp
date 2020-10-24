@@ -358,19 +358,22 @@ static void colorTwistRGB24_AVX3_Generic(const void* pSrc, size_t widthOver8, si
     const float& t32 = twistMatrix[9];
     const float& t33 = twistMatrix[10];
     const float& t34 = twistMatrix[11];
-   
-    static const __m256i shuffleConst256_1 = _mm256_setr_epi8(0, -1, -1, 1, -1, -1, 2, -1, -1, 3, -1, -1, 4, -1, -1, 5, -1,
+
+    static const __m256i shuffleConst256_1 = _mm256_setr_epi8(
+        0, -1, -1, 1, -1, -1, 2, -1, -1, 3, -1, -1, 4, -1, -1, 5, -1,
         -1, 6, -1, -1, 7, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1);
-    static const __m256i shuffleConst256_2 = _mm256_setr_epi8(-1, 0, -1, -1, 1, -1, -1, 2, -1, -1, 3, -1, -1, 4, -1, -1, 5,
+    static const __m256i shuffleConst256_2 = _mm256_setr_epi8(
+        -1, 0, -1, -1, 1, -1, -1, 2, -1, -1, 3, -1, -1, 4, -1, -1, 5,
         -1, -1, 6, -1, -1, 7, -1, -1, -1, -1, -1, -1, -1, -1, -1);
-    static const __m256i shuffleConst256_3 = _mm256_setr_epi8(-1, -1, 0, -1, -1, 1, -1, -1, 2, -1, -1, 3, -1, -1, 4, -1, -1,
+    static const __m256i shuffleConst256_3 = _mm256_setr_epi8(
+        -1, -1, 0, -1, -1, 1, -1, -1, 2, -1, -1, 3, -1, -1, 4, -1, -1,
         5, -1, -1, 6, -1, -1, 7, -1, -1, -1, -1, -1, -1, -1, -1);
 
     static const __m128i shuffleConst1 = _mm_setr_epi8(0, 3, 6, 9, 12, 15, 1, 4, 7, 10, 13, 2, 5, 8, 11, 14);
-    static const __m128i shuffleConst2 = _mm_setr_epi8(2, 5, 0, 3, 6, 1, 4, 7, 0, 0, 0, 0, 0, 0, 0, 0);
+    static const __m128i shuffleConst2 = _mm_setr_epi8(2, 5, 0, 3,  6,  1, 4, 7, 0,  0,  0, 0, 0, 0,  0,  0);
 
-    static const __m128i mask1 = _mm_setr_epi8(0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0);
-    static const __m128i mask2 = _mm_setr_epi8(0, 0, 0, 0, 0, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0);
+    static const __m128i mask1 = _mm_setr_epi8(  0,  0,  0,  0,  0,  0, -1, -1,  0,  0,  0,  0,  0,  0,  0,  0);
+    static const __m128i mask2 = _mm_setr_epi8(  0,  0,  0,  0,  0, -1, -1, -1,  0,  0,  0,  0,  0,  0,  0,  0);
 
     static const __m256i maskStore = _mm256_setr_epi64x(-1, -1, -1, 0);
 
@@ -452,6 +455,53 @@ inline void colorTwistRGB24_AVX3_MultipleOfEight(const void* pSrc, size_t widthO
     colorTwistRGB24_AVX3_Generic<NullHandler>(pSrc, widthOver8, 0, height, strideSrc, pDst, strideDst, twistMatrix);
 }
 
+inline void colorTwistRGB24_AVX3_MultipleOfEightAndRemainder(const void* pSrc, size_t widthOver8, size_t widthRemainder, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
+{
+    class RemainingPixelsHandler
+    {
+    private:
+        __m128 t11t21t31;
+        __m128 t12t22t32;
+        __m128 t13t23t33;
+        __m128 t14t24t34;
+        __m128i storeMask;
+    public:
+        RemainingPixelsHandler() = delete;
+        RemainingPixelsHandler(const float* twistMatrix) :
+            t11t21t31(_mm_setr_ps(twistMatrix[0], twistMatrix[4], twistMatrix[8], 0)),
+            t12t22t32(_mm_setr_ps(twistMatrix[1], twistMatrix[5], twistMatrix[9], 0)),
+            t13t23t33(_mm_setr_ps(twistMatrix[2], twistMatrix[6], twistMatrix[10], 0)),
+            t14t24t34(_mm_setr_ps(twistMatrix[3], twistMatrix[7], twistMatrix[11], 0)),
+            storeMask{ _mm_setr_epi8(-1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0) }
+        {}
+
+        inline void DoRemainingPixels(const uint8_t* pSrc, uint8_t* pDst, size_t remainingPixels)
+        {
+            for (size_t x = 0; x < remainingPixels; ++x)
+            {
+                const __m128 r_src = _mm_set1_ps(pSrc[0]);
+                const __m128 g_src = _mm_set1_ps(pSrc[1]);
+                const __m128 b_src = _mm_set1_ps(pSrc[2]);
+
+                __m128 result = _mm_fmadd_ps(r_src, this->t11t21t31, this->t14t24t34);
+                result = _mm_fmadd_ps(g_src, this->t12t22t32, result);
+                result = _mm_fmadd_ps(b_src, this->t13t23t33, result);
+
+                const __m128i resultInteger = _mm_cvtps_epi32(result);
+                const __m128i resultShort = _mm_packus_epi32(resultInteger, resultInteger);
+                const __m128i resultByte = _mm_packus_epi16(resultShort, resultShort);
+
+                _mm_maskmoveu_si128(resultByte, this->storeMask, reinterpret_cast<char*>(pDst));
+
+                pSrc += 3;
+                pDst += 3;
+            }
+        }
+    };
+
+    colorTwistRGB24_AVX3_Generic<RemainingPixelsHandler>(pSrc, widthOver8, widthRemainder, height, strideSrc, pDst, strideDst, twistMatrix);
+}
+
 colortwist::StatusCode colorTwistRGB24_AVX3(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
     const size_t widthRemainder = width % 8;
@@ -463,7 +513,7 @@ colortwist::StatusCode colorTwistRGB24_AVX3(const void* pSrc, uint32_t width, ui
     }
     else
     {
-        //colorTwistRGB48_AVX3_MultipleOfEightAndRemainder(pSrc, widthOver8, widthRemainder, height, strideSrc, pDst, strideDst, twistMatrix);
+        colorTwistRGB24_AVX3_MultipleOfEightAndRemainder(pSrc, widthOver8, widthRemainder, height, strideSrc, pDst, strideDst, twistMatrix);
     }
 
     _mm256_zeroupper();

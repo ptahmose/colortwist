@@ -12,18 +12,18 @@ static void TestBgr48();
 static void TestBgr24();
 static void CompareUint16(const char* functionName, const uint16_t* ptr1, const uint16_t* ptr2, size_t length, uint8_t maxDiff);
 static void CompareUint8(const char* functionName, const uint8_t* ptr1, const uint8_t* ptr2, size_t length, uint8_t maxDiff);
-static void Test();
+//static void Test();
 
 int main(int argc, char** argv)
 {
-    Test();
+    //Test();
     TestBgr24();
     TestBgr48();
     //bool b = colorTwistRGB24_C(nullptr, 10, 11, 12, nullptr, 13, nullptr);
     return 0;
 }
 
-void Test()
+/*void Test()
 {
     size_t bitmapSize = 32 * 3;
     std::unique_ptr<uint8_t, void (*)(uint8_t*)> upSrc((uint8_t*)malloc(bitmapSize), [](uint8_t* p) -> void { free(p); });
@@ -44,7 +44,7 @@ void Test()
     colorTwistRGB24(ImplementationType::PlainC, upSrc.get(), 32, 1, 32 * 3, upDstC.get(), 32 * 1, twistMatrix);
     colorTwistRGB24(ImplementationType::ARM_NEON2, upSrc.get(), 32, 1, 32 * 3, upDst.get(), 32 * 3, twistMatrix);
     //colorTwistRGB24(ImplementationType::X64_AVX3, upSrc.get(), 32, 1, 32 * 3, upDst.get(), 32 * 3, twistMatrix);
-}
+}*/
 
 
 //void Test()
@@ -94,7 +94,7 @@ void Test()
 
 void FillWithRandom(void* p, size_t size)
 {
-    /* uint8_t* dst = (uint8_t*)p;
+     /*uint8_t* dst = (uint8_t*)p;
      for (size_t i = 0; i < size; ++i)
      {
          *dst++ = (uint8_t)i;
@@ -159,7 +159,7 @@ static void TestBgr24(const string& name, ImplementationType type, int repeats, 
 
 void TestBgr48()
 {
-    const int Repeats = 100;
+    const int Repeats =  100;
     const int Width = 2048;
     const int Height = 2048;
 
@@ -218,8 +218,8 @@ void TestBgr48()
 
 void TestBgr24()
 {
-    const int Repeats = 50;
-    const int Width = 2048+3;
+    const int Repeats =  50;
+    const int Width = 2048;
     const int Height = 2048;
 
     const size_t StrideSrc = Width * 3;

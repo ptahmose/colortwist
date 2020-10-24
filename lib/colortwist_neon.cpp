@@ -67,18 +67,21 @@ static void colorTwistRGB48_NEON2_Generic(const void* pSrc, size_t widthOver4, s
     // Yes, we are using here 16 (of 32) qword-registers - but we still have enough left for the
     //  calculation itself to be efficient (-> 16 are left). This way it is faster than using "vdupq_lane_f32"
     //  in the matrix-multiplication code (from a neon-register).
-    const float32x4_t t11 = vdupq_n_f32(twistMatrix[0]);
-    const float32x4_t t12 = vdupq_n_f32(twistMatrix[1]);
-    const float32x4_t t13 = vdupq_n_f32(twistMatrix[2]);
+    const float32x4_t t11 = vld1q_dup_f32(twistMatrix + 0);
+    const float32x4_t t12 = vld1q_dup_f32(twistMatrix + 1);
+    const float32x4_t t13 = vld1q_dup_f32(twistMatrix + 2);
     const float32x4_t t14 = vdupq_n_f32(twistMatrix[3] + .5f);    // we add 0.5 here for rounding - because the instrinsic vcvtnq_u32_f32 is missing,
-    const float32x4_t t21 = vdupq_n_f32(twistMatrix[4]);          //  -> https://patchwork.ozlabs.org/project/gcc/patch/1601891882-13015-1-git-send-email-christophe.lyon@linaro.org/
-    const float32x4_t t22 = vdupq_n_f32(twistMatrix[5]);
-    const float32x4_t t23 = vdupq_n_f32(twistMatrix[6]);
+    const float32x4_t t21 = vld1q_dup_f32(twistMatrix + 4);       //  -> https://patchwork.ozlabs.org/project/gcc/patch/1601891882-13015-1-git-send-email-christophe.lyon@linaro.org/
+    const float32x4_t t22 = vld1q_dup_f32(twistMatrix + 5); 
+    const float32x4_t t23 = vld1q_dup_f32(twistMatrix + 6); 
     const float32x4_t t24 = vdupq_n_f32(twistMatrix[7] + .5f);
-    const float32x4_t t31 = vdupq_n_f32(twistMatrix[8]);
-    const float32x4_t t32 = vdupq_n_f32(twistMatrix[9]);
-    const float32x4_t t33 = vdupq_n_f32(twistMatrix[10]);
+    const float32x4_t t31 = vld1q_dup_f32(twistMatrix + 8); 
+    const float32x4_t t32 = vld1q_dup_f32(twistMatrix + 9); 
+    const float32x4_t t33 = vld1q_dup_f32(twistMatrix + 10); 
     const float32x4_t t34 = vdupq_n_f32(twistMatrix[11] + .5f);
+
+    // Note: this way is a bit faster than going with "vmlaq_lane_f32" (as in the RGB24-implementation), maybe
+    //        because the register pressure is higher with the RGB24-version
 
     tUnevenWidthHandler handler{ twistMatrix };
 
@@ -92,7 +95,7 @@ static void colorTwistRGB48_NEON2_Generic(const void* pSrc, size_t widthOver4, s
             // [0] : R1 R2 R3 R4
             // [1] : G1 G2 G3 G4
             // [2] : B1 B2 B3 B4
-            const uint16x4x3_t data = vld3_u16(static_cast<const uint16_t*>(p));
+            const uint16x4x3_t data = vld3_u16(p);
             const float32x4_t dataFloatR = vcvtq_f32_u32(vmovl_u16(data.val[0]));
             const float32x4_t dataFloatG = vcvtq_f32_u32(vmovl_u16(data.val[1]));
             const float32x4_t dataFloatB = vcvtq_f32_u32(vmovl_u16(data.val[2]));
@@ -206,21 +209,15 @@ StatusCode colorTwistRGB48_NEON2(const void* pSrc, uint32_t width, uint32_t heig
 template <typename tUnevenWidthHandler>
 static void colorTwistRGB24_NEON2_Generic(const void* pSrc, size_t widthOver8, size_t widthRemainder, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
-    // Yes, we are using here 16 (of 32) qword-registers - but we still have enough left for the
-    //  calculation itself to be efficient (-> 16 are left). This way it is faster than using "vdupq_lane_f32"
-    //  in the matrix-multiplication code (from a neon-register).
-    const float32x4_t t11 = vdupq_n_f32(twistMatrix[0]);
-    const float32x4_t t12 = vdupq_n_f32(twistMatrix[1]);
-    const float32x4_t t13 = vdupq_n_f32(twistMatrix[2]);
     const float32x4_t t14 = vdupq_n_f32(twistMatrix[3] + .5f);    // we add 0.5 here for rounding - because the instrinsic vcvtnq_u32_f32 is missing,
-    const float32x4_t t21 = vdupq_n_f32(twistMatrix[4]);          //  -> https://patchwork.ozlabs.org/project/gcc/patch/1601891882-13015-1-git-send-email-christophe.lyon@linaro.org/
-    const float32x4_t t22 = vdupq_n_f32(twistMatrix[5]);
-    const float32x4_t t23 = vdupq_n_f32(twistMatrix[6]);
-    const float32x4_t t24 = vdupq_n_f32(twistMatrix[7] + .5f);
-    const float32x4_t t31 = vdupq_n_f32(twistMatrix[8]);
-    const float32x4_t t32 = vdupq_n_f32(twistMatrix[9]);
-    const float32x4_t t33 = vdupq_n_f32(twistMatrix[10]);
+    const float32x4_t t24 = vdupq_n_f32(twistMatrix[7] + .5f);    //  -> https://patchwork.ozlabs.org/project/gcc/patch/1601891882-13015-1-git-send-email-christophe.lyon@linaro.org/
     const float32x4_t t34 = vdupq_n_f32(twistMatrix[11] + .5f);
+
+    float32x2_t c0 = vld1_f32(twistMatrix + 0);
+    float32x2_t c1{ twistMatrix[2],twistMatrix[4] };
+    float32x2_t c2 = vld1_f32(twistMatrix + 5);
+    float32x2_t c3 = vld1_f32(twistMatrix + 8);
+    float32x2_t c4{ twistMatrix[10],0 };
 
     tUnevenWidthHandler handler{ twistMatrix };
 
@@ -234,7 +231,7 @@ static void colorTwistRGB24_NEON2_Generic(const void* pSrc, size_t widthOver8, s
             // [0] : R1 R2 R3 R4 R5 R6 R7 R8
             // [1] : G1 G2 G3 G4 G5 G6 G7 G8
             // [2] : B1 B2 B3 B4 B5 B6 B7 B8
-            const uint8x8x3_t data = vld3_u8((p));
+            const uint8x8x3_t data = vld3_u8(p);
             const uint16x8_t dataUShortR = vmovl_u8(data.val[0]);
             const uint16x8_t dataUShortG = vmovl_u8(data.val[1]);
             const uint16x8_t dataUShortB = vmovl_u8(data.val[2]);
@@ -245,12 +242,12 @@ static void colorTwistRGB24_NEON2_Generic(const void* pSrc, size_t widthOver8, s
             const float32x4_t dataFloatG2 = vcvtq_f32_u32(vmovl_u16(vget_high_u16(dataUShortG)));
             const float32x4_t dataFloatB2 = vcvtq_f32_u32(vmovl_u16(vget_high_u16(dataUShortB)));
 
-            const float32x4_t resultR1 = vmlaq_f32(vmlaq_f32(vmlaq_f32(t14, dataFloatR1, t11), dataFloatG1, t12), dataFloatB1, t13);
-            const float32x4_t resultG1 = vmlaq_f32(vmlaq_f32(vmlaq_f32(t24, dataFloatR1, t21), dataFloatG1, t22), dataFloatB1, t23);
-            const float32x4_t resultB1 = vmlaq_f32(vmlaq_f32(vmlaq_f32(t34, dataFloatR1, t31), dataFloatG1, t32), dataFloatB1, t33);
-            const float32x4_t resultR2 = vmlaq_f32(vmlaq_f32(vmlaq_f32(t14, dataFloatR2, t11), dataFloatG2, t12), dataFloatB2, t13);
-            const float32x4_t resultG2 = vmlaq_f32(vmlaq_f32(vmlaq_f32(t24, dataFloatR2, t21), dataFloatG2, t22), dataFloatB2, t23);
-            const float32x4_t resultB2 = vmlaq_f32(vmlaq_f32(vmlaq_f32(t34, dataFloatR2, t31), dataFloatG2, t32), dataFloatB2, t33);
+            const float32x4_t resultR1 = vmlaq_lane_f32(vmlaq_lane_f32(vmlaq_lane_f32(t14, dataFloatR1, c0, 0), dataFloatG1, c0, 1), dataFloatB1, c1, 0);
+            const float32x4_t resultG1 = vmlaq_lane_f32(vmlaq_lane_f32(vmlaq_lane_f32(t24, dataFloatR1, c1, 1), dataFloatG1, c2, 0), dataFloatB1, c2, 1);
+            const float32x4_t resultB1 = vmlaq_lane_f32(vmlaq_lane_f32(vmlaq_lane_f32(t34, dataFloatR1, c3, 0), dataFloatG1, c3, 1), dataFloatB1, c4, 0);
+            const float32x4_t resultR2 = vmlaq_lane_f32(vmlaq_lane_f32(vmlaq_lane_f32(t14, dataFloatR2, c0, 0), dataFloatG2, c0, 1), dataFloatB2, c1, 0);
+            const float32x4_t resultG2 = vmlaq_lane_f32(vmlaq_lane_f32(vmlaq_lane_f32(t24, dataFloatR2, c1, 1), dataFloatG2, c2, 0), dataFloatB2, c2, 1);
+            const float32x4_t resultB2 = vmlaq_lane_f32(vmlaq_lane_f32(vmlaq_lane_f32(t34, dataFloatR2, c3, 0), dataFloatG2, c3, 1), dataFloatB2, c4, 0);
 
             const uint16x8_t rShortPixelR = vcombine_u16(vqmovn_u32(vcvtq_u32_f32(resultR1)), vqmovn_u32(vcvtq_u32_f32(resultR2)));
             const uint16x8_t rShortPixelG = vcombine_u16(vqmovn_u32(vcvtq_u32_f32(resultG1)), vqmovn_u32(vcvtq_u32_f32(resultG2)));
@@ -263,7 +260,7 @@ static void colorTwistRGB24_NEON2_Generic(const void* pSrc, size_t widthOver8, s
             // and this conveniently will shuffle R, G and B into the correct order, i. e.
             // R1 G1 B1 R2 G2 B2 R3 G3 B3 R4 G4 B4  R5 G5 B5 R6 G6 B6 R7 G7 B7 R8 G8 B8
             vst3_u8(d, uint8x8x3_t{ rBytePixelR,rBytePixelG,rBytePixelB });
-            
+
             p += 3 * 8;
             d += 3 * 8;
         }
@@ -290,7 +287,7 @@ inline static void colorTwistRGB24_NEON2_MultipleOfFourAndRemainder(const void* 
     private:
         const float* twistMatrix;
     public:
-        RemainingPixelsHandler(const float* twistMatrix):twistMatrix(twistMatrix) {}
+        RemainingPixelsHandler(const float* twistMatrix) :twistMatrix(twistMatrix) {}
         inline void DoRemainingPixels(const uint8_t* pSrc, uint8_t* pDst, size_t remainingPixels)
         {
             colorTwistRGB24_C(pSrc, remainingPixels, 1, remainingPixels, pDst, remainingPixels, this->twistMatrix);
