@@ -14,6 +14,53 @@ using namespace colortwist;
 // https://developer.arm.com/architectures/instruction-sets/simd-isas/neon/intrinsics
 // https://github.com/thenifty/neon-guide
 
+static inline void DoOnePixelRgb48ReadOneByteBehind(const uint16_t* p, uint16_t* d, const float32x4_t& c0, const float32x4_t& c1, const float32x4_t& c2, const float32x4_t& c3)
+{
+    const uint16x4_t data = vld1_u16(static_cast<const uint16_t*>(p));
+    const uint32x4_t dataInt32 = vmovl_u16(data);
+    const float32x4_t dataFloat = vcvtq_f32_u32(dataInt32);
+
+    const float32x4_t r = vdupq_lane_f32(vget_low_f32(dataFloat), 0);
+    const float32x4_t g = vdupq_lane_f32(vget_low_f32(dataFloat), 1);
+    const float32x4_t b = vdupq_lane_f32(vget_high_f32(dataFloat), 0);
+
+    const float32x4_t m1 = vmlaq_f32(c3, r, c0);
+    const float32x4_t m2 = vmlaq_f32(m1, g, c1);
+    const float32x4_t m3 = vmlaq_f32(m2, b, c2);
+
+    // conversion to int with rounding -> the intrinsic is missing, was added here -> https://patchwork.ozlabs.org/project/gcc/patch/1601891882-13015-1-git-send-email-christophe.lyon@linaro.org/
+    //uint32x4_t rInt = vcvtnq_u32_f32(m3);
+    const uint32x4_t rInt = vcvtq_u32_f32(m3);
+    const uint16x4_t rShort = vqmovn_u32(rInt);
+
+    vst1_lane_u32(reinterpret_cast<uint32_t*>(d), vreinterpret_u32_u16(rShort), 0);
+    vst1_lane_u16(2 + d, rShort, 2);
+}
+
+static inline void DoOnePixelRgb48ReadExact(const uint16_t* p, uint16_t* d, const float32x4_t& c0, const float32x4_t& c1, const float32x4_t& c2, const float32x4_t& c3)
+{
+    uint64_t _3pixels = p[0] + (((uint32_t)p[1]) << 16) + (((uint64_t)p[2]) << 32);
+    const uint16x4_t data = vcreate_u16(_3pixels);
+    const uint32x4_t dataInt32 = vmovl_u16(data);
+    const float32x4_t dataFloat = vcvtq_f32_u32(dataInt32);
+
+    const float32x4_t r = vdupq_lane_f32(vget_low_f32(dataFloat), 0);
+    const float32x4_t g = vdupq_lane_f32(vget_low_f32(dataFloat), 1);
+    const float32x4_t b = vdupq_lane_f32(vget_high_f32(dataFloat), 0);
+
+    const float32x4_t m1 = vmlaq_f32(c3, r, c0);
+    const float32x4_t m2 = vmlaq_f32(m1, g, c1);
+    const float32x4_t m3 = vmlaq_f32(m2, b, c2);
+
+    // conversion to int with rounding -> the intrinsic is missing, was added here -> https://patchwork.ozlabs.org/project/gcc/patch/1601891882-13015-1-git-send-email-christophe.lyon@linaro.org/
+    //uint32x4_t rInt = vcvtnq_u32_f32(m3);
+    const uint32x4_t rInt = vcvtq_u32_f32(m3);
+    const uint16x4_t rShort = vqmovn_u32(rInt);
+
+    vst1_lane_u32(reinterpret_cast<uint32_t*>(d), vreinterpret_u32_u16(rShort), 0);
+    vst1_lane_u16(2 + d, rShort, 2);
+}
+
 colortwist::StatusCode colorTwistRGB48_NEON(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
     StatusCode rc = checkArgumentsRgb48(pSrc, width, strideSrc, pDst, strideDst, twistMatrix);
@@ -28,35 +75,29 @@ colortwist::StatusCode colorTwistRGB48_NEON(const void* pSrc, uint32_t width, ui
     float32x4_t c2{ twistMatrix[2],twistMatrix[6],twistMatrix[10],0 };
     float32x4_t c3{ twistMatrix[3] + 0.5f,twistMatrix[7] + 0.5f,twistMatrix[11] + 0.5f,0 };
 
-    for (size_t y = 0; y < height; ++y)
+    for (size_t y = 0; y < height - 1; ++y)
     {
         const uint16_t* p = reinterpret_cast<const uint16_t*>(static_cast<const uint8_t*>(pSrc) + y * strideSrc);
         uint16_t* d = reinterpret_cast<uint16_t*>(static_cast<uint8_t*>(pDst) + y * strideDst);
         for (size_t x = 0; x < width; ++x)
         {
-            const uint16x4_t data = vld1_u16(static_cast<const uint16_t*>(p));
-            const uint32x4_t dataInt32 = vmovl_u16(data);
-            const float32x4_t dataFloat = vcvtq_f32_u32(dataInt32);
-
-            const float32x4_t r = vdupq_lane_f32(vget_low_f32(dataFloat), 0);
-            const float32x4_t g = vdupq_lane_f32(vget_low_f32(dataFloat), 1);
-            const float32x4_t b = vdupq_lane_f32(vget_high_f32(dataFloat), 0);
-
-            const float32x4_t m1 = vmlaq_f32(c3, r, c0);
-            const float32x4_t m2 = vmlaq_f32(m1, g, c1);
-            const float32x4_t m3 = vmlaq_f32(m2, b, c2);
-
-            // conversion to int with rounding -> the intrinsic is missing, was added here -> https://patchwork.ozlabs.org/project/gcc/patch/1601891882-13015-1-git-send-email-christophe.lyon@linaro.org/
-            //uint32x4_t rInt = vcvtnq_u32_f32(m3);
-            const uint32x4_t rInt = vcvtq_u32_f32(m3);
-            const uint16x4_t rShort = vqmovn_u32(rInt);
-
-            vst1_lane_u32(reinterpret_cast<uint32_t*>(d), vreinterpret_u32_u16(rShort), 0);
-            vst1_lane_u16(2 + d, rShort, 2);
+            DoOnePixelRgb48ReadOneByteBehind(p, d, c0, c1, c2, c3);
             p += 3;
             d += 3;
         }
     }
+
+    // for the very last pixel, we have be careful not to read beyond the source buffer
+    const uint16_t* p = reinterpret_cast<const uint16_t*>(static_cast<const uint8_t*>(pSrc) + (height - 1) * strideSrc);
+    uint16_t* d = reinterpret_cast<uint16_t*>(static_cast<uint8_t*>(pDst) + (height - 1) * strideDst);
+    for (size_t x = 0; x < width - 1; ++x)
+    {
+        DoOnePixelRgb48ReadOneByteBehind(p, d, c0, c1, c2, c3);
+        p += 3;
+        d += 3;
+    }
+
+    DoOnePixelRgb48ReadExact(p, d, c0, c1, c2, c3);
 
     return StatusCode::OK;
 }
@@ -72,12 +113,12 @@ static void colorTwistRGB48_NEON2_Generic(const void* pSrc, size_t widthOver4, s
     const float32x4_t t13 = vld1q_dup_f32(twistMatrix + 2);
     const float32x4_t t14 = vdupq_n_f32(twistMatrix[3] + .5f);    // we add 0.5 here for rounding - because the instrinsic vcvtnq_u32_f32 is missing,
     const float32x4_t t21 = vld1q_dup_f32(twistMatrix + 4);       //  -> https://patchwork.ozlabs.org/project/gcc/patch/1601891882-13015-1-git-send-email-christophe.lyon@linaro.org/
-    const float32x4_t t22 = vld1q_dup_f32(twistMatrix + 5); 
-    const float32x4_t t23 = vld1q_dup_f32(twistMatrix + 6); 
+    const float32x4_t t22 = vld1q_dup_f32(twistMatrix + 5);
+    const float32x4_t t23 = vld1q_dup_f32(twistMatrix + 6);
     const float32x4_t t24 = vdupq_n_f32(twistMatrix[7] + .5f);
-    const float32x4_t t31 = vld1q_dup_f32(twistMatrix + 8); 
-    const float32x4_t t32 = vld1q_dup_f32(twistMatrix + 9); 
-    const float32x4_t t33 = vld1q_dup_f32(twistMatrix + 10); 
+    const float32x4_t t31 = vld1q_dup_f32(twistMatrix + 8);
+    const float32x4_t t32 = vld1q_dup_f32(twistMatrix + 9);
+    const float32x4_t t33 = vld1q_dup_f32(twistMatrix + 10);
     const float32x4_t t34 = vdupq_n_f32(twistMatrix[11] + .5f);
 
     // Note: this way is a bit faster than going with "vmlaq_lane_f32" (as in the RGB24-implementation), maybe
@@ -136,14 +177,16 @@ inline static void colorTwistRGB48_NEON2_MultipleOfFourAndRemainder(const void* 
     class RemainingPixelsHandler
     {
     private:
-        float32x4_t c0;
-        float32x4_t c1;
-        float32x4_t c2;
-        float32x4_t c3;
+           float32x4_t c0;
+           float32x4_t c1;
+           float32x4_t c2;
+           float32x4_t c3;
     public:
+        const bool isempty = false;
         RemainingPixelsHandler() = delete;
         RemainingPixelsHandler(const float* twistMatrix)
-            : c0{ twistMatrix[0],twistMatrix[4],twistMatrix[8],0 },
+            :
+            c0{ twistMatrix[0],twistMatrix[4],twistMatrix[8],0 },
             c1{ twistMatrix[1],twistMatrix[5],twistMatrix[9],0 },
             c2{ twistMatrix[2],twistMatrix[6],twistMatrix[10],0 },
             c3{ twistMatrix[3] + 0.5f,twistMatrix[7] + 0.5f,twistMatrix[11] + 0.5f,0 }    // we add 0.5 here for rounding - because the instrinsic vcvtnq_u32_f32 is missing,
@@ -153,24 +196,7 @@ inline static void colorTwistRGB48_NEON2_MultipleOfFourAndRemainder(const void* 
         {
             for (size_t i = 0; i < remainingPixels; ++i)
             {
-                const uint16x4_t data = vld1_u16(static_cast<const uint16_t*>(pSrc));
-                const uint32x4_t dataint32 = vmovl_u16(data);
-                const float32x4_t dataFloat = vcvtq_f32_u32(dataint32);
-
-                const float32x4_t r = vdupq_lane_f32(vget_low_f32(dataFloat), 0);
-                const float32x4_t g = vdupq_lane_f32(vget_low_f32(dataFloat), 1);
-                const float32x4_t b = vdupq_lane_f32(vget_high_f32(dataFloat), 0);
-                const float32x4_t m1 = vmlaq_f32(this->c3, r, this->c0);
-                const float32x4_t m2 = vmlaq_f32(m1, g, this->c1);
-                const float32x4_t m3 = vmlaq_f32(m2, b, this->c2);
-
-                // conversion to int with rounding -> the intrinsic is missing, was added here -> https://patchwork.ozlabs.org/project/gcc/patch/1601891882-13015-1-git-send-email-christophe.lyon@linaro.org/
-                //uint32x4_t rInt = vcvtnq_u32_f32(m3);
-                const uint32x4_t rInt = vcvtq_u32_f32(m3);
-                const uint16x4_t rShort = vqmovn_u32(rInt);
-
-                vst1_lane_u32(reinterpret_cast<uint32_t*>(pDst), vreinterpret_u32_u16(rShort), 0);
-                vst1_lane_u16(2 + pDst, rShort, 2);
+                DoOnePixelRgb48ReadExact(pSrc, pDst, this->c0, this->c1, this->c2, this->c3);
                 pSrc += 3;
                 pDst += 3;
             }
