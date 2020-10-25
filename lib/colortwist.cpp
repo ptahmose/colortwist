@@ -117,26 +117,78 @@ StatusCode colortwist::colorTwistRGB24(ImplementationType type, const void* pSrc
     return StatusCode::UnknownImplementation;
 }
 
-bool colortwist::isAvailable(ImplementationType type)
+bool colortwist::isOperationalRgb24(ImplementationType type)
 {
     switch (type)
     {
     case ImplementationType::PlainC:
         return true;
-#if COLORTWISTLIB_HASAVX
-    case ImplementationType::X64_AVX:
-    case ImplementationType::X64_AVX2:
     case ImplementationType::X64_AVX3:
-        return true;
+#if COLORTWISTLIB_HASAVX
+        return CanAvx();
+#else
+        return false;
 #endif
-#if COLORTWISTLIB_HASIPP
     case ImplementationType::IPP:
+#if COLORTWISTLIB_HASIPP
         return true;
+#else
+        return false;
 #endif
-#if COLORTWISTLIB_HASNEON
     case ImplementationType::ARM_NEON:
+        return false;
     case ImplementationType::ARM_NEON2:
+#if COLORTWISTLIB_HASNEON
+        return CanNeon();
+#else
+        return false;
+#endif
+    }
+
+    return false;
+}
+
+bool colortwist::isOperationalRgb48(ImplementationType type)
+{
+    switch (type)
+    {
+    case ImplementationType::PlainC:
         return true;
+    case ImplementationType::X64_AVX:
+#if COLORTWISTLIB_HASAVX
+        return CanAvx();
+#else
+        return false;
+#endif
+    case ImplementationType::X64_AVX2:
+#if COLORTWISTLIB_HASAVX
+        return CanAvx();
+#else
+        return false;
+#endif
+    case ImplementationType::X64_AVX3:
+#if COLORTWISTLIB_HASAVX
+        return CanAvx();
+#else
+        return false;
+#endif
+    case ImplementationType::IPP:
+#if COLORTWISTLIB_HASIPP
+        return true;
+#else
+        return false;
+#endif
+    case ImplementationType::ARM_NEON:
+#if COLORTWISTLIB_HASNEON
+        return CanNeon();
+#else
+        return false;
+#endif
+    case ImplementationType::ARM_NEON2:
+#if COLORTWISTLIB_HASNEON
+        return CanNeon();
+#else
+        return false;
 #endif
     }
 

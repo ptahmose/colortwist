@@ -45,5 +45,14 @@ namespace colortwist
 
     StatusCode colorTwistRGB48(ImplementationType type, const void* pSrc, std::uint32_t width, std::uint32_t height, int strideSrc, void* pDst, std::int32_t strideDst, const float* twistMatrix);
     StatusCode colorTwistRGB24(ImplementationType type, const void* pSrc, std::uint32_t width, std::uint32_t height, int strideSrc, void* pDst, std::int32_t strideDst, const float* twistMatrix);
-    bool isAvailable(ImplementationType type);
+
+    /// Query if the specified implementation type' is available for RGB24-bitmaps and operational.
+    /// \param type The implementation type.
+    /// \returns True if operational, false if not.
+    bool isOperationalRgb24(ImplementationType type);
+
+    /// Query if the specified implementation type' is available for RGB48-bitmaps and operational.
+    /// \param type The implementation type.
+    /// \returns True if operational, false if not.
+    bool isOperationalRgb48(ImplementationType type);
 }
