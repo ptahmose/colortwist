@@ -74,3 +74,25 @@ bool CheckWhetherCpuSupportsAVX2()
     return check_4th_gen_intel_core_features() > 0;
 }
 #endif
+
+#if COLORTWISTLIB_HASNEON
+
+#if COLORTWISTLIB_HAS_SYS_AUXV_H
+#include <sys/auxv.h>
+#endif
+
+bool CheckWhetherCpuSupportsNeon()
+{
+#if COLORTWISTLIB_HAS_SYS_AUXV_H
+    #if  defined(__aarch64__)
+        return (getauxval(AT_HWCAP) & (1L << 1)) != 0;
+    #elif defined(__arm__)
+        return (getauxval(AT_HWCAP) & (1L << 12)) != 0;
+    #endif
+#endif
+
+    // TODO: other ways how to detect Neon...?
+    return false;
+}
+
+#endif

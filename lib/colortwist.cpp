@@ -24,6 +24,21 @@ bool CanAvx()
 }
 #endif
 
+#if COLORTWISTLIB_HASNEON
+static int hasNeon = -1;
+
+bool CanNeon()
+{
+    if (hasNeon >= 0)
+    {
+        return hasNeon > 0;
+    }
+
+    hasNeon = CheckWhetherCpuSupportsNeon() ? 1 : 0;
+    return hasNeon;
+}
+#endif
+
 StatusCode colortwist::colorTwistRGB48(ImplementationType type, const void* pSrc, std::uint32_t width, std::uint32_t height, int strideSrc, void* pDst, std::int32_t strideDst, const float* twistMatrix)
 {
     switch (type)
@@ -56,13 +71,13 @@ StatusCode colortwist::colorTwistRGB48(ImplementationType type, const void* pSrc
 #endif
     case ImplementationType::ARM_NEON:
 #if COLORTWISTLIB_HASNEON
-        return colorTwistRGB48_NEON(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
+        return CanNeon() ? colorTwistRGB48_NEON(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
 #else
         return StatusCode::InvalidISA;
 #endif
     case ImplementationType::ARM_NEON2:
 #if COLORTWISTLIB_HASNEON
-        return colorTwistRGB48_NEON2(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
+        return CanNeon() ? colorTwistRGB48_NEON2(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;;
 #else
         return StatusCode::InvalidISA;
 #endif
@@ -93,7 +108,7 @@ StatusCode colortwist::colorTwistRGB24(ImplementationType type, const void* pSrc
         return StatusCode::NotAvailable;
     case ImplementationType::ARM_NEON2:
 #if COLORTWISTLIB_HASNEON
-        return colorTwistRGB24_NEON2(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
+        return CanNeon() ? colorTwistRGB24_NEON2(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
 #else
         return StatusCode::InvalidISA;
 #endif

@@ -54,6 +54,15 @@ else()
  set(COLORTWIST_HAS_NEON 0)
 endif()
 
+set(COLORTWIST_HAS_SYS_AUXV_H 0)
+if (ARMNEONFOUND)
+ CHECK_INCLUDE_FILES("sys/auxv.h" SYSAUXHFOUND)
+ if (SYSAUXHFOUND)
+  set(COLORTWIST_HAS_SYS_AUXV_H 1)
+ endif()
+endif()
+
+
 configure_file (
   "${CMAKE_CURRENT_SOURCE_DIR}/colortwist_config.h.in"
   "${CMAKE_CURRENT_BINARY_DIR}/colortwist_config.h"

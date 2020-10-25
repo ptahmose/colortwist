@@ -37,3 +37,7 @@ inline colortwist::StatusCode checkArgumentsRgb24(const void* pSrc, std::uint32_
 #if COLORTWISTLIB_HASAVX
 bool CheckWhetherCpuSupportsAVX2();
 #endif
+
+#if COLORTWISTLIB_HASNEON
+bool CheckWhetherCpuSupportsNeon();
+#endif
