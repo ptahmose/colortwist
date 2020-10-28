@@ -32,6 +32,19 @@ Here are some numbers (1MB = 1,000,000 bytes):
 | colorTwistRGB24_IPP    | 892.93              |
 | colorTwistRGB24_AVX3   | 2966.55             |
 
+[Intel Core i7-8700K @ 3.70GHz](https://ark.intel.com/content/www/us/en/ark/products/126684/intel-core-i7-8700k-processor-12m-cache-up-to-4-70-ghz.html), Intel icl 19.1.3.311, x64 : 2048x2048 RGB48 bitmap
+
+| version                | performance in MB/s |
+| ---------------------- | ------------------- |
+| colorTwistRGB48_C      | 1313.22             |
+| [colorTwistRGB48_IPP](https://software.intel.com/content/www/us/en/develop/documentation/ipp-dev-reference/top/volume-2-image-processing/image-color-conversion/color-twist.html)  | 1809.26  |
+| colorTwistRGB48_AVX    | 3354.22             |
+| colorTwistRGB48_AVX2   | 4452.38             |
+| colorTwistRGB48_AVX3   | 5207.50             |
+| colorTwistRGB24_C      | 340.01              |
+| colorTwistRGB24_IPP    | 922.14              |
+| colorTwistRGB24_AVX3   | 3180.88             |
+
 Intel Core i7-8700K @ 3.70GHz, gcc 10.2.0, x64 : 2048x2048 RGB48 bitmap
 
 | version                | performance in MB/s |
@@ -65,6 +78,19 @@ AMD Ryzen 7 4700U, msvc 19.27.29112, x64 : 2048x2048 RGB48 bitmap
 | colorTwistRGB24_C      | 297.13              |
 | colorTwistRGB24_IPP    | 920.24              |
 | colorTwistRGB24_AVX3   | 2548.42             |
+
+AMD Ryzen 7 4700U,  Intel icl 19.1.3.311, x64 : 2048x2048 RGB48 bitmap
+
+| version                | performance in MB/s |
+| ---------------------- | ------------------- |
+| colorTwistRGB48_C      | 1355.20             |
+| [colorTwistRGB48_IPP](https://software.intel.com/content/www/us/en/develop/documentation/ipp-dev-reference/top/volume-2-image-processing/image-color-conversion/color-twist.html)  | 1862.04  |
+| colorTwistRGB48_AVX    | 3881.71             |
+| colorTwistRGB48_AVX2   | 5150.99             |
+| colorTwistRGB48_AVX3   | 5736.88             |
+| colorTwistRGB24_C      | 287.26              |
+| colorTwistRGB24_IPP    | 952.50              |
+| colorTwistRGB24_AVX3   | 2508.71             |
 
 [Intel Core m3-6Y30 @ 0.9GHz](https://ark.intel.com/content/www/us/en/ark/products/88198/intel-core-m3-6y30-processor-4m-cache-up-to-2-20-ghz.html), msvc 19.27.29112, x64 : 2048x2048 RGB48 bitmap
 
