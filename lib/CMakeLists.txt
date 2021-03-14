@@ -78,8 +78,10 @@ if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "AMD64" OR ${CMAKE_SYSTEM_PROCESSOR} MATCHE
   endif()
 endif()
 
-if((${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv7l") OR (${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv6l")) 
+if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv7l") 
  set_target_properties(libcolortwist PROPERTIES COMPILE_FLAGS -mfpu=auto)
  #set_source_files_properties(colortwist_neon.cpp PROPERTIES COMPILE_FLAGS -mfpu=neon)
  #set_source_files_properties(colortwist_neon.cpp PROPERTIES COMPILE_FLAGS -march=armv7-a)
+elseif(${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv6l")
+ set_target_properties(libcolortwist PROPERTIES COMPILE_FLAGS -mfpu=auto -mfloat-abi=soft)
 endif()
