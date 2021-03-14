@@ -3,10 +3,6 @@ project(libcolortwist VERSION 0.1.0)
 
 INCLUDE(CheckIncludeFiles)
 
-#include(CTest)
-#enable_testing()
-
-#FIND_PACKAGE (IPP REQUIRED )
 set (LIBCOLORTWIST_SOURCES  colortwist.h
                             colortwist.cpp
                             colortwist_c.h
@@ -19,14 +15,6 @@ set (LIBCOLORTWIST_SOURCES  colortwist.h
                             colortwist_neon.cpp
                             utils.h
                             utils.cpp)
-
-#[[
-add_library(libcolortwist 
-                colortwist.h
-                colortwist.cpp
-                colortwist_ipp.cpp
-                colortwist_avx.cpp)
-]]                
 
 add_library(libcolortwist 
                 ${LIBCOLORTWIST_SOURCES})
@@ -79,7 +67,7 @@ target_include_directories (libcolortwist PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 # this is necessary so that we can find "colortwist_config.h" which we created above
 target_include_directories(libcolortwist PRIVATE  ${CMAKE_CURRENT_BINARY_DIR})  
 
-message(STATUS ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR})
+message(STATUS "ARCHITECTURE: " ${CMAKE_SYSTEM_PROCESSOR})
 
 if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "AMD64" OR ${CMAKE_SYSTEM_PROCESSOR} MATCHES "x86_64") 
   if (MSVC)
@@ -90,7 +78,7 @@ if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "AMD64" OR ${CMAKE_SYSTEM_PROCESSOR} MATCHE
   endif()
 endif()
 
-if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv7l") 
+if((${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv7l") OR (${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv6l")) 
  set_target_properties(libcolortwist PROPERTIES COMPILE_FLAGS -mfpu=neon)
  #set_source_files_properties(colortwist_neon.cpp PROPERTIES COMPILE_FLAGS -mfpu=neon)
  #set_source_files_properties(colortwist_neon.cpp PROPERTIES COMPILE_FLAGS -march=armv7-a)
