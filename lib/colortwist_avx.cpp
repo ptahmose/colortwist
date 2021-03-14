@@ -90,7 +90,7 @@ StatusCode colorTwistRGB48_AVX2(const void* pSrc, uint32_t width, uint32_t heigh
             __m256 src1Float = _mm256_cvtepi32_ps(src1Int32);                        // convert to float
 
             __m128i src1r3g3 = _mm_bsrli_si128(src1, 12);                            // shift so that we have R3 G3 00 00 | 00 00 00 00
-            __m128i src2 = _mm_loadu_si64(p + 8);                                    // load 4 words -> B3 R4 G4 B4
+            __m128i src2 = _mm_loadl_epi64(p + 8);                                   // load 4 words -> B3 R4 G4 B4
             __m128i src2Shifted = _mm_bslli_si128(src2, 4);                          // shift so that we have 00 00 B3 R4 | G4 B4 xx xx
             __m128i src2Ored = _mm_or_si128(src1r3g3, src2Shifted);                  // or to get R3 G3 B3 R4 | G4 B4 xx xx
             __m128i src2Shuffled = _mm_shuffle_epi8(src2Ored, shuffleConst6);        // shuffle to R3 G3 B3 xx | R4 G4 B4 xx
@@ -386,7 +386,7 @@ static void colorTwistRGB24_AVX3_Generic(const void* pSrc, size_t widthOver8, si
         for (size_t x = 0; x < widthOver8; ++x)
         {
             const __m128i src1src2_128 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(p));     // load 16 bytes -> R1 G1 B1 R2 | G2 B2 R3 G3 | B3 R4 G4 B4 | R5 G5 B5 R6
-            const __m128i src3_128 = _mm_loadu_si64(p + 16);                                       // load 8 bytes  -> G6 B6 R7 G7 | B7 R8 G8 B8
+            const __m128i src3_128 = _mm_loadl_epi64(p + 16);                                      // load 8 bytes  -> G6 B6 R7 G7 | B7 R8 G8 B8
             const __m128i src1src2_128Shuffled = _mm_shuffle_epi8(src1src2_128, shuffleConst1);    // shuffle to       R1 R2 R3 R4 | R5 R6 G1 G2 | G3 G4 G5 B1 | B2 B3 B4 B5
             const __m128i src3_128Shuffled = _mm_shuffle_epi8(src3_128, shuffleConst2);            // shuffle to       R7 R8 G6 G7 | G8 B6 B7 B8
 
