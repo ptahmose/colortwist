@@ -37,6 +37,8 @@ endif()
 # check whether we can use ARM-Neon-instructions -> we check for the presence of the file
 CHECK_INCLUDE_FILES(arm_neon.h ARMNEONFOUND)
 if (ARMNEONFOUND)
+ try_compile(RESULT_VAR ${CMAKE_CURRENT_BINARY_DIR}  ${CMAKE_CURRENT_SOURCE_DIR}/../cmakemodules/checks/cpu_neon.cpp OUTPUT_VARIABLE TRY_OUT)
+ message(STATUS "try-compile: " ${RESULT_VAR} - ${TRY_OUT})
  set(COLORTWIST_HAS_NEON 1)
 else()
  set(COLORTWIST_HAS_NEON 0)
@@ -77,6 +79,7 @@ if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "AMD64" OR ${CMAKE_SYSTEM_PROCESSOR} MATCHE
    set_source_files_properties(colortwist_avx.cpp PROPERTIES COMPILE_FLAGS "-mfma -mavx2")
   endif()
 endif()
+
 
 if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv7l") 
  set_target_properties(libcolortwist PROPERTIES COMPILE_FLAGS -mfpu=auto)
