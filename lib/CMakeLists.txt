@@ -37,14 +37,14 @@ endif()
 # check whether we can use ARM-Neon-instructions -> we check for the presence of the file
 CHECK_INCLUDE_FILES(arm_neon.h ARMNEONFOUND)
 if (ARMNEONFOUND)
- try_compile(
-   __NEON_COMPILEWORKS
+ try_run(
+   __RESULT_NEON_RUNTEST __RESULT_NEON_COMPILETEST
    ${CMAKE_CURRENT_BINARY_DIR}  
    ${CMAKE_CURRENT_SOURCE_DIR}/../cmakemodules/checks/cpu_neon.cpp 
    COMPILE_DEFINITIONS -mfpu=neon
    OUTPUT_VARIABLE OUTPUT_NEONTESTCOMPILE)
-   #message(STATUS "try-compile: " ${RESULT_VAR} - ${TRY_OUT})
- if (__NEON_COMPILEWORKS)
+   message(STATUS "try_run: " ${__RESULT_NEON_RUNTEST} - ${__RESULT_NEON_COMPILETEST})
+ if (__RESULT_NEON_COMPILETEST AND __RESULT_NEON_RUNTEST EQUAL 0)
   set(COLORTWIST_HAS_NEON 1)
  else()
   message(STATUS "Test for Neon-support failed, Neon-support is disabled.")
