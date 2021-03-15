@@ -43,8 +43,9 @@ if (ARMNEONFOUND)
    ${CMAKE_CURRENT_SOURCE_DIR}/../cmakemodules/checks/cpu_neon.cpp 
    COMPILE_DEFINITIONS -mfpu=neon
    OUTPUT_VARIABLE OUTPUT_NEONTESTCOMPILE)
-   message(STATUS "try_run: " ${__RESULT_NEON_RUNTEST} - ${__RESULT_NEON_COMPILETEST})
+   #message(STATUS "try_run: " ${__RESULT_NEON_RUNTEST} - ${__RESULT_NEON_COMPILETEST})
  if (__RESULT_NEON_COMPILETEST AND __RESULT_NEON_RUNTEST EQUAL 0)
+  message(STATUS "Test for Neon-support succeeded, Neon-support is enabled.")
   set(COLORTWIST_HAS_NEON 1)
  else()
   message(STATUS "Test for Neon-support failed, Neon-support is disabled.")
