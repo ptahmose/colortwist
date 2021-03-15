@@ -37,7 +37,20 @@ endif()
 # check whether we can use ARM-Neon-instructions -> we check for the presence of the file
 CHECK_INCLUDE_FILES(arm_neon.h ARMNEONFOUND)
 if (ARMNEONFOUND)
- set(COLORTWIST_HAS_NEON 1)
+ try_run(
+   __RESULT_NEON_RUNTEST __RESULT_NEON_COMPILETEST
+   ${CMAKE_CURRENT_BINARY_DIR}  
+   ${CMAKE_CURRENT_SOURCE_DIR}/../cmakemodules/checks/cpu_neon.cpp 
+   COMPILE_DEFINITIONS -mfpu=neon
+   OUTPUT_VARIABLE OUTPUT_NEONTESTCOMPILE)
+   #message(STATUS "try_run: " ${__RESULT_NEON_RUNTEST} - ${__RESULT_NEON_COMPILETEST})
+ if (__RESULT_NEON_COMPILETEST AND __RESULT_NEON_RUNTEST EQUAL 0)
+  message(STATUS "Test for Neon-support succeeded, Neon-support is enabled.")
+  set(COLORTWIST_HAS_NEON 1)
+ else()
+  message(STATUS "Test for Neon-support failed, Neon-support is disabled.")
+  set(COLORTWIST_HAS_NEON 0)
+ endif()
 else()
  set(COLORTWIST_HAS_NEON 0)
 endif()
@@ -78,12 +91,7 @@ if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "AMD64" OR ${CMAKE_SYSTEM_PROCESSOR} MATCHE
   endif()
 endif()
 
-if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv7l") 
- set_target_properties(libcolortwist PROPERTIES COMPILE_FLAGS -mfpu=auto)
- #set_source_files_properties(colortwist_neon.cpp PROPERTIES COMPILE_FLAGS -mfpu=neon)
- #set_source_files_properties(colortwist_neon.cpp PROPERTIES COMPILE_FLAGS -march=armv7-a)
-elseif(${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv6l")
- set_target_properties(libcolortwist PROPERTIES COMPILE_FLAGS -mfpu=auto)
- set_target_properties(libcolortwist PROPERTIES COMPILE_FLAGS -mhard-float)
- set_target_properties(libcolortwist PROPERTIES COMPILE_FLAGS -mfloat-abi=hard)
+if (COLORTWIST_HAS_NEON)
+ set_target_properties(libcolortwist PROPERTIES COMPILE_FLAGS -mfpu=neon )
 endif()
+
