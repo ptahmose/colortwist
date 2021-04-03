@@ -48,8 +48,21 @@ if (ARMNEONFOUND)
   message(STATUS "Test for Neon-support succeeded, Neon-support is enabled.")
   set(COLORTWIST_HAS_NEON 1)
  else()
-  message(STATUS "Test for Neon-support failed, Neon-support is disabled.")
-  set(COLORTWIST_HAS_NEON 0)
+   # try one more time, this time without any compile-definitions tweaks (with aarch64 it seems we must not set anything)  
+   try_run(
+     __RESULT_NEON_RUNTEST __RESULT_NEON_COMPILETEST
+     ${CMAKE_CURRENT_BINARY_DIR}  
+     ${CMAKE_CURRENT_SOURCE_DIR}/../cmakemodules/checks/cpu_neon.cpp 
+     OUTPUT_VARIABLE OUTPUT_NEONTESTCOMPILE)
+
+     if (__RESULT_NEON_COMPILETEST AND __RESULT_NEON_RUNTEST EQUAL 0)
+      message(STATUS "Test for Neon-support succeeded, Neon-support is enabled.")
+      set(COLORTWIST_HAS_NEON 1)
+     else()
+      message(STATUS "Test for Neon-support failed, Neon-support is disabled.")
+      set(COLORTWIST_HAS_NEON 0)
+    endif()
+
  endif()
 else()
  set(COLORTWIST_HAS_NEON 0)
@@ -91,7 +104,11 @@ if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "AMD64" OR ${CMAKE_SYSTEM_PROCESSOR} MATCHE
   endif()
 endif()
 
+# With ARM the situation seems to be: with aarch64 neon-support is guaranteed, and the compiler does not 
+#  support the "fpu"-flag in this case
 if (COLORTWIST_HAS_NEON)
- set_target_properties(libcolortwist PROPERTIES COMPILE_FLAGS -mfpu=neon )
+ if (NOT ${CMAKE_SYSTEM_PROCESSOR} MATCHES "aarch64")
+  set_target_properties(libcolortwist PROPERTIES COMPILE_FLAGS -mfpu=neon )
+ endif()
 endif()
 
