@@ -77,7 +77,11 @@ colortwist::StatusCode colorTwistRGB48_NEON(const void* pSrc, uint32_t width, ui
     float32x4_t c0{ twistMatrix[0],twistMatrix[4],twistMatrix[8],0 };
     float32x4_t c1{ twistMatrix[1],twistMatrix[5],twistMatrix[9],0 };
     float32x4_t c2{ twistMatrix[2],twistMatrix[6],twistMatrix[10],0 };
+#if COLORTWISTLIB_CANUSENEONINTRINSIC_VCVTNQ_U32_F32
+    float32x4_t c3{ twistMatrix[3],twistMatrix[7],twistMatrix[11],0 };
+#else
     float32x4_t c3{ twistMatrix[3] + 0.5f,twistMatrix[7] + 0.5f,twistMatrix[11] + 0.5f,0 };
+#endif
 
     for (size_t y = 0; y < height - 1; ++y)
     {
@@ -199,10 +203,10 @@ inline static void colorTwistRGB48_NEON2_MultipleOfFourAndRemainder(const void* 
     class RemainingPixelsHandler
     {
     private:
-           float32x4_t c0;
-           float32x4_t c1;
-           float32x4_t c2;
-           float32x4_t c3;
+        float32x4_t c0;
+        float32x4_t c1;
+        float32x4_t c2;
+        float32x4_t c3;
     public:
         const bool isempty = false;
         RemainingPixelsHandler() = delete;
@@ -211,7 +215,11 @@ inline static void colorTwistRGB48_NEON2_MultipleOfFourAndRemainder(const void* 
             c0{ twistMatrix[0],twistMatrix[4],twistMatrix[8],0 },
             c1{ twistMatrix[1],twistMatrix[5],twistMatrix[9],0 },
             c2{ twistMatrix[2],twistMatrix[6],twistMatrix[10],0 },
+#if COLORTWISTLIB_CANUSENEONINTRINSIC_VCVTNQ_U32_F32
+            c3{ twistMatrix[3],twistMatrix[7],twistMatrix[11],0 }
+#else
             c3{ twistMatrix[3] + 0.5f,twistMatrix[7] + 0.5f,twistMatrix[11] + 0.5f,0 }    // we add 0.5 here for rounding - because the instrinsic vcvtnq_u32_f32 is missing,
+#endif
         {}
 
         inline void DoRemainingPixels(const uint16_t* pSrc, uint16_t* pDst, size_t remainingPixels)
@@ -258,8 +266,8 @@ template <typename tUnevenWidthHandler>
 static void colorTwistRGB24_NEON2_Generic(const void* pSrc, size_t widthOver8, size_t widthRemainder, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
 #if COLORTWISTLIB_CANUSENEONINTRINSIC_VCVTNQ_U32_F32
-    const float32x4_t t14 = vdupq_n_f32(twistMatrix[3]);  
-    const float32x4_t t24 = vdupq_n_f32(twistMatrix[7]);  
+    const float32x4_t t14 = vdupq_n_f32(twistMatrix[3]);
+    const float32x4_t t24 = vdupq_n_f32(twistMatrix[7]);
     const float32x4_t t34 = vdupq_n_f32(twistMatrix[11]);
 #else
     const float32x4_t t14 = vdupq_n_f32(twistMatrix[3] + .5f);    // we add 0.5 here for rounding - because the instrinsic vcvtnq_u32_f32 is missing,
