@@ -73,6 +73,7 @@ endif()
 set(COLORTWISTLIB_CANUSENEONINTRINSIC_VCVTNQ_U32_F32 0)
 if (COLORTWIST_HAS_NEON)
    try_run(
+     __RESULT_NEON_RUNTEST __RESULT_NEON_COMPILETEST
      ${CMAKE_CURRENT_BINARY_DIR}  
      ${CMAKE_CURRENT_SOURCE_DIR}/../cmakemodules/checks/canuse_vcvtnq_u32_f32_intrinsic.cpp 
     
