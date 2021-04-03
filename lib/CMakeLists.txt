@@ -75,7 +75,7 @@ if (COLORTWIST_HAS_NEON)
    try_run(
      ${CMAKE_CURRENT_BINARY_DIR}  
      ${CMAKE_CURRENT_SOURCE_DIR}/../cmakemodules/checks/canuse_vcvtnq_u32_f32_intrinsic.cpp 
-     COMPILE_DEFINITIONS ${COMPILEDEFINITIONS_FOR_NEON}
+    
      COMPILE_OUTPUT_VARIABLE RESULT_NEONVCVTNQ_COMPILETEST
      RUN_OUTPUT_VARIABLE RESULT_NEONVCVTNQ_RUNTEST)
      message(STATUS "vcvtnq_u32_f32-try_run: " ${RESULT_NEONVCVTNQ_COMPILETEST} - ${RESULT_NEONVCVTNQ_RUNTEST} )
@@ -85,6 +85,8 @@ if (COLORTWIST_HAS_NEON)
      else()
        message(STATUS "test whether intrinsic 'vcvtnq_u32_f32' works -> FAILURE")
      endif()
+
+     # COMPILE_DEFINITIONS ${COMPILEDEFINITIONS_FOR_NEON}
 endif()
 
 
