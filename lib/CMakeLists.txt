@@ -47,6 +47,7 @@ if (ARMNEONFOUND)
  if (__RESULT_NEON_COMPILETEST AND __RESULT_NEON_RUNTEST EQUAL 0)
   message(STATUS "Test for Neon-support succeeded, Neon-support is enabled.")
   set(COLORTWIST_HAS_NEON 1)
+  set(COMPILEDEFINITIONS_FOR_NEON "-mfpu=neon")
  else()
    # try one more time, this time without any compile-definitions tweaks (with aarch64 it seems we must not set anything)  
    try_run(
@@ -58,6 +59,7 @@ if (ARMNEONFOUND)
      if (__RESULT_NEON_COMPILETEST AND __RESULT_NEON_RUNTEST EQUAL 0)
       message(STATUS "Test for Neon-support succeeded, Neon-support is enabled.")
       set(COLORTWIST_HAS_NEON 1)
+      set(COMPILEDEFINITIONS_FOR_NEON "")
      else()
       message(STATUS "Test for Neon-support failed, Neon-support is disabled.")
       set(COLORTWIST_HAS_NEON 0)
@@ -67,6 +69,21 @@ if (ARMNEONFOUND)
 else()
  set(COLORTWIST_HAS_NEON 0)
 endif()
+
+set(COLORTWISTLIB_CANUSENEONINTRINSIC_VCVTNQ_U32_F32 0)
+if (COLORTWIST_HAS_NEON)
+   try_run(
+     __RESULT_NEONVCVTNQ_RUNTEST __RESULT_NEONVCVTNQ_COMPILETEST
+     ${CMAKE_CURRENT_BINARY_DIR}  
+     ${CMAKE_CURRENT_SOURCE_DIR}/../cmakemodules/checks/canuse_vcvtnq_u32_f32_intrinsic.cpp 
+     COMPILE_DEFINITIONS ${COMPILEDEFINITIONS_FOR_NEON}
+     OUTPUT_VARIABLE OUTPUT_NEONTESTCOMPILE)
+     message(STATUS "vcvtnq_u32_f32-try_run: " ${__RESULT_NEONVCVTNQ_RUNTEST} - ${__RESULT_NEONVCVTNQ_COMPILETEST})
+     if (__RESULT_NEONVCVTNQ_COMPILETEST AND __RESULT_NEONVCVTNQ_RUNTEST EQUAL 0)
+       set(COLORTWISTLIB_CANUSENEONINTRINSIC_VCVTNQ_U32_F32 0)
+     endif()
+endif()
+
 
 set(COLORTWIST_HAS_SYS_AUXV_H 0)
 if (ARMNEONFOUND)
@@ -107,8 +124,9 @@ endif()
 # With ARM the situation seems to be: with aarch64 neon-support is guaranteed, and the compiler does not 
 #  support the "fpu"-flag in this case
 if (COLORTWIST_HAS_NEON)
- if (NOT ${CMAKE_SYSTEM_PROCESSOR} MATCHES "aarch64")
-  set_target_properties(libcolortwist PROPERTIES COMPILE_FLAGS -mfpu=neon )
+ ##if (NOT ${CMAKE_SYSTEM_PROCESSOR} MATCHES "aarch64")
+ if (COMPILEDEFINITIONS_FOR_NEON)
+  set_target_properties(libcolortwist PROPERTIES COMPILE_FLAGS ${COMPILEDEFINITIONS_FOR_NEON} )
  endif()
 endif()
 

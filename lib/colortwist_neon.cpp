@@ -29,9 +29,11 @@ static inline void DoOnePixelRgb48ReadOneByteBehind(const uint16_t* p, uint16_t*
     const float32x4_t m3 = vmlaq_f32(m2, b, c2);
 
     // conversion to int with rounding -> the intrinsic is missing, was added here -> https://patchwork.ozlabs.org/project/gcc/patch/1601891882-13015-1-git-send-email-christophe.lyon@linaro.org/
-    //uint32x4_t rInt = vcvtnq_u32_f32(m3);
-    const uint32x4_t rInt = vcvtq_u32_f32(m3);
-    const uint16x4_t rShort = vqmovn_u32(rInt);
+#if COLORTWISTLIB_CANUSENEONINTRINSIC_VCVTNQ_U32_F32
+    const uint16x4_t rShort = vqmovn_u32(vcvtnq_u32_f32(m3));
+#else
+    const uint16x4_t rShort = vqmovn_u32(vcvtq_u32_f32(m3));
+#endif
 
     vst1_lane_u32(reinterpret_cast<uint32_t*>(d), vreinterpret_u32_u16(rShort), 0);
     vst1_lane_u16(2 + d, rShort, 2);
@@ -53,9 +55,11 @@ static inline void DoOnePixelRgb48ReadExact(const uint16_t* p, uint16_t* d, cons
     const float32x4_t m3 = vmlaq_f32(m2, b, c2);
 
     // conversion to int with rounding -> the intrinsic is missing, was added here -> https://patchwork.ozlabs.org/project/gcc/patch/1601891882-13015-1-git-send-email-christophe.lyon@linaro.org/
-    //uint32x4_t rInt = vcvtnq_u32_f32(m3);
-    const uint32x4_t rInt = vcvtq_u32_f32(m3);
-    const uint16x4_t rShort = vqmovn_u32(rInt);
+#if COLORTWISTLIB_CANUSENEONINTRINSIC_VCVTNQ_U32_F32
+    const uint16x4_t rShort = vqmovn_u32(vcvtnq_u32_f32(m3));
+#else
+    const uint16x4_t rShort = vqmovn_u32(vcvtq_u32_f32(m3));
+#endif
 
     vst1_lane_u32(reinterpret_cast<uint32_t*>(d), vreinterpret_u32_u16(rShort), 0);
     vst1_lane_u16(2 + d, rShort, 2);
@@ -111,15 +115,27 @@ static void colorTwistRGB48_NEON2_Generic(const void* pSrc, size_t widthOver4, s
     const float32x4_t t11 = vld1q_dup_f32(twistMatrix + 0);
     const float32x4_t t12 = vld1q_dup_f32(twistMatrix + 1);
     const float32x4_t t13 = vld1q_dup_f32(twistMatrix + 2);
+#if COLORTWISTLIB_CANUSENEONINTRINSIC_VCVTNQ_U32_F32
+    const float32x4_t t14 = vdupq_n_f32(twistMatrix[3]);
+#else
     const float32x4_t t14 = vdupq_n_f32(twistMatrix[3] + .5f);    // we add 0.5 here for rounding - because the instrinsic vcvtnq_u32_f32 is missing,
+#endif
     const float32x4_t t21 = vld1q_dup_f32(twistMatrix + 4);       //  -> https://patchwork.ozlabs.org/project/gcc/patch/1601891882-13015-1-git-send-email-christophe.lyon@linaro.org/
     const float32x4_t t22 = vld1q_dup_f32(twistMatrix + 5);
     const float32x4_t t23 = vld1q_dup_f32(twistMatrix + 6);
+#if COLORTWISTLIB_CANUSENEONINTRINSIC_VCVTNQ_U32_F32
+    const float32x4_t t24 = vdupq_n_f32(twistMatrix[7]);
+#else
     const float32x4_t t24 = vdupq_n_f32(twistMatrix[7] + .5f);
+#endif
     const float32x4_t t31 = vld1q_dup_f32(twistMatrix + 8);
     const float32x4_t t32 = vld1q_dup_f32(twistMatrix + 9);
     const float32x4_t t33 = vld1q_dup_f32(twistMatrix + 10);
+#if COLORTWISTLIB_CANUSENEONINTRINSIC_VCVTNQ_U32_F32
+    const float32x4_t t34 = vdupq_n_f32(twistMatrix[11]);
+#else
     const float32x4_t t34 = vdupq_n_f32(twistMatrix[11] + .5f);
+#endif
 
     // Note: this way is a bit faster than going with "vmlaq_lane_f32" (as in the RGB24-implementation), maybe
     //        because the register pressure is higher with the RGB24-version
