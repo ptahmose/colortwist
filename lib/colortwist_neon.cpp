@@ -161,9 +161,15 @@ static void colorTwistRGB48_NEON2_Generic(const void* pSrc, size_t widthOver4, s
             const float32x4_t resultG = vmlaq_f32(vmlaq_f32(vmlaq_f32(t24, dataFloatR, t21), dataFloatG, t22), dataFloatB, t23);
             const float32x4_t resultB = vmlaq_f32(vmlaq_f32(vmlaq_f32(t34, dataFloatR, t31), dataFloatG, t32), dataFloatB, t33);
 
+#if COLORTWISTLIB_CANUSENEONINTRINSIC_VCVTNQ_U32_F32
+            const uint16x4_t rShortPixelR = vqmovn_u32(vcvtnq_u32_f32(resultR));
+            const uint16x4_t rShortPixelG = vqmovn_u32(vcvtnq_u32_f32(resultG));
+            const uint16x4_t rShortPixelB = vqmovn_u32(vcvtnq_u32_f32(resultB));
+#else
             const uint16x4_t rShortPixelR = vqmovn_u32(vcvtq_u32_f32(resultR));
             const uint16x4_t rShortPixelG = vqmovn_u32(vcvtq_u32_f32(resultG));
             const uint16x4_t rShortPixelB = vqmovn_u32(vcvtq_u32_f32(resultB));
+#endif
 
             // and this conveniently will shuffle R, G and B into the correct order, i. e.
             // R1 G1 B1 R2 G2 B2 R3 G3 B3 R4 G4 B4
@@ -251,9 +257,15 @@ StatusCode colorTwistRGB48_NEON2(const void* pSrc, uint32_t width, uint32_t heig
 template <typename tUnevenWidthHandler>
 static void colorTwistRGB24_NEON2_Generic(const void* pSrc, size_t widthOver8, size_t widthRemainder, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
+#if COLORTWISTLIB_CANUSENEONINTRINSIC_VCVTNQ_U32_F32
+    const float32x4_t t14 = vdupq_n_f32(twistMatrix[3]);  
+    const float32x4_t t24 = vdupq_n_f32(twistMatrix[7]);  
+    const float32x4_t t34 = vdupq_n_f32(twistMatrix[11]);
+#else
     const float32x4_t t14 = vdupq_n_f32(twistMatrix[3] + .5f);    // we add 0.5 here for rounding - because the instrinsic vcvtnq_u32_f32 is missing,
     const float32x4_t t24 = vdupq_n_f32(twistMatrix[7] + .5f);    //  -> https://patchwork.ozlabs.org/project/gcc/patch/1601891882-13015-1-git-send-email-christophe.lyon@linaro.org/
     const float32x4_t t34 = vdupq_n_f32(twistMatrix[11] + .5f);
+#endif
 
     float32x2_t c0 = vld1_f32(twistMatrix + 0);
     float32x2_t c1{ twistMatrix[2],twistMatrix[4] };
@@ -291,9 +303,15 @@ static void colorTwistRGB24_NEON2_Generic(const void* pSrc, size_t widthOver8, s
             const float32x4_t resultG2 = vmlaq_lane_f32(vmlaq_lane_f32(vmlaq_lane_f32(t24, dataFloatR2, c1, 1), dataFloatG2, c2, 0), dataFloatB2, c2, 1);
             const float32x4_t resultB2 = vmlaq_lane_f32(vmlaq_lane_f32(vmlaq_lane_f32(t34, dataFloatR2, c3, 0), dataFloatG2, c3, 1), dataFloatB2, c4, 0);
 
+#if COLORTWISTLIB_CANUSENEONINTRINSIC_VCVTNQ_U32_F32
+            const uint16x8_t rShortPixelR = vcombine_u16(vqmovn_u32(vcvtnq_u32_f32(resultR1)), vqmovn_u32(vcvtnq_u32_f32(resultR2)));
+            const uint16x8_t rShortPixelG = vcombine_u16(vqmovn_u32(vcvtnq_u32_f32(resultG1)), vqmovn_u32(vcvtnq_u32_f32(resultG2)));
+            const uint16x8_t rShortPixelB = vcombine_u16(vqmovn_u32(vcvtnq_u32_f32(resultB1)), vqmovn_u32(vcvtnq_u32_f32(resultB2)));
+#else
             const uint16x8_t rShortPixelR = vcombine_u16(vqmovn_u32(vcvtq_u32_f32(resultR1)), vqmovn_u32(vcvtq_u32_f32(resultR2)));
             const uint16x8_t rShortPixelG = vcombine_u16(vqmovn_u32(vcvtq_u32_f32(resultG1)), vqmovn_u32(vcvtq_u32_f32(resultG2)));
             const uint16x8_t rShortPixelB = vcombine_u16(vqmovn_u32(vcvtq_u32_f32(resultB1)), vqmovn_u32(vcvtq_u32_f32(resultB2)));
+#endif
 
             const uint8x8_t rBytePixelR = vqmovn_u16(rShortPixelR);
             const uint8x8_t rBytePixelG = vqmovn_u16(rShortPixelG);
