@@ -70,24 +70,26 @@ else()
  set(COLORTWIST_HAS_NEON 0)
 endif()
 
+# There seems to be a problem that the instrinsic "vcvtnq_u32_f32" was forgotten in early versions of GCC
+# -> https://patchwork.ozlabs.org/project/gcc/patch/1601891882-13015-1-git-send-email-christophe.lyon@linaro.org/
+# So, what we do here is to check whether this intrinsic is available. We have a fallback implementation if it is
+# not available in place.
 set(COLORTWISTLIB_CANUSENEONINTRINSIC_VCVTNQ_U32_F32 0)
 if (COLORTWIST_HAS_NEON)
    try_run(
-     __RESULT_NEON_RUNTEST __RESULT_NEON_COMPILETEST
+     __RESULT_NEON_VCVTNQ_U32_F32RUNTEST __RESULT_NEON_VCVTNQ_U32_F32COMPILETEST
      ${CMAKE_CURRENT_BINARY_DIR}  
      ${CMAKE_CURRENT_SOURCE_DIR}/../cmakemodules/checks/canuse_vcvtnq_u32_f32_intrinsic.cpp 
-    
+     COMPILE_DEFINITIONS "${COMPILEDEFINITIONS_FOR_NEON}" 
      COMPILE_OUTPUT_VARIABLE RESULT_NEONVCVTNQ_COMPILETEST
      RUN_OUTPUT_VARIABLE RESULT_NEONVCVTNQ_RUNTEST)
      message(STATUS "vcvtnq_u32_f32-try_run: " ${RESULT_NEONVCVTNQ_COMPILETEST} - ${RESULT_NEONVCVTNQ_RUNTEST} )
-     if (RESULT_NEONVCVTNQ_COMPILETEST AND RESULT_NEONVCVTNQ_RUNTEST EQUAL 0)
-       message(STATUS "test whether intrinsic 'vcvtnq_u32_f32' works -> SUCCESS")
+     if (__RESULT_NEON_VCVTNQ_U32_F32COMPILETEST AND __RESULT_NEON_VCVTNQ_U32_F32RUNTEST EQUAL 0)
+       message(STATUS "test whether intrinsic 'vcvtnq_u32_f32' is available -> YES")
        set(COLORTWISTLIB_CANUSENEONINTRINSIC_VCVTNQ_U32_F32 1)
      else()
-       message(STATUS "test whether intrinsic 'vcvtnq_u32_f32' works -> FAILURE")
+       message(STATUS "test whether intrinsic 'vcvtnq_u32_f32' is available -> NO")
      endif()
-
-     # COMPILE_DEFINITIONS ${COMPILEDEFINITIONS_FOR_NEON}
 endif()
 
 

@@ -18,12 +18,14 @@ int test()
   uint32x4_t r = vcvtnq_u32_f32(value);
   uint32_t results[4];
   vst1q_u32(results, r);
-  //if (r.val[0] == 11 && r.val[1] == 2 && r.val[2] == 5 && r.val[3] == 1)
+
   if (results[0] == 11 && results[1] == 2 && results[2] == 5 && results[3] == 1)
   {
+    // if we have the expected result, then return "0"
     return 0;
   }
 
+  // otherwise - minus 1
   return -1;
 }
 #else
@@ -32,6 +34,7 @@ int test()
 
 int main()
 {
-  printf("%d\n", test());
-  return 0;
+  int retVal = test();
+  printf("canuse_vcvtnq_u32_f32_intrinsic: retVal=%d\n", retVal);
+  return retVal;
 }
