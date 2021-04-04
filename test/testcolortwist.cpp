@@ -12,7 +12,6 @@ static void TestBgr48();
 static void TestBgr24();
 static void CompareUint16(const char* functionName, const uint16_t* ptr1, const uint16_t* ptr2, size_t length, uint8_t maxDiff);
 static void CompareUint8(const char* functionName, const uint8_t* ptr1, const uint8_t* ptr2, size_t length, uint8_t maxDiff);
-//static void Test();
 
 int main(int argc, char** argv)
 {
