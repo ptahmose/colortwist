@@ -3,6 +3,7 @@
 #include <chrono>
 #include <cstring>
 #include <colortwist.h>
+#include <loHiBytePackUnpack.h>
 #include <random>
 
 using namespace std;
@@ -10,14 +11,15 @@ using namespace colortwist;
 
 static void TestBgr48();
 static void TestBgr24();
+static void TestHiLoBytePackUnpack();
 static void CompareUint16(const char* functionName, const uint16_t* ptr1, const uint16_t* ptr2, size_t length, uint8_t maxDiff);
 static void CompareUint8(const char* functionName, const uint8_t* ptr1, const uint8_t* ptr2, size_t length, uint8_t maxDiff);
 
 int main(int argc, char** argv)
 {
-    //Test();
-    TestBgr24();
-    TestBgr48();
+    TestHiLoBytePackUnpack();
+    /*TestBgr24();
+    TestBgr48();*/
     return 0;
 }
 
@@ -285,4 +287,60 @@ void CompareUint8(const char* functionName, const uint8_t* ptr1, const uint8_t* 
     }
 
     cout << functionName << " -> " << ((isOk) ? "OK" : "FAILURE") << endl;
+}
+
+static void TestHiLoBytePackUnpack()
+{
+    const int REPEATS = 1;// 100;
+    size_t bitmapSize = 1024 * 1024 * 4;
+    std::unique_ptr<uint16_t, void (*)(uint16_t*)> upSrc((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
+    std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstC((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
+    std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDst2((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
+    FillWithRandom(upSrc.get(), bitmapSize);
+
+    auto start = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < REPEATS; ++i)
+    {
+        LoHiBytePackUnpack::LoHiBytePack_C(upSrc.get(), upDstC.get(), bitmapSize);
+    }
+
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed_seconds = end - start;
+    cout << "LoHiBytePack_C" << " -> " << elapsed_seconds.count() << "s, " << (REPEATS * bitmapSize / elapsed_seconds.count()) / 1e6 << "MB/s" << endl;
+
+    memset(upDst2.get(),0, bitmapSize);
+    start = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < REPEATS; ++i)
+    {
+        LoHiBytePackUnpack::LoHiBytePack_SSE(upSrc.get(), upDst2.get(), bitmapSize);
+    }
+
+    end = std::chrono::high_resolution_clock::now();
+    elapsed_seconds = end - start;
+    int comp = memcmp(upDstC.get(), upDst2.get(), bitmapSize);
+    cout << "LoHiBytePack_SSE" << (comp == 0 ? " (OK)" : " (FAILURE)") << " -> " << elapsed_seconds.count() << "s, " << (REPEATS * bitmapSize / elapsed_seconds.count()) / 1e6 << "MB/s" << endl;
+
+    memset(upDst2.get(), 0, bitmapSize);
+    start = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < REPEATS; ++i)
+    {
+        LoHiBytePackUnpack::LoHiBytePack_AVX(upSrc.get(), upDst2.get(), bitmapSize);
+    }
+
+    end = std::chrono::high_resolution_clock::now();
+    elapsed_seconds = end - start;
+    comp = memcmp(upDstC.get(), upDst2.get(), bitmapSize);
+    cout << "LoHiBytePack_AVX" << (comp == 0 ? " (OK)" : " (FAILURE)") << " -> " << elapsed_seconds.count() << "s, " << (REPEATS * bitmapSize / elapsed_seconds.count()) / 1e6 << "MB/s" << endl;
+
+    memset(upDst2.get(), 0, bitmapSize);
+    start = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < REPEATS; ++i)
+    {
+        LoHiBytePackUnpack::LoHiBytePack_Neon(upSrc.get(), upDst2.get(), bitmapSize);
+    }
+
+    end = std::chrono::high_resolution_clock::now();
+    elapsed_seconds = end - start;
+    comp = memcmp(upDstC.get(), upDst2.get(), bitmapSize);
+    cout << "LoHiBytePack_Neon" << (comp == 0 ? " (OK)" : " (FAILURE)") << " -> " << elapsed_seconds.count() << "s, " << (REPEATS * bitmapSize / elapsed_seconds.count()) / 1e6 << "MB/s" << endl;
 }

@@ -14,7 +14,11 @@ set (LIBCOLORTWIST_SOURCES  colortwist.h
                             colortwist_neon.h
                             colortwist_neon.cpp
                             utils.h
-                            utils.cpp)
+                            utils.cpp
+                            loHiBytePackUnpack.h
+                            loHiBytePackUnpack.cpp
+                            loHiBytePackUnpack_avx.cpp
+                            loHiBytePackUnpack_neon.cpp)
 
 add_library(libcolortwist 
                 ${LIBCOLORTWIST_SOURCES})
@@ -29,10 +33,20 @@ endif()
 # check whether we can use AVX2-instructions -> we check for the presence of the file
 CHECK_INCLUDE_FILES(immintrin.h IMMINTRINFOUND)
 if (IMMINTRINFOUND)
- set(COLORTWISE_HAS_AVX 1)
+ set(COLORTWIST_HAS_AVX 1)
 else()
- set(COLORTWISE_HAS_AVX 0)
+ set(COLORTWIST_HAS_AVX 0)
 endif()
+
+# check whether we can use SSSE3-instructions -> we check for the presence of the file
+CHECK_INCLUDE_FILES(tmmintrin.h TMMINTRINFOUND)
+if (TMMINTRINFOUND)
+ set(COLORTWISE_HAS_SSSE3 1)
+else()
+ set(COLORTWISE_HAS_SSSE3 0)
+endif()
+
+
 
 # check whether we can use ARM-Neon-instructions -> we check for the presence of the file
 CHECK_INCLUDE_FILES(arm_neon.h ARMNEONFOUND)
@@ -123,9 +137,11 @@ message(STATUS "ARCHITECTURE: " ${CMAKE_SYSTEM_PROCESSOR})
 if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "AMD64" OR ${CMAKE_SYSTEM_PROCESSOR} MATCHES "x86_64") 
   if (MSVC)
    set_source_files_properties(colortwist_avx.cpp PROPERTIES COMPILE_FLAGS /arch:AVX2)
+   set_source_files_properties(loHiBytePackUnpack_avx.cpp PROPERTIES COMPILE_FLAGS /arch:AVX2)
   endif()
   if (CMAKE_COMPILER_IS_GNUCXX)
    set_source_files_properties(colortwist_avx.cpp PROPERTIES COMPILE_FLAGS "-mfma -mavx2")
+   set_source_files_properties(loHiBytePackUnpack_avx.cpp PROPERTIES COMPILE_FLAGS "-mfma -mavx2")
   endif()
 endif()
 
