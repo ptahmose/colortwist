@@ -2,6 +2,8 @@ add_executable (testcolortwist testcolortwist.cpp)
 
 target_link_libraries (testcolortwist LINK_PUBLIC libcolortwist)
 
+#set_target_properties(testcolortwist PROPERTIES VS_GLOBAL_UseIntelIPP "Sequential") # Parallel_Static
+
 #message(STATUS "IPP-Libraries: ${IPP_LIBRARIES}")
 
 if(IPP_FOUND)

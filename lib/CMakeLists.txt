@@ -41,9 +41,9 @@ endif()
 # check whether we can use SSSE3-instructions -> we check for the presence of the file
 CHECK_INCLUDE_FILES(tmmintrin.h TMMINTRINFOUND)
 if (TMMINTRINFOUND)
- set(COLORTWISE_HAS_SSSE3 1)
+ set(COLORTWIST_HAS_SSSE3 1)
 else()
- set(COLORTWISE_HAS_SSSE3 0)
+ set(COLORTWIST_HAS_SSSE3 0)
 endif()
 
 
@@ -138,6 +138,8 @@ if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "AMD64" OR ${CMAKE_SYSTEM_PROCESSOR} MATCHE
   if (MSVC)
    set_source_files_properties(colortwist_avx.cpp PROPERTIES COMPILE_FLAGS /arch:AVX2)
    set_source_files_properties(loHiBytePackUnpack_avx.cpp PROPERTIES COMPILE_FLAGS /arch:AVX2)
+
+   #set_target_properties(libcolortwist PROPERTIES VS_GLOBAL_UseIntelIPP "Sequential") # Parallel_Static
   endif()
   if (CMAKE_COMPILER_IS_GNUCXX)
    set_source_files_properties(colortwist_avx.cpp PROPERTIES COMPILE_FLAGS "-mfma -mavx2")

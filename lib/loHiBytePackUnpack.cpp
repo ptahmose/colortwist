@@ -1,4 +1,5 @@
 #include "loHiBytePackUnpack.h"
+#include "colortwist_config.h"
 
 #if COLORTWISTLIB_HASSSSE3
 #include <tmmintrin.h>  // SSSE3

@@ -21,7 +21,8 @@ find_path(IPP_ROOT_DIR
         /opt/intel/compilers_and_libraries/linux/ipp
         /opt/intel/compilers_and_libraries/mac/ipp
         "C:/IntelSWTools/compilers_and_libraries/windows/ipp/"
-        "C:/Program Files (x86)/IntelSWTools/compilers_and_libraries/windows/ipp"
+        "$ENV{ProgramFiles\(x86\)}/IntelSWTools/compilers_and_libraries/windows/ipp"
+        "$ENV{ProgramFiles\(x86\)}/Intel/oneAPI/ipp/latest"
         $ENV{HOME}/intel/ipp
         $ENV{HOME}/miniconda3
         $ENV{USERPROFILE}/miniconda3/Library
@@ -33,6 +34,8 @@ find_path(IPP_INCLUDE_DIR
         PATHS
         ${IPP_ROOT_DIR}/include
         )
+
+#message(STATUS ****${IPP_ROOT_DIR}****)
 
 if(WIN32)
     set(IPP_SEARCH_LIB ippcoremt.lib)

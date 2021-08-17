@@ -28,13 +28,9 @@
         const uint8x8_t b = vld1_u8(static_cast<const uint8_t*>(pSrc + halfLength));
         pSrc += 8;
 
-        const auto z1 = vzip1_u8(a, b);
-        const auto z2 = vzip2_u8(a, b);
-
-        vst1_u8(pDst,z1);
-        pDst += 8;
-        vst1_u8( pDst, z2);
-        pDst += 8;
+        vst1_u8(pDst, vzip1_u8(a, b));
+        vst1_u8(pDst+8, vzip2_u8(a, b));
+        pDst += 16;
     }
 
     const size_t remainder = halfLength % 8;
@@ -46,7 +42,7 @@
             const uint16_t v = *pSrc | (static_cast<uint16_t>(*(pSrc + halfLength)) << 8);
             *pDstWord++ = v;
             ++pSrc;
-}
+        }
     }
 
     return StatusCode::OK;

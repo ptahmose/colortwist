@@ -291,7 +291,7 @@ void CompareUint8(const char* functionName, const uint8_t* ptr1, const uint8_t* 
 
 static void TestHiLoBytePackUnpack()
 {
-    const int REPEATS = 1;// 100;
+    const int REPEATS = 100;
     size_t bitmapSize = 1024 * 1024 * 4;
     std::unique_ptr<uint16_t, void (*)(uint16_t*)> upSrc((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
     std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstC((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
