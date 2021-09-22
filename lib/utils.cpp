@@ -83,16 +83,18 @@ bool CheckWhetherCpuSupportsAVX2()
 
 bool CheckWhetherCpuSupportsNeon()
 {
-#if COLORTWISTLIB_HAS_SYS_AUXV_H
-    #if  defined(__aarch64__)
-        return (getauxval(AT_HWCAP) & (1L << 1)) != 0;
-    #elif defined(__arm__)
-        return (getauxval(AT_HWCAP) & (1L << 12)) != 0;
-    #endif
-#endif
+////#if COLORTWISTLIB_HAS_SYS_AUXV_H
+////    #if  defined(__aarch64__)
+////        return (getauxval(AT_HWCAP) & (1L << 1)) != 0;
+////    #elif defined(__arm__)
+////        return (getauxval(AT_HWCAP) & (1L << 12)) != 0;
+////    #endif
+////#endif
 
-    // TODO: other ways how to detect Neon...?
-    return false;
+    // There seems to be no reliable way (I could find) in order to detect
+    //  Neon-support at runtime, and it does not seem to be usual way on
+    //  ARM (to detect support at runtime).
+    return true;
 }
 
 #endif
