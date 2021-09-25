@@ -6,6 +6,25 @@
 #include <cstddef>
 #include <arm_neon.h>
 
+// with VC-compiler, the initialization of a neon-type like "float32x2_t v{1,2}" does not work
+#if _MSC_VER
+ #define CANINITIALIZENEONTYPES (0)
+#else 
+ #define CANINITIALIZENEONTYPES (1)
+#endif
+
+#if CANINITIALIZENEONTYPES
+    #define DECLARE_float32x4_t(_n,f1,f2,f3,f4)\
+    float32x4_t _n {(f1),(f2),(f3),(f4)}
+    #define DECLARE_float32x2_t(_n,f1,f2)\
+    float32x2_t _n {(f1),(f2)}
+#else
+    #define DECLARE_float32x4_t(_n,f1,f2,f3,f4)\
+    float32x4_t _n;_n.n128_f32[0]=(f1);_n.n128_f32[1]=(f2);_n.n128_f32[2]=(f3);_n.n128_f32[3]=(f4)
+    #define DECLARE_float32x2_t(_n,f1,f2)\
+    float32x2_t _n;_n.n64_f32[0]=(f1);_n.n64_f32[1]=(f2)
+#endif
+
 using namespace colortwist;
 
 // references:
@@ -36,7 +55,7 @@ static inline void DoOnePixelRgb48ReadOneByteBehind(const uint16_t* p, uint16_t*
 #endif
 
     vst1_lane_u32(reinterpret_cast<uint32_t*>(d), vreinterpret_u32_u16(rShort), 0);
-    vst1_lane_u16(2 + d, rShort, 2);
+    vst1_lane_u16((2 + d), rShort, 2);
 }
 
 static inline void DoOnePixelRgb48ReadExact(const uint16_t* p, uint16_t* d, const float32x4_t& c0, const float32x4_t& c1, const float32x4_t& c2, const float32x4_t& c3)
@@ -62,7 +81,7 @@ static inline void DoOnePixelRgb48ReadExact(const uint16_t* p, uint16_t* d, cons
 #endif
 
     vst1_lane_u32(reinterpret_cast<uint32_t*>(d), vreinterpret_u32_u16(rShort), 0);
-    vst1_lane_u16(2 + d, rShort, 2);
+    vst1_lane_u16((2 + d), rShort, 2);
 }
 
 colortwist::StatusCode colorTwistRGB48_NEON(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
@@ -74,13 +93,13 @@ colortwist::StatusCode colorTwistRGB48_NEON(const void* pSrc, uint32_t width, ui
     }
 
     // note: if adding "const" here, this produces incorrect results? Compiler-error or am I missing something? gcc 8.3 on Raspberry4
-    float32x4_t c0{ twistMatrix[0],twistMatrix[4],twistMatrix[8],0 };
-    float32x4_t c1{ twistMatrix[1],twistMatrix[5],twistMatrix[9],0 };
-    float32x4_t c2{ twistMatrix[2],twistMatrix[6],twistMatrix[10],0 };
+    DECLARE_float32x4_t(c0,twistMatrix[0],twistMatrix[4],twistMatrix[8],0);
+    DECLARE_float32x4_t(c1, twistMatrix[1],twistMatrix[5],twistMatrix[9],0);
+    DECLARE_float32x4_t(c2, twistMatrix[2],twistMatrix[6],twistMatrix[10],0); 
 #if COLORTWISTLIB_CANUSENEONINTRINSIC_VCVTNQ_U32_F32
-    float32x4_t c3{ twistMatrix[3],twistMatrix[7],twistMatrix[11],0 };
+    DECLARE_float32x4_t(c3, twistMatrix[3],twistMatrix[7],twistMatrix[11],0 );
 #else
-    float32x4_t c3{ twistMatrix[3] + 0.5f,twistMatrix[7] + 0.5f,twistMatrix[11] + 0.5f,0 };
+    DECLARE_float32x4_t(c3, twistMatrix[3] + 0.5f, twistMatrix[7] + 0.5f, twistMatrix[11] + 0.5f, 0);
 #endif
 
     for (size_t y = 0; y < height - 1; ++y)
@@ -177,7 +196,15 @@ static void colorTwistRGB48_NEON2_Generic(const void* pSrc, size_t widthOver4, s
 
             // and this conveniently will shuffle R, G and B into the correct order, i. e.
             // R1 G1 B1 R2 G2 B2 R3 G3 B3 R4 G4 B4
+#if CANINITIALIZENEONTYPES            
             vst3_u16(d, uint16x4x3_t{ rShortPixelR,rShortPixelG,rShortPixelB });
+#else            
+            uint16x4x3_t shortPixels;
+            shortPixels.val[0] = rShortPixelR;
+            shortPixels.val[1] = rShortPixelG;
+            shortPixels.val[2] = rShortPixelB;
+            vst3_u16(d, shortPixels);
+#endif
 
             p += 3 * 4;
             d += 3 * 4;
@@ -210,9 +237,11 @@ inline static void colorTwistRGB48_NEON2_MultipleOfFourAndRemainder(const void* 
     public:
         const bool isempty = false;
         RemainingPixelsHandler() = delete;
+
         RemainingPixelsHandler(const float* twistMatrix)
+#if CANINITIALIZENEONTYPES
             :
-            c0{ twistMatrix[0],twistMatrix[4],twistMatrix[8],0 },
+            c0( twistMatrix[0],twistMatrix[4],twistMatrix[8],0 ),
             c1{ twistMatrix[1],twistMatrix[5],twistMatrix[9],0 },
             c2{ twistMatrix[2],twistMatrix[6],twistMatrix[10],0 },
 #if COLORTWISTLIB_CANUSENEONINTRINSIC_VCVTNQ_U32_F32
@@ -220,7 +249,27 @@ inline static void colorTwistRGB48_NEON2_MultipleOfFourAndRemainder(const void* 
 #else
             c3{ twistMatrix[3] + 0.5f,twistMatrix[7] + 0.5f,twistMatrix[11] + 0.5f,0 }    // we add 0.5 here for rounding - because the instrinsic vcvtnq_u32_f32 is missing,
 #endif
-        {}
+#endif
+        {
+#if !CANINITIALIZENEONTYPES            
+            c0.n128_f32[0]=twistMatrix[0];
+            c0.n128_f32[1]=twistMatrix[4];
+            c0.n128_f32[2]=twistMatrix[8];
+            c0.n128_f32[3]=0;
+            c1.n128_f32[0]=twistMatrix[1];
+            c1.n128_f32[1]=twistMatrix[5];
+            c1.n128_f32[2]=twistMatrix[9];
+            c1.n128_f32[3]=0;
+            c2.n128_f32[0]=twistMatrix[2];
+            c2.n128_f32[1]=twistMatrix[6];
+            c2.n128_f32[2]=twistMatrix[10];
+            c2.n128_f32[3]=0;
+            c3.n128_f32[0]=twistMatrix[3];
+            c3.n128_f32[1]=twistMatrix[7];
+            c3.n128_f32[2]=twistMatrix[11];
+            c3.n128_f32[3]=0;
+#endif            
+        }
 
         inline void DoRemainingPixels(const uint16_t* pSrc, uint16_t* pDst, size_t remainingPixels)
         {
@@ -276,10 +325,10 @@ static void colorTwistRGB24_NEON2_Generic(const void* pSrc, size_t widthOver8, s
 #endif
 
     float32x2_t c0 = vld1_f32(twistMatrix + 0);
-    float32x2_t c1{ twistMatrix[2],twistMatrix[4] };
+    DECLARE_float32x2_t(c1,twistMatrix[2],twistMatrix[4]);
     float32x2_t c2 = vld1_f32(twistMatrix + 5);
     float32x2_t c3 = vld1_f32(twistMatrix + 8);
-    float32x2_t c4{ twistMatrix[10],0 };
+    DECLARE_float32x2_t(c4,twistMatrix[10],0);
 
     tUnevenWidthHandler handler{ twistMatrix };
 
@@ -327,7 +376,15 @@ static void colorTwistRGB24_NEON2_Generic(const void* pSrc, size_t widthOver8, s
 
             // and this conveniently will shuffle R, G and B into the correct order, i. e.
             // R1 G1 B1 R2 G2 B2 R3 G3 B3 R4 G4 B4  R5 G5 B5 R6 G6 B6 R7 G7 B7 R8 G8 B8
-            vst3_u8(d, uint8x8x3_t{ rBytePixelR,rBytePixelG,rBytePixelB });
+#if CANINITIALIZENEONTYPES            
+            vst3_u8(d, uint8x8x3_t( rBytePixelR,rBytePixelG,rBytePixelB ));
+#else            
+            uint8x8x3_t bytePixels;
+            bytePixels.val[0] = rBytePixelR;
+            bytePixels.val[1] = rBytePixelG;
+            bytePixels.val[2] = rBytePixelB;
+            vst3_u8(d, bytePixels);
+#endif
 
             p += 3 * 8;
             d += 3 * 8;

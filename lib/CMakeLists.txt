@@ -37,23 +37,29 @@ endif()
 # check whether we can use ARM-Neon-instructions -> we check for the presence of the file
 CHECK_INCLUDE_FILES(arm_neon.h ARMNEONFOUND)
 if (ARMNEONFOUND)
+ if (MSVC)
+  set(COMPILEDEFINITIONSTATICRUNTIMEVS "/MT")
+  set(COMPILEDEFINITIONS_FOR_NEON "")
+ else()
+  set(COMPILEDEFINITIONS_FOR_NEON "-mfpu=neon")
+ endif(MSVC)
  try_run(
    __RESULT_NEON_RUNTEST __RESULT_NEON_COMPILETEST
    ${CMAKE_CURRENT_BINARY_DIR}  
    ${CMAKE_CURRENT_SOURCE_DIR}/../cmakemodules/checks/cpu_neon.cpp 
-   COMPILE_DEFINITIONS -mfpu=neon
+   COMPILE_DEFINITIONS "${COMPILEDEFINITIONS_FOR_NEON} ${COMPILEDEFINITIONSTATICRUNTIMEVS}"
    OUTPUT_VARIABLE OUTPUT_NEONTESTCOMPILE)
    #message(STATUS "try_run: " ${OUTPUT_NEONTESTCOMPILE} : ${__RESULT_NEON_RUNTEST} - ${__RESULT_NEON_COMPILETEST})
  if (__RESULT_NEON_COMPILETEST AND __RESULT_NEON_RUNTEST EQUAL 0)
   message(STATUS "Test for Neon-support succeeded, Neon-support is enabled.")
   set(COLORTWIST_HAS_NEON 1)
-  set(COMPILEDEFINITIONS_FOR_NEON "-mfpu=neon")
  else()
    # try one more time, this time without any compile-definitions tweaks (with aarch64 it seems we must not set anything)  
    try_run(
      __RESULT_NEON_RUNTEST __RESULT_NEON_COMPILETEST
      ${CMAKE_CURRENT_BINARY_DIR}  
      ${CMAKE_CURRENT_SOURCE_DIR}/../cmakemodules/checks/cpu_neon.cpp 
+     COMPILE_DEFINITIONS ${COMPILEDEFINITIONSTATICRUNTIMEVS}
      OUTPUT_VARIABLE OUTPUT_NEONTESTCOMPILE)
 
      if (__RESULT_NEON_COMPILETEST AND __RESULT_NEON_RUNTEST EQUAL 0)
@@ -80,7 +86,7 @@ if (COLORTWIST_HAS_NEON)
      __RESULT_NEON_VCVTNQ_U32_F32RUNTEST __RESULT_NEON_VCVTNQ_U32_F32COMPILETEST
      ${CMAKE_CURRENT_BINARY_DIR}  
      ${CMAKE_CURRENT_SOURCE_DIR}/../cmakemodules/checks/canuse_vcvtnq_u32_f32_intrinsic.cpp 
-     COMPILE_DEFINITIONS "${COMPILEDEFINITIONS_FOR_NEON}" 
+     COMPILE_DEFINITIONS "${COMPILEDEFINITIONS_FOR_NEON} ${COMPILEDEFINITIONSTATICRUNTIMEVS}" 
      COMPILE_OUTPUT_VARIABLE RESULT_NEONVCVTNQ_COMPILETEST
      RUN_OUTPUT_VARIABLE RESULT_NEONVCVTNQ_RUNTEST)
      #message(STATUS "vcvtnq_u32_f32-try_run: " ${RESULT_NEONVCVTNQ_COMPILETEST} - ${RESULT_NEONVCVTNQ_RUNTEST} )
@@ -118,7 +124,7 @@ target_include_directories (libcolortwist PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 # this is necessary so that we can find "colortwist_config.h" which we created above
 target_include_directories(libcolortwist PRIVATE  ${CMAKE_CURRENT_BINARY_DIR})  
 
-message(STATUS "ARCHITECTURE: " ${CMAKE_SYSTEM_PROCESSOR})
+message(STATUS "HOST-ARCHITECTURE: " ${CMAKE_SYSTEM_PROCESSOR})
 
 if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "AMD64" OR ${CMAKE_SYSTEM_PROCESSOR} MATCHES "x86_64") 
   if (MSVC)
@@ -135,6 +141,7 @@ if (COLORTWIST_HAS_NEON)
  ##if (NOT ${CMAKE_SYSTEM_PROCESSOR} MATCHES "aarch64")
  if (COMPILEDEFINITIONS_FOR_NEON)
   set_target_properties(libcolortwist PROPERTIES COMPILE_FLAGS ${COMPILEDEFINITIONS_FOR_NEON} )
+  #message(STATUS "########################### ${COMPILEDEFINITIONS_FOR_NEON}")
  endif()
 endif()
 
