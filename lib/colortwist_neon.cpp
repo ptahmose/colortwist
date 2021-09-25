@@ -247,7 +247,7 @@ inline static void colorTwistRGB48_NEON2_MultipleOfFourAndRemainder(const void* 
 #if COLORTWISTLIB_CANUSENEONINTRINSIC_VCVTNQ_U32_F32
             c3{ twistMatrix[3],twistMatrix[7],twistMatrix[11],0 }
 #else
-            c3{ twistMatrix[3] + 0.5f,twistMatrix[7] + 0.5f,twistMatrix[11] + 0.5f,0.f }    // we add 0.5 here for rounding - because the intrinsic vcvtnq_u32_f32 is missing,
+            c3{ twistMatrix[3] + 0.5f,twistMatrix[7] + 0.5f,twistMatrix[11] + 0.5f,0.f }    // we add 0.5 here for rounding - because the intrinsic vcvtnq_u32_f32 is missing
 #endif
 #endif
         {
@@ -264,9 +264,15 @@ inline static void colorTwistRGB48_NEON2_MultipleOfFourAndRemainder(const void* 
             c2.n128_f32[1]=twistMatrix[6];
             c2.n128_f32[2]=twistMatrix[10];
             c2.n128_f32[3]=0;
+#if COLORTWISTLIB_CANUSENEONINTRINSIC_VCVTNQ_U32_F32
             c3.n128_f32[0]=twistMatrix[3];
             c3.n128_f32[1]=twistMatrix[7];
             c3.n128_f32[2]=twistMatrix[11];
+#else
+            c3.n128_f32[0] = twistMatrix[3] + 0.5f;
+            c3.n128_f32[1] = twistMatrix[7] + 0.5f;
+            c3.n128_f32[2] = twistMatrix[11] + 0.5f;
+#endif
             c3.n128_f32[3]=0;
 #endif            
         }
