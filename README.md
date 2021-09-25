@@ -115,7 +115,7 @@ AMD Ryzen 7 4700U,  Intel icl 19.1.3.311, x64 : 2048x2048 RGB48 bitmap
 | colorTwistRGB24_IPP    | 466.74              |
 | colorTwistRGB24_AVX3   | 1793.66             |
 
-Samsung Galaxy Go, msvc 19.29.30133.0, ARM64 : 2048x2048 RGB48 bitmap
+Samsung Galaxy Go ([Snapdragon 7c Gen2 @ 2.55GHz](https://www.qualcomm.com/products/snapdragon-7c-gen-2-compute-platform)), msvc 19.29.30133.0, ARM64 : 2048x2048 RGB48 bitmap
 
 | version                | performance in MB/s |
 | ---------------------- | ------------------- |
@@ -125,7 +125,7 @@ Samsung Galaxy Go, msvc 19.29.30133.0, ARM64 : 2048x2048 RGB48 bitmap
 | colorTwistRGB24_C      | 222.86              |
 | colorTwistRGB24_NEON2  | 1201.04             |
 
-Samsung Galaxy Go, msvc 19.29.30133.0, ARM : 2048x2048 RGB48 bitmap
+Samsung Galaxy Go ([Snapdragon 7c Gen2 @ 2.55GHz](https://www.qualcomm.com/products/snapdragon-7c-gen-2-compute-platform)), msvc 19.29.30133.0, ARM : 2048x2048 RGB48 bitmap
 
 | version                | performance in MB/s |
 | ---------------------- | ------------------- |
