@@ -377,7 +377,7 @@ static void colorTwistRGB24_NEON2_Generic(const void* pSrc, size_t widthOver8, s
             // and this conveniently will shuffle R, G and B into the correct order, i. e.
             // R1 G1 B1 R2 G2 B2 R3 G3 B3 R4 G4 B4  R5 G5 B5 R6 G6 B6 R7 G7 B7 R8 G8 B8
 #if CANINITIALIZENEONTYPES            
-            vst3_u8(d, uint8x8x3_t( rBytePixelR,rBytePixelG,rBytePixelB ));
+            vst3_u8(d, uint8x8x3_t{ rBytePixelR,rBytePixelG,rBytePixelB });
 #else            
             uint8x8x3_t bytePixels;
             bytePixels.val[0] = rBytePixelR;
