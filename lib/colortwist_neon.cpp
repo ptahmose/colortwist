@@ -241,14 +241,13 @@ inline static void colorTwistRGB48_NEON2_MultipleOfFourAndRemainder(const void* 
         RemainingPixelsHandler(const float* twistMatrix)
 #if CANINITIALIZENEONTYPES
             :
-            c0( twistMatrix[0],twistMatrix[4],twistMatrix[8],0 ),
+            c0{ twistMatrix[0],twistMatrix[4],twistMatrix[8],0 },
             c1{ twistMatrix[1],twistMatrix[5],twistMatrix[9],0 },
             c2{ twistMatrix[2],twistMatrix[6],twistMatrix[10],0 },
 #if COLORTWISTLIB_CANUSENEONINTRINSIC_VCVTNQ_U32_F32
             c3{ twistMatrix[3],twistMatrix[7],twistMatrix[11],0 }
 #else
-                c3{ twistMatrix[3],twistMatrix[7],twistMatrix[11],0 }
-            //c3{ twistMatrix[3] + 0.5f,twistMatrix[7] + 0.5f,twistMatrix[11] + 0.5f,0.f }    // we add 0.5 here for rounding - because the intrinsic vcvtnq_u32_f32 is missing
+            c3{ twistMatrix[3] + 0.5f,twistMatrix[7] + 0.5f,twistMatrix[11] + 0.5f,0 }    // we add 0.5 here for rounding - because the intrinsic vcvtnq_u32_f32 is missing
 #endif
 #endif
         {
