@@ -66,15 +66,25 @@ Raspberry Pi 4, gcc 8.3.0-6, 32bit : 2048x2048 RGB48 bitmap
 | colorTwistRGB24_C      | 96.14               |
 | colorTwistRGB24_NEON2  | 480.69              |
 
+Raspberry Pi 4, gcc 10.3.0, 64bit : 2048x2048 RGB48 bitmap
+
+| version                | performance in MB/s |
+| ---------------------- | ------------------- |
+| colorTwistRGB48_C      | 439.89              |
+| colorTwistRGB48_NEON   | 417.84              |
+| colorTwistRGB48_NEON2  | 942.86              |
+| colorTwistRGB24_C      | 120.64              |
+| colorTwistRGB24_NEON2  | 462.34              |
+
 Raspberry Pi 3b, gcc 8.3.0-6, 32bit : 2048x2048 RGB48 bitmap
 
 | version                | performance in MB/s |
 | ---------------------- | ------------------- |
-| colorTwistRGB48_C      | 181.37              |
-| colorTwistRGB48_NEON   | 170.11              |
-| colorTwistRGB48_NEON2  | 347.69              |
-| colorTwistRGB24_C      | 48.45               |
-| colorTwistRGB24_NEON2  | 222.63              |
+| colorTwistRGB48_C      | 208.69              |
+| colorTwistRGB48_NEON   | 187.42              |
+| colorTwistRGB48_NEON2  | 435.30              |
+| colorTwistRGB24_C      | 63.30               |
+| colorTwistRGB24_NEON2  | 285.971             |
 
 AMD Ryzen 7 4700U, msvc 19.27.29112, x64 : 2048x2048 RGB48 bitmap
 
