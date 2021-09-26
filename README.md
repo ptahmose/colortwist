@@ -145,6 +145,18 @@ Samsung Galaxy Book Go ([Snapdragon 7c Gen2 @ 2.55GHz](https://www.qualcomm.com/
 | colorTwistRGB24_C      | 208.34              |
 | colorTwistRGB24_NEON2  | 1336.50             |
 
+[AMD Ryzen 5 1600X](https://www.amd.com/en/products/cpu/amd-ryzen-5-1600x), gcc 7.5.0, Linux x64  : 2048x2048 RGB48 bitmap
+
+| version                | performance in MB/s |
+| ---------------------- | ------------------- |
+| colorTwistRGB48_C      | 1344.27             |
+| colorTwistRGB48_AVX    | 3186.97             |
+| colorTwistRGB48_AVX2   | 3445.82             |
+| colorTwistRGB48_AVX3   | 4008.93             |
+| colorTwistRGB24_C      | 281.88              |
+| colorTwistRGB24_AVX3   | 2014.70             |
+
+
 # Building
 
 For Windows-on-ARM, run the following:
