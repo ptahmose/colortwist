@@ -156,6 +156,18 @@ Samsung Galaxy Book Go ([Snapdragon 7c Gen2 @ 2.55GHz](https://www.qualcomm.com/
 | colorTwistRGB24_C      | 281.88              |
 | colorTwistRGB24_AVX3   | 2014.70             |
 
+[Intel Core i9-12900K @ 3.20GHz](https://ark.intel.com/content/www/us/en/ark/products/134599/intel-core-i912900k-processor-30m-cache-up-to-5-20-ghz.html), msvc 19.31.31106.2, x64 : 2048x2048 bitmap
+
+| version                | performance in MB/s |
+| ---------------------- | ------------------- |
+| colorTwistRGB48_C      | 1928.36             |
+| [colorTwistRGB48_IPP](https://software.intel.com/content/www/us/en/develop/documentation/ipp-dev-reference/top/volume-2-image-processing/image-color-conversion/color-twist.html)  | 2203.86  |
+| colorTwistRGB48_AVX    | 4058.93             |
+| colorTwistRGB48_AVX2   | 8323.63             |
+| colorTwistRGB48_AVX3   | 9091.08             |
+| colorTwistRGB24_C      | 440.10              |
+| colorTwistRGB24_IPP    | 1116.93             |
+| colorTwistRGB24_AVX3   | 5441.54             |
 
 # Building
 

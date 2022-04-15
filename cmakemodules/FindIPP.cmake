@@ -22,6 +22,7 @@ find_path(IPP_ROOT_DIR
         /opt/intel/compilers_and_libraries/mac/ipp
         "C:/IntelSWTools/compilers_and_libraries/windows/ipp/"
         "C:/Program Files (x86)/IntelSWTools/compilers_and_libraries/windows/ipp"
+        "C:/Program Files (x86)/Intel/oneAPI/ipp/latest"
         $ENV{HOME}/intel/ipp
         $ENV{HOME}/miniconda3
         $ENV{USERPROFILE}/miniconda3/Library
