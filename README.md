@@ -169,6 +169,17 @@ Samsung Galaxy Book Go ([Snapdragon 7c Gen2 @ 2.55GHz](https://www.qualcomm.com/
 | colorTwistRGB24_IPP    | 1116.93             |
 | colorTwistRGB24_AVX3   | 5441.54             |
 
+[MacBook Pro M2](https://www.apple.com/macbook-pro-13/specs/), clang-1400.0.29.202, arm64 : 2048x2048 bitmap
+
+| version                | performance in MB/s |
+| ---------------------- | ------------------- |
+| colorTwistRGB48_C      | 5301.62             |
+| colorTwistRGB48_NEON   | 7226.25             |
+| colorTwistRGB48_NEON2  | 9188.08             |
+| colorTwistRGB24_C      | 2863.86             |
+| colorTwistRGB24_NEON2  | 4584.36             |
+
+
 # Building
 
 For Windows-on-ARM, run the following:
