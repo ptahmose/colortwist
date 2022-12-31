@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="D:\dev\MyGitHub\colortwist\buildintel\CMakeFiles\140f8ad2b7e0e4ff941ddf5a209fcb06\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{E32298C9-8E50-34D9-B4A2-16DB9E0998BC}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
