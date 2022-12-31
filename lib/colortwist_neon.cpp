@@ -259,7 +259,21 @@ inline static void colorTwistRGB48_NEON2_MultipleOfFourAndRemainder(const void* 
 #endif
 #endif
         {
-#if !CANINITIALIZENEONTYPES            
+#if !CANINITIALIZENEONTYPES    
+    #if __clang__
+            c0[0] = twistMatrix[0];
+            c0[1] = twistMatrix[4];
+            c0[2] = twistMatrix[8];
+            c0[3] = 0;
+            c1[0] = twistMatrix[1];
+            c1[1] = twistMatrix[5];
+            c1[2] = twistMatrix[9];
+            c1[3] = 0;
+            c2[0] = twistMatrix[2];
+            c2[1] = twistMatrix[6];
+            c2[2] = twistMatrix[10];
+            c2[3] = 0;
+    #else
             c0.n128_f32[0]=twistMatrix[0];
             c0.n128_f32[1]=twistMatrix[4];
             c0.n128_f32[2]=twistMatrix[8];
@@ -272,6 +286,7 @@ inline static void colorTwistRGB48_NEON2_MultipleOfFourAndRemainder(const void* 
             c2.n128_f32[1]=twistMatrix[6];
             c2.n128_f32[2]=twistMatrix[10];
             c2.n128_f32[3]=0;
+    #endif
 #if COLORTWISTLIB_CANUSENEONINTRINSIC_VCVTNQ_U32_F32
             c3.n128_f32[0]=twistMatrix[3];
             c3.n128_f32[1]=twistMatrix[7];
