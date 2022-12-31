@@ -32,4 +32,5 @@
 *.app
 
 build/
+buildintel/
 .vs/
