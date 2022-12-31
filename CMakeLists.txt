@@ -9,5 +9,7 @@ set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmakemodules" ${CMAKE_MODULE_PATH})
 
 FIND_PACKAGE (IPP REQUIRED )
 
+set(CMAKE_CXX_STANDARD 11)
+
 add_subdirectory (lib)
 add_subdirectory (test)
