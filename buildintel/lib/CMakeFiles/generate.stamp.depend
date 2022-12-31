@@ -1,4 +1,0 @@
-# CMake generation dependency list for this directory.
-C:/Program Files/CMake/share/cmake-3.25/Modules/CheckIncludeFiles.cmake
-D:/dev/MyGitHub/colortwist/lib/CMakeLists.txt
-D:/dev/MyGitHub/colortwist/lib/colortwist_config.h.in

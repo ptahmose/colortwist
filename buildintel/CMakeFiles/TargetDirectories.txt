@@ -1,5 +1,0 @@
-D:/dev/MyGitHub/colortwist/buildintel/CMakeFiles/ALL_BUILD.dir
-D:/dev/MyGitHub/colortwist/buildintel/CMakeFiles/ZERO_CHECK.dir
-D:/dev/MyGitHub/colortwist/buildintel/lib/CMakeFiles/libcolortwist.dir
-D:/dev/MyGitHub/colortwist/buildintel/lib/CMakeFiles/ALL_BUILD.dir
-D:/dev/MyGitHub/colortwist/buildintel/test/CMakeFiles/testcolortwist.dir
