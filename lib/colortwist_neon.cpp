@@ -7,7 +7,8 @@
 #include <arm_neon.h>
 
 // with VC-compiler, the initialization of a neon-type like "float32x2_t v{1,2}" does not work
-#if _MSC_VER
+// ...it seems, with clang things are also different (-> https://blog.llvm.org/2010/04/arm-advanced-simd-neon-intrinsics-and.html)
+#if _MSC_VER || __clang__
  #define CANINITIALIZENEONTYPES (0)
 #else 
  #define CANINITIALIZENEONTYPES (1)
@@ -19,10 +20,17 @@
     #define DECLARE_float32x2_t(_n,f1,f2)\
     float32x2_t _n {(f1),(f2)}
 #else
-    #define DECLARE_float32x4_t(_n,f1,f2,f3,f4)\
-    float32x4_t _n;_n.n128_f32[0]=(f1);_n.n128_f32[1]=(f2);_n.n128_f32[2]=(f3);_n.n128_f32[3]=(f4)
-    #define DECLARE_float32x2_t(_n,f1,f2)\
-    float32x2_t _n;_n.n64_f32[0]=(f1);_n.n64_f32[1]=(f2)
+    #if __clang__
+        #define DECLARE_float32x4_t(_n,f1,f2,f3,f4)\
+        float32x4_t _n;_n[0]=(f1);_n[1]=(f2);_n[2]=(f3);_n[3]=(f4)
+        #define DECLARE_float32x2_t(_n,f1,f2)\
+        float32x2_t _n;_n[0]=(f1);_n[1]=(f2)
+    #else
+        #define DECLARE_float32x4_t(_n,f1,f2,f3,f4)\
+        float32x4_t _n;_n.n128_f32[0]=(f1);_n.n128_f32[1]=(f2);_n.n128_f32[2]=(f3);_n.n128_f32[3]=(f4)
+        #define DECLARE_float32x2_t(_n,f1,f2)\
+        float32x2_t _n;_n.n64_f32[0]=(f1);_n.n64_f32[1]=(f2)
+    #endif
 #endif
 
 using namespace colortwist;
