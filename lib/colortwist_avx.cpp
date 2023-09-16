@@ -161,9 +161,12 @@ StatusCode colorTwistRGB48_AVX2(const void* pSrc, uint32_t width, uint32_t heigh
             __m128i resultInteger = _mm_cvtps_epi32(result);
             __m128i resultShort = _mm_packus_epi32(resultInteger, resultInteger);
 
-            d[0] = resultShort.m128i_u16[0];
+            /*d[0] = resultShort.m128i_u16[0];
             d[1] = resultShort.m128i_u16[1];
-            d[2] = resultShort.m128i_u16[2];
+            d[2] = resultShort.m128i_u16[2];*/
+            d[0] = static_cast<uint16_t>(_mm_extract_epi16(resultShort, 0));
+            d[1] = static_cast<uint16_t>(_mm_extract_epi16(resultShort, 1));
+            d[2] = static_cast<uint16_t>(_mm_extract_epi16(resultShort, 2));
            /* uint64_t _3words = _mm_cvtsi128_si64(resultShort);
             *reinterpret_cast<uint32_t*>(d) = static_cast<uint32_t>(_3words);
             *(d + 2) = static_cast<uint16_t>(_3words >> 32);*/
@@ -312,9 +315,12 @@ inline void colorTwistRGB48_AVX3_MultipleOfEightAndRemainder(const void* pSrc, s
                 const __m128i resultInteger = _mm_cvtps_epi32(result);
                 const __m128i resultShort = _mm_packus_epi32(resultInteger, resultInteger);
 
-                pDst[0] = resultShort.m128i_u16[0];
+/*                pDst[0] = resultShort.m128i_u16[0];
                 pDst[1] = resultShort.m128i_u16[1];
-                pDst[2] = resultShort.m128i_u16[2];
+                pDst[2] = resultShort.m128i_u16[2];*/
+                pDst[0] = static_cast<uint16_t>(_mm_extract_epi16(resultShort, 0));
+                pDst[1] = static_cast<uint16_t>(_mm_extract_epi16(resultShort, 1));
+                pDst[2] = static_cast<uint16_t>(_mm_extract_epi16(resultShort, 2));
                 /*const uint64_t _3words = _mm_cvtsi128_si64(resultShort);
                 *reinterpret_cast<uint32_t*>(pDst) = static_cast<uint32_t>(_3words);
                 *(pDst + 2) = static_cast<uint16_t>(_3words >> 32);*/
