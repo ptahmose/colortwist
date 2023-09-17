@@ -39,15 +39,15 @@ template < bool _Cond > struct colorTwist24t
         const uint32_t width_over_four = width / 4;
         const uint32_t width_mod_four = width % 4;
 
-        for (size_t y = 0; y < height; ++y)
+        for (uint32_t y = 0; y < height; ++y)
         {
-            const uint8_t* ps = static_cast<const uint8_t*>(pSrc) + y * strideSrc;
-            uint8_t* pd = static_cast<uint8_t*>(pDst) + y * strideDst;
+            const uint8_t* ps = static_cast<const uint8_t*>(pSrc) + static_cast<size_t>(y) * strideSrc;
+            uint8_t* pd = static_cast<uint8_t*>(pDst) + static_cast<size_t>(y) * strideDst;
             for (uint32_t x = 0; x < width_over_four; ++x)
             {
                 __m128i a = _mm_loadu_si64(ps);
                 //__m128i b = /*_mm_loadu_si32*/load_unaligned_dword(ps + 8);
-                __m128i b = _mm_castps_si128(_mm_load_ss((const float*)(ps + 8)));
+                __m128i b = _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float*>(ps + 8)));
 
                 __m128i c = _mm_unpacklo_epi8(a, _mm_setzero_si128());
 
@@ -109,7 +109,7 @@ template < bool _Cond > struct colorTwist24t
 
                 _mm_storeu_si64(reinterpret_cast<__m128i*>(pd), result12_ui8);
                 //        /*_mm_storeu_si32*/store_unaligned_dword(pd + 8, result3_ui8);
-                _mm_store_ss((float*)(pd + 8), _mm_castsi128_ps(result3_ui8));
+                _mm_store_ss(reinterpret_cast<float*>(pd + 8), _mm_castsi128_ps(result3_ui8));
 
                 pd += 3 * 4;
                 ps += 3 * 4;
@@ -146,7 +146,7 @@ template < bool _Cond > struct colorTwist24t
 
 colortwist::StatusCode colorTwistRGB24_SSE(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
-    if ((width % 4)!=0)
+    if ((width % 4) != 0)
     {
         return colorTwist24t<true>::do_it(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
     }
@@ -223,15 +223,15 @@ colortwist::StatusCode colorTwistRGB24_SSE(const void* pSrc, uint32_t width, uin
 
             __m128i result12_ui16 = _mm_unpacklo_epi64(result1_ui16, result2_ui16);
 
-           // __m128i result1_ui8 = _mm_packus_epi16(result1_ui16, result1_ui16);
-           // __m128i result2_ui8 = _mm_packus_epi16(result2_ui16, result2_ui16);
+            // __m128i result1_ui8 = _mm_packus_epi16(result1_ui16, result1_ui16);
+            // __m128i result2_ui8 = _mm_packus_epi16(result2_ui16, result2_ui16);
             __m128i result3_ui8 = _mm_packus_epi16(result3_ui16, result3_ui16);
 
             //__m128i result12_ui8 = _mm_unpackhi_epi32(result1_ui8, result2_ui8);
             __m128i result12_ui8 = _mm_packus_epi16(result12_ui16, result12_ui16);
 
             _mm_storeu_si64(reinterpret_cast<__m128i*>(pd), result12_ui8);
-    //        /*_mm_storeu_si32*/store_unaligned_dword(pd + 8, result3_ui8);
+            //        /*_mm_storeu_si32*/store_unaligned_dword(pd + 8, result3_ui8);
             _mm_store_ss((float*)(pd + 8), _mm_castsi128_ps(result3_ui8));
 
             pd += 3 * 4;
