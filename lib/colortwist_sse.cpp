@@ -2,12 +2,12 @@
 #include "colortwist_config.h"
 #include "colortwist_sse.h"
 
-#include <intrin.h>
 
 #if COLORTWISTLIB_HASAVX
 #include "utils.h"
 #include <limits>
 #include <emmintrin.h>
+#include <smmintrin.h>
 #include <xmmintrin.h>  // ->  AVX, AVX2, FMA
 
 //#if defined(_MSC_VER) && !defined(__AVX2__)
