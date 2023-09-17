@@ -135,6 +135,9 @@ template < bool _Cond > struct colorTwist24t
                     pd[0] = (uint8_t)r;
                     pd[1] = (uint8_t)(r >> 8);
                     pd[2] = (uint8_t)(r >> 16);
+
+                    ps += 3;
+                    pd += 3;
                 }
             }
         }
@@ -257,7 +260,7 @@ colortwist::StatusCode colorTwistRGB24_SSE(const void* pSrc, uint32_t width, uin
             pd[1] = (uint8_t)(r >> 8);
             pd[2] = (uint8_t)(r >> 16);
         }
-    }
+}
 
     return colortwist::StatusCode::OK;
 #endif
