@@ -9,6 +9,7 @@
 #include "utils.h"
 #include <limits>
 #include <emmintrin.h>
+#include <immintrin.h>
 #include <smmintrin.h>
 #include <xmmintrin.h>  // ->  AVX, AVX2, FMA
 
@@ -90,7 +91,7 @@ colortwist::StatusCode colorTwistRGB24_SSE(const void* pSrc, uint32_t width, uin
             __m128i result12_ui8 = _mm_unpackhi_epi32(result1_ui8, result2_ui8);
 
             _mm_storeu_si64(reinterpret_cast<__m128i*>(pd), result12_ui8);
-            _mm_storeu_si32(pd + 8, result3_ui8);
+            /*_mm_storeu_si32*/_mm_storeu_epi32(pd + 8, result3_ui8);
 
             pd += 3 * 4;
             ps += 3 * 4;
