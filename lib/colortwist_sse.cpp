@@ -56,9 +56,15 @@ colortwist::StatusCode colorTwistRGB24_SSE(const void* pSrc, uint32_t width, uin
             // Similarly, values are saturated to fit into int8_t.
             __m128i vecInt8 = _mm_packus_epi16(vecInt16, vecInt16); // The same trick is used here
 
-            pd[0] = _mm_extract_epi8(vecInt8, 0);
+            uint32_t r = (uint32_t)_mm_cvtsi128_si32(vecInt8);
+
+            pd[0] = (uint8_t)r;
+            pd[1] = (uint8_t)(r>>8);
+            pd[2] = (uint8_t)(r >> 16);
+
+            /*pd[0] = _mm_extract_epi8(vecInt8, 0);
             pd[1] = _mm_extract_epi8(vecInt8, 1);
-            pd[2] = _mm_extract_epi8(vecInt8, 2);
+            pd[2] = _mm_extract_epi8(vecInt8, 2);*/
 
             pd += 3;
             ps += 3;
