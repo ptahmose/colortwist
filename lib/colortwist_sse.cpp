@@ -41,7 +41,8 @@ colortwist::StatusCode colorTwistRGB24_SSE(const void* pSrc, uint32_t width, uin
         for (uint32_t x = 0; x < width/4; ++x)
         {
             __m128i a = _mm_loadu_si64(ps);
-            __m128i b = /*_mm_loadu_si32*/load_unaligned_dword(ps + 8);
+            //__m128i b = /*_mm_loadu_si32*/load_unaligned_dword(ps + 8);
+            __m128i b = _mm_castps_si128(_mm_load_ss((const float*)(ps + 8)));
 
             __m128i c = _mm_unpacklo_epi8(a, _mm_setzero_si128());
 
@@ -99,7 +100,8 @@ colortwist::StatusCode colorTwistRGB24_SSE(const void* pSrc, uint32_t width, uin
             __m128i result12_ui8 = _mm_unpackhi_epi32(result1_ui8, result2_ui8);
 
             _mm_storeu_si64(reinterpret_cast<__m128i*>(pd), result12_ui8);
-            /*_mm_storeu_si32*/store_unaligned_dword(pd + 8, result3_ui8);
+    //        /*_mm_storeu_si32*/store_unaligned_dword(pd + 8, result3_ui8);
+            _mm_store_ss((float*)(pd + 8), _mm_castsi128_ps(result3_ui8));
 
             pd += 3 * 4;
             ps += 3 * 4;
