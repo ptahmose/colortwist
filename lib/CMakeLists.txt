@@ -135,6 +135,13 @@ if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "AMD64" OR ${CMAKE_SYSTEM_PROCESSOR} MATCHE
   if (CMAKE_COMPILER_IS_GNUCXX)
    set_source_files_properties(colortwist_avx.cpp PROPERTIES COMPILE_FLAGS "-mfma -mavx2")
   endif()
+elseif(${CMAKE_SYSTEM_PROCESSOR} MATCHES "i686" OR ${CMAKE_SYSTEM_PROCESSOR} MATCHES "x86_32")
+  if (MSVC)
+   set_source_files_properties(colortwist_avx.cpp PROPERTIES COMPILE_FLAGS /arch:AVX2)
+  endif()
+  if (CMAKE_COMPILER_IS_GNUCXX)
+   set_source_files_properties(colortwist_avx.cpp PROPERTIES COMPILE_FLAGS "-mfma -mavx2")
+  endif()
 endif()
 
 # With ARM the situation seems to be: with aarch64 neon-support is guaranteed, and the compiler does not 
