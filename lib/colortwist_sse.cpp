@@ -20,6 +20,10 @@
 using namespace std;
 using namespace colortwist;
 
+__m128i load_unaligned_dword(const void* ptr) {
+    return _mm_castps_si128(_mm_load_ss((const float*)ptr));
+}
+
 colortwist::StatusCode colorTwistRGB24_SSE(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
     __m128 matrix_row1 = _mm_setr_ps(twistMatrix[0], twistMatrix[1], twistMatrix[2], twistMatrix[3]);
@@ -33,7 +37,7 @@ colortwist::StatusCode colorTwistRGB24_SSE(const void* pSrc, uint32_t width, uin
         for (uint32_t x = 0; x < width/4; ++x)
         {
             __m128i a = _mm_loadu_si64(ps);
-            __m128i b = _mm_loadu_si32(ps + 8);
+            __m128i b = /*_mm_loadu_si32*/load_unaligned_dword(ps + 8);
 
             __m128i c = _mm_unpacklo_epi8(a, _mm_setzero_si128());
 
