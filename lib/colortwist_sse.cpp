@@ -131,7 +131,7 @@ template < bool _Cond > struct colorTwist24t
                     __m128i result_ui32 = _mm_cvtps_epi32(result);
                     __m128i vecInt16 = _mm_packs_epi32(result_ui32, result_ui32); // The same input is used twice as a trick to only use the low 4 values
                     __m128i vecInt8 = _mm_packus_epi16(vecInt16, vecInt16); // The same trick is used here
-                    uint32_t r = (uint32_t)_mm_cvtsi128_si32(vecInt8);
+                    uint32_t r = static_cast<uint32_t>(_mm_cvtsi128_si32(vecInt8));
                     pd[0] = (uint8_t)r;
                     pd[1] = (uint8_t)(r >> 8);
                     pd[2] = (uint8_t)(r >> 16);
