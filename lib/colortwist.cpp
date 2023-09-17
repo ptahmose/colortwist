@@ -12,6 +12,7 @@ using namespace  colortwist;
 
 #if COLORTWISTLIB_HASAVX
 static int hasAvx = -1;
+static int hasSse41 = -1;
 
 bool CanAvx()
 {
@@ -22,6 +23,17 @@ bool CanAvx()
 
     hasAvx = CheckWhetherCpuSupportsAVX2() ? 1 : 0;
     return hasAvx;
+}
+
+bool CanSse41()
+{
+    if (hasSse41 >= 0)
+    {
+        return hasSse41 > 0;
+    }
+
+    hasSse41 = CheckWhetherCpuSupportsSSE41() ? 1 : 0;
+    return hasSse41;
 }
 #endif
 
@@ -44,43 +56,43 @@ StatusCode colortwist::colorTwistRGB48(ImplementationType type, const void* pSrc
 {
     switch (type)
     {
-    case ImplementationType::PlainC:
-        return colorTwistRGB48_C(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
-    case ImplementationType::X64_AVX:
+        case ImplementationType::PlainC:
+            return colorTwistRGB48_C(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
+        case ImplementationType::X64_AVX:
 #if COLORTWISTLIB_HASAVX
-        return CanAvx() ? colorTwistRGB48_AVX(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
+            return CanAvx() ? colorTwistRGB48_AVX(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
 #else
-        return StatusCode::InvalidISA;
+            return StatusCode::InvalidISA;
 #endif
-    case ImplementationType::X64_AVX2:
+        case ImplementationType::X64_AVX2:
 #if COLORTWISTLIB_HASAVX
-        return CanAvx() ? colorTwistRGB48_AVX2(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
+            return CanAvx() ? colorTwistRGB48_AVX2(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
 #else
-        return StatusCode::InvalidISA;
+            return StatusCode::InvalidISA;
 #endif
-    case ImplementationType::X64_AVX3:
+        case ImplementationType::X64_AVX3:
 #if COLORTWISTLIB_HASAVX
-        return CanAvx() ? colorTwistRGB48_AVX3(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
+            return CanAvx() ? colorTwistRGB48_AVX3(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
 #else
-        return StatusCode::InvalidISA;
+            return StatusCode::InvalidISA;
 #endif
-    case ImplementationType::IPP:
+        case ImplementationType::IPP:
 #if COLORTWISTLIB_HASIPP
-        return colorTwistRGB48_IPP(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
+            return colorTwistRGB48_IPP(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
 #else
-        return StatusCode::NotAvailable;
+            return StatusCode::NotAvailable;
 #endif
-    case ImplementationType::ARM_NEON:
+        case ImplementationType::ARM_NEON:
 #if COLORTWISTLIB_HASNEON
-        return CanNeon() ? colorTwistRGB48_NEON(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
+            return CanNeon() ? colorTwistRGB48_NEON(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
 #else
-        return StatusCode::InvalidISA;
+            return StatusCode::InvalidISA;
 #endif
-    case ImplementationType::ARM_NEON2:
+        case ImplementationType::ARM_NEON2:
 #if COLORTWISTLIB_HASNEON
-        return CanNeon() ? colorTwistRGB48_NEON2(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;;
+            return CanNeon() ? colorTwistRGB48_NEON2(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;;
 #else
-        return StatusCode::InvalidISA;
+            return StatusCode::InvalidISA;
 #endif
     }
 
@@ -91,33 +103,33 @@ StatusCode colortwist::colorTwistRGB24(ImplementationType type, const void* pSrc
 {
     switch (type)
     {
-    case ImplementationType::PlainC:
-        return colorTwistRGB24_C(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
-    case ImplementationType::X64_AVX3:
+        case ImplementationType::PlainC:
+            return colorTwistRGB24_C(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
+        case ImplementationType::X64_AVX3:
 #if COLORTWISTLIB_HASAVX
-        return CanAvx() ? colorTwistRGB24_AVX3(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
+            return CanAvx() ? colorTwistRGB24_AVX3(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
 #else
-        return StatusCode::InvalidISA;
+            return StatusCode::InvalidISA;
 #endif
-    case ImplementationType::IPP:
+        case ImplementationType::IPP:
 #if COLORTWISTLIB_HASIPP
-        return colorTwistRGB24_IPP(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
+            return colorTwistRGB24_IPP(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
 #else
-        return StatusCode::NotAvailable;
+            return StatusCode::NotAvailable;
 #endif
-    case ImplementationType::ARM_NEON:
-        return StatusCode::NotAvailable;
-    case ImplementationType::ARM_NEON2:
+        case ImplementationType::ARM_NEON:
+            return StatusCode::NotAvailable;
+        case ImplementationType::ARM_NEON2:
 #if COLORTWISTLIB_HASNEON
-        return CanNeon() ? colorTwistRGB24_NEON2(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
+            return CanNeon() ? colorTwistRGB24_NEON2(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
 #else
-        return StatusCode::InvalidISA;
+            return StatusCode::InvalidISA;
 #endif
-    case ImplementationType::X86_SSE:
+        case ImplementationType::X86_SSE:
 #if COLORTWISTLIB_HASAVX
-        return CanAvx() ? colorTwistRGB24_SSE(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
+            return CanSse41() ? colorTwistRGB24_SSE(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
 #else
-        return StatusCode::InvalidISA;
+            return StatusCode::InvalidISA;
 #endif
     }
 
@@ -128,33 +140,33 @@ bool colortwist::isOperationalRgb24(ImplementationType type)
 {
     switch (type)
     {
-    case ImplementationType::PlainC:
-        return true;
-    case ImplementationType::X64_AVX3:
+        case ImplementationType::PlainC:
+            return true;
+        case ImplementationType::X64_AVX3:
 #if COLORTWISTLIB_HASAVX
-        return CanAvx();
+            return CanAvx();
 #else
-        return false;
+            return false;
 #endif
-    case ImplementationType::IPP:
+        case ImplementationType::IPP:
 #if COLORTWISTLIB_HASIPP
-        return true;
+            return true;
 #else
-        return false;
+            return false;
 #endif
-    case ImplementationType::ARM_NEON:
-        return false;
-    case ImplementationType::ARM_NEON2:
+        case ImplementationType::ARM_NEON:
+            return false;
+        case ImplementationType::ARM_NEON2:
 #if COLORTWISTLIB_HASNEON
-        return CanNeon();
+            return CanNeon();
 #else
-        return false;
+            return false;
 #endif
-    case ImplementationType::X86_SSE:
+        case ImplementationType::X86_SSE:
 #if COLORTWISTLIB_HASAVX
-        return CanAvx();
+            return CanSse41();
 #else
-        return false;
+            return false;
 #endif
     }
 
@@ -165,43 +177,43 @@ bool colortwist::isOperationalRgb48(ImplementationType type)
 {
     switch (type)
     {
-    case ImplementationType::PlainC:
-        return true;
-    case ImplementationType::X64_AVX:
+        case ImplementationType::PlainC:
+            return true;
+        case ImplementationType::X64_AVX:
 #if COLORTWISTLIB_HASAVX
-        return CanAvx();
+            return CanAvx();
 #else
-        return false;
+            return false;
 #endif
-    case ImplementationType::X64_AVX2:
+        case ImplementationType::X64_AVX2:
 #if COLORTWISTLIB_HASAVX
-        return CanAvx();
+            return CanAvx();
 #else
-        return false;
+            return false;
 #endif
-    case ImplementationType::X64_AVX3:
+        case ImplementationType::X64_AVX3:
 #if COLORTWISTLIB_HASAVX
-        return CanAvx();
+            return CanAvx();
 #else
-        return false;
+            return false;
 #endif
-    case ImplementationType::IPP:
+        case ImplementationType::IPP:
 #if COLORTWISTLIB_HASIPP
-        return true;
+            return true;
 #else
-        return false;
+            return false;
 #endif
-    case ImplementationType::ARM_NEON:
+        case ImplementationType::ARM_NEON:
 #if COLORTWISTLIB_HASNEON
-        return CanNeon();
+            return CanNeon();
 #else
-        return false;
+            return false;
 #endif
-    case ImplementationType::ARM_NEON2:
+        case ImplementationType::ARM_NEON2:
 #if COLORTWISTLIB_HASNEON
-        return CanNeon();
+            return CanNeon();
 #else
-        return false;
+            return false;
 #endif
     }
 

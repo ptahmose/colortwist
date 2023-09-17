@@ -69,9 +69,28 @@ static int check_4th_gen_intel_core_features()
     return 1;
 }
 
+static int check_sse41_support()
+{
+    uint32_t abcd[4];
+    constexpr uint32_t sse41_mask = (1 << 19);
+
+    run_cpuid(1, 0, abcd);
+    if ((abcd[2] & sse41_mask) != sse41_mask)
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
 bool CheckWhetherCpuSupportsAVX2()
 {
     return check_4th_gen_intel_core_features() > 0;
+}
+
+bool CheckWhetherCpuSupportsSSE41()
+{
+       return check_sse41_support() > 0;
 }
 #endif
 
