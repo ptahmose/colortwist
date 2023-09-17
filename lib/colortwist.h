@@ -12,7 +12,8 @@ namespace colortwist
         X64_AVX2,
         X64_AVX3,
         ARM_NEON,
-        ARM_NEON2
+        ARM_NEON2,
+        X86_SSE,
     };
 
     /// Values that represent the status of an operation.

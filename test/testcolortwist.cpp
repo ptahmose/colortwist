@@ -8,6 +8,8 @@
 using namespace std;
 using namespace colortwist;
 
+static void Test();
+
 static void TestBgr48();
 static void TestBgr24();
 static void CompareUint16(const char* functionName, const uint16_t* ptr1, const uint16_t* ptr2, size_t length, uint8_t maxDiff);
@@ -15,13 +17,13 @@ static void CompareUint8(const char* functionName, const uint8_t* ptr1, const ui
 
 int main(int argc, char** argv)
 {
-    //Test();
+    Test();
     TestBgr24();
     TestBgr48();
     return 0;
 }
 
-/*void Test()
+void Test()
 {
     size_t bitmapSize = 32 * 3;
     std::unique_ptr<uint8_t, void (*)(uint8_t*)> upSrc((uint8_t*)malloc(bitmapSize), [](uint8_t* p) -> void { free(p); });
@@ -40,10 +42,11 @@ int main(int argc, char** argv)
     };
 
     colorTwistRGB24(ImplementationType::PlainC, upSrc.get(), 32, 1, 32 * 3, upDstC.get(), 32 * 1, twistMatrix);
-    colorTwistRGB24(ImplementationType::ARM_NEON2, upSrc.get(), 32, 1, 32 * 3, upDst.get(), 32 * 3, twistMatrix);
-    //colorTwistRGB24(ImplementationType::X64_AVX3, upSrc.get(), 32, 1, 32 * 3, upDst.get(), 32 * 3, twistMatrix);
-}*/
+    colorTwistRGB24(ImplementationType::X86_SSE, upSrc.get(), 32, 1, 32 * 3, upDst.get(), 32 * 3, twistMatrix);
 
+    int is_ok = memcmp(upDstC.get(), upDst.get(), bitmapSize);
+    //colorTwistRGB24(ImplementationType::X64_AVX3, upSrc.get(), 32, 1, 32 * 3, upDst.get(), 32 * 3, twistMatrix);
+}
 
 //void Test()
 //{
@@ -243,6 +246,13 @@ void TestBgr24()
         std::unique_ptr<uint8_t, void (*)(uint8_t*)> upDstAvx3((uint8_t*)malloc(bitmapSize), [](uint8_t* p) -> void { free(p); });
         TestBgr24("colorTwistRGB24_AVX3", ImplementationType::X64_AVX3, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstAvx3.get(), StrideDst);
         CompareUint8("colorTwistRGB24: C vs AVX3", upDstC.get(), upDstAvx3.get(), bitmapSize, 1);
+    }
+
+    if (isOperationalRgb24(ImplementationType::X86_SSE))
+    {
+        std::unique_ptr<uint8_t, void (*)(uint8_t*)> upDstSse((uint8_t*)malloc(bitmapSize), [](uint8_t* p) -> void { free(p); });
+        TestBgr24("colorTwistRGB24_SSE", ImplementationType::X86_SSE, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstSse.get(), StrideDst);
+        CompareUint8("colorTwistRGB24: C vs SSE", upDstC.get(), upDstSse.get(), bitmapSize, 1);
     }
 
     if (isOperationalRgb24(ImplementationType::ARM_NEON2))

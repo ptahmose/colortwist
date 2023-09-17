@@ -11,6 +11,8 @@ set (LIBCOLORTWIST_SOURCES  colortwist.h
                             colortwist_ipp.cpp
                             colortwist_avx.h
                             colortwist_avx.cpp
+                            colortwist_sse.h
+                            colortwist_sse.cpp
                             colortwist_neon.h
                             colortwist_neon.cpp
                             utils.h

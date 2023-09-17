@@ -1,6 +1,7 @@
 #include "colortwist.h"
 #include "colortwist_config.h"
 #include "colortwist_avx.h"
+#include "colortwist_sse.h"
 #include "colortwist_c.h"
 #include "colortwist_ipp.h"
 #include "colortwist_neon.h"
@@ -112,6 +113,12 @@ StatusCode colortwist::colorTwistRGB24(ImplementationType type, const void* pSrc
 #else
         return StatusCode::InvalidISA;
 #endif
+    case ImplementationType::X86_SSE:
+#if COLORTWISTLIB_HASAVX
+        return CanAvx() ? colorTwistRGB24_SSE(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
+#else
+        return StatusCode::InvalidISA;
+#endif
     }
 
     return StatusCode::UnknownImplementation;
@@ -140,6 +147,12 @@ bool colortwist::isOperationalRgb24(ImplementationType type)
     case ImplementationType::ARM_NEON2:
 #if COLORTWISTLIB_HASNEON
         return CanNeon();
+#else
+        return false;
+#endif
+    case ImplementationType::X86_SSE:
+#if COLORTWISTLIB_HASAVX
+        return CanAvx();
 #else
         return false;
 #endif
