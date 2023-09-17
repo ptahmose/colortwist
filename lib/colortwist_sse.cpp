@@ -93,11 +93,14 @@ colortwist::StatusCode colorTwistRGB24_SSE(const void* pSrc, uint32_t width, uin
             __m128i result2_ui16 = _mm_packs_epi32(result2_ui32, result2_ui32);
             __m128i result3_ui16 = _mm_packs_epi32(result3_ui32, result3_ui32);
 
-            __m128i result1_ui8 = _mm_packus_epi16(result1_ui16, result1_ui16);
-            __m128i result2_ui8 = _mm_packus_epi16(result2_ui16, result2_ui16);
+            __m128i result12_ui16 = _mm_unpacklo_epi64(result1_ui16, result2_ui16);
+
+           // __m128i result1_ui8 = _mm_packus_epi16(result1_ui16, result1_ui16);
+           // __m128i result2_ui8 = _mm_packus_epi16(result2_ui16, result2_ui16);
             __m128i result3_ui8 = _mm_packus_epi16(result3_ui16, result3_ui16);
 
-            __m128i result12_ui8 = _mm_unpackhi_epi32(result1_ui8, result2_ui8);
+            //__m128i result12_ui8 = _mm_unpackhi_epi32(result1_ui8, result2_ui8);
+            __m128i result12_ui8 = _mm_packus_epi16(result12_ui16, result12_ui16);
 
             _mm_storeu_si64(reinterpret_cast<__m128i*>(pd), result12_ui8);
     //        /*_mm_storeu_si32*/store_unaligned_dword(pd + 8, result3_ui8);
