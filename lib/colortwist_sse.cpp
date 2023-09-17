@@ -24,6 +24,10 @@ __m128i load_unaligned_dword(const void* ptr) {
     return _mm_castps_si128(_mm_load_ss((const float*)ptr));
 }
 
+void store_unaligned_dword(void* ptr, __m128i value) {
+    _mm_store_ss((float*)ptr, _mm_castsi128_ps(value));
+}
+
 colortwist::StatusCode colorTwistRGB24_SSE(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
     __m128 matrix_row1 = _mm_setr_ps(twistMatrix[0], twistMatrix[1], twistMatrix[2], twistMatrix[3]);
@@ -95,7 +99,7 @@ colortwist::StatusCode colorTwistRGB24_SSE(const void* pSrc, uint32_t width, uin
             __m128i result12_ui8 = _mm_unpackhi_epi32(result1_ui8, result2_ui8);
 
             _mm_storeu_si64(reinterpret_cast<__m128i*>(pd), result12_ui8);
-            /*_mm_storeu_si32*/_mm_storeu_epi32(pd + 8, result3_ui8);
+            /*_mm_storeu_si32*/store_unaligned_dword(pd + 8, result3_ui8);
 
             pd += 3 * 4;
             ps += 3 * 4;
