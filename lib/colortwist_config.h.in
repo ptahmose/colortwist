@@ -2,7 +2,9 @@
 
 #define COLORTWISTLIB_HASIPP  @COLORTWIST_HAS_IPP@
 
-#define COLORTWISTLIB_HASAVX  @COLORTWISE_HAS_AVX@
+#define COLORTWISTLIB_HASAVX_INTRINSICS  @COLORTWISE_HAS_AVX@  // whether the header <immintrin.h> is available or not (which is a meta-header for AVX, AVX2, FMA, etc.))
+
+#define COLORTWISTLIB_HASSSE42_INTRINSICS @COLORTWISTLIB_HASSSE42_INTRINSICS@ // whether the header <nmmintrin.h> is available or not (associated with the SSE4.2 instruction set))
 
 #define COLORTWISTLIB_HASNEON  @COLORTWIST_HAS_NEON@
 

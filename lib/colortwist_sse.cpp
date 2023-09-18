@@ -5,13 +5,14 @@
 #include <immintrin.h>
 
 
-#if COLORTWISTLIB_HASAVX
+#if COLORTWISTLIB_HASSSE42_INTRINSICS
 #include "utils.h"
 #include <limits>
-#include <emmintrin.h>
-#include <immintrin.h>
-#include <smmintrin.h>
-#include <xmmintrin.h>  // ->  AVX, AVX2, FMA
+#include <nmmintrin.h>
+//#include <emmintrin.h>
+//#include <immintrin.h>
+//#include <smmintrin.h>
+//#include <xmmintrin.h>  // ->  AVX, AVX2, FMA
 
 //#if defined(_MSC_VER) && !defined(__AVX2__)
 //#error "Must be compiled with option /arch:AVX2"

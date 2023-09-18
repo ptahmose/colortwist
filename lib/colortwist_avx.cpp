@@ -1,6 +1,6 @@
 #include "colortwist.h"
 #include "colortwist_config.h"
-#if COLORTWISTLIB_HASAVX
+#if COLORTWISTLIB_HASAVX_INTRINSICS
 #include "utils.h"
 #include <limits>
 #include <immintrin.h>  // ->  AVX, AVX2, FMA

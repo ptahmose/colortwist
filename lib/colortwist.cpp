@@ -10,7 +10,7 @@
 using namespace std;
 using namespace  colortwist;
 
-#if COLORTWISTLIB_HASAVX
+#if COLORTWISTLIB_HASAVX_INTRINSICS || COLORTWISTLIB_HASSSE42_INTRINSICS
 static int hasAvx = -1;
 static int hasSse41 = -1;
 
@@ -59,19 +59,19 @@ StatusCode colortwist::colorTwistRGB48(ImplementationType type, const void* pSrc
         case ImplementationType::PlainC:
             return colorTwistRGB48_C(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
         case ImplementationType::X64_AVX:
-#if COLORTWISTLIB_HASAVX
+#if COLORTWISTLIB_HASAVX_INTRINSICS_INTRINSICS
             return CanAvx() ? colorTwistRGB48_AVX(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
 #else
             return StatusCode::InvalidISA;
 #endif
         case ImplementationType::X64_AVX2:
-#if COLORTWISTLIB_HASAVX
+#if COLORTWISTLIB_HASAVX_INTRINSICS_INTRINSICS
             return CanAvx() ? colorTwistRGB48_AVX2(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
 #else
             return StatusCode::InvalidISA;
 #endif
         case ImplementationType::X64_AVX3:
-#if COLORTWISTLIB_HASAVX
+#if COLORTWISTLIB_HASAVX_INTRINSICS_INTRINSICS
             return CanAvx() ? colorTwistRGB48_AVX3(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
 #else
             return StatusCode::InvalidISA;
@@ -95,7 +95,7 @@ StatusCode colortwist::colorTwistRGB48(ImplementationType type, const void* pSrc
             return StatusCode::InvalidISA;
 #endif
         case ImplementationType::X86_SSE:
-#if COLORTWISTLIB_HASAVX
+#if COLORTWISTLIB_HASAVX_INTRINSICS
             return CanSse41() ? colorTwistRGB48_SSE(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
 #else
             return StatusCode::InvalidISA;
@@ -112,7 +112,7 @@ StatusCode colortwist::colorTwistRGB24(ImplementationType type, const void* pSrc
         case ImplementationType::PlainC:
             return colorTwistRGB24_C(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
         case ImplementationType::X64_AVX3:
-#if COLORTWISTLIB_HASAVX
+#if COLORTWISTLIB_HASAVX_INTRINSICS
             return CanAvx() ? colorTwistRGB24_AVX3(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
 #else
             return StatusCode::InvalidISA;
@@ -132,7 +132,7 @@ StatusCode colortwist::colorTwistRGB24(ImplementationType type, const void* pSrc
             return StatusCode::InvalidISA;
 #endif
         case ImplementationType::X86_SSE:
-#if COLORTWISTLIB_HASAVX
+#if COLORTWISTLIB_HASAVX_INTRINSICS
             return CanSse41() ? colorTwistRGB24_SSE(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
 #else
             return StatusCode::InvalidISA;
@@ -149,7 +149,7 @@ bool colortwist::isOperationalRgb24(ImplementationType type)
         case ImplementationType::PlainC:
             return true;
         case ImplementationType::X64_AVX3:
-#if COLORTWISTLIB_HASAVX
+#if COLORTWISTLIB_HASAVX_INTRINSICS
             return CanAvx();
 #else
             return false;
@@ -169,7 +169,7 @@ bool colortwist::isOperationalRgb24(ImplementationType type)
             return false;
 #endif
         case ImplementationType::X86_SSE:
-#if COLORTWISTLIB_HASAVX
+#if COLORTWISTLIB_HASAVX_INTRINSICS
             return CanSse41();
 #else
             return false;
@@ -186,19 +186,19 @@ bool colortwist::isOperationalRgb48(ImplementationType type)
         case ImplementationType::PlainC:
             return true;
         case ImplementationType::X64_AVX:
-#if COLORTWISTLIB_HASAVX
+#if COLORTWISTLIB_HASAVX_INTRINSICS
             return CanAvx();
 #else
             return false;
 #endif
         case ImplementationType::X64_AVX2:
-#if COLORTWISTLIB_HASAVX
+#if COLORTWISTLIB_HASAVX_INTRINSICS
             return CanAvx();
 #else
             return false;
 #endif
         case ImplementationType::X64_AVX3:
-#if COLORTWISTLIB_HASAVX
+#if COLORTWISTLIB_HASAVX_INTRINSICS
             return CanAvx();
 #else
             return false;
@@ -222,7 +222,7 @@ bool colortwist::isOperationalRgb48(ImplementationType type)
             return false;
 #endif
         case ImplementationType::X86_SSE:
-#if COLORTWISTLIB_HASAVX
+#if COLORTWISTLIB_HASAVX_INTRINSICS
             return CanSse41();
 #else
             return false;
