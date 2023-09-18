@@ -134,6 +134,7 @@ if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "AMD64" OR ${CMAKE_SYSTEM_PROCESSOR} MATCHE
   endif()
   if (CMAKE_COMPILER_IS_GNUCXX)
    set_source_files_properties(colortwist_avx.cpp PROPERTIES COMPILE_FLAGS "-mfma -mavx2")
+   set_source_files_properties(colortwist_sse.cpp PROPERTIES COMPILE_FLAGS "-msse2 -msse4.1")
   endif()
 elseif(${CMAKE_SYSTEM_PROCESSOR} MATCHES "i686" OR ${CMAKE_SYSTEM_PROCESSOR} MATCHES "x86_32")
   if (MSVC)
