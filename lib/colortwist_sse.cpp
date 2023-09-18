@@ -277,6 +277,70 @@ colortwist::StatusCode colorTwistRGB48_SSE(const void* pSrc, uint32_t width, uin
     __m128 matrix_row2 = _mm_setr_ps(twistMatrix[4], twistMatrix[5], twistMatrix[6], twistMatrix[7]);
     __m128 matrix_row3 = _mm_setr_ps(twistMatrix[8], twistMatrix[9], twistMatrix[10], twistMatrix[11]);
 
+    __m128 matrix_row1_ = _mm_setr_ps(twistMatrix[3], twistMatrix[0], twistMatrix[1], twistMatrix[2]);
+    __m128 matrix_row2_ = _mm_setr_ps(twistMatrix[7], twistMatrix[4], twistMatrix[5], twistMatrix[6]);
+    __m128 matrix_row3_ = _mm_setr_ps(twistMatrix[11], twistMatrix[8], twistMatrix[9], twistMatrix[10]);
+
+    /*__m128i one_constant = _mm_set1_epi32(0x0010000);
+    __m128i store_mask = _mm_set_epi8(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1);*/
+
+    for (uint32_t y = 0; y < height; ++y)
+    {
+        const uint8_t* ps = static_cast<const uint8_t*>(pSrc) + static_cast<size_t>(y) * strideSrc;
+        uint8_t* pd = static_cast<uint8_t*>(pDst) + static_cast<size_t>(y) * strideDst;
+        for (uint32_t x = 0; x < width / 2; ++x)
+        {
+            __m128i a = _mm_loadu_si32(ps);
+            __m128i b = _mm_loadu_si32(ps + 4);
+            __m128i c = _mm_loadu_si32(ps + 8);
+
+            __m128i first_rgb1_ushort16 = _mm_unpacklo_epi32(a, b);
+            first_rgb1_ushort16 = _mm_insert_epi16(first_rgb1_ushort16, 0x0001, 3);
+            __m128i second_rgb1_ushort16 = _mm_unpacklo_epi32(b, c);
+            second_rgb1_ushort16 = _mm_insert_epi16(second_rgb1_ushort16, 0x0001, 0);
+
+            __m128i first_rgb1_uint32 = _mm_unpacklo_epi16(first_rgb1_ushort16, _mm_setzero_si128());
+            __m128  first_rgb1_ = _mm_cvtepi32_ps(first_rgb1_uint32);
+
+            __m128i second_rgb1_uint32 = _mm_unpacklo_epi16(second_rgb1_ushort16, _mm_setzero_si128());
+            __m128  second_rgb1_ = _mm_cvtepi32_ps(second_rgb1_uint32);
+
+            __m128 sum1 = _mm_dp_ps(first_rgb1_, matrix_row1, 0xF1);
+            __m128 sum2 = _mm_dp_ps(first_rgb1_, matrix_row2, 0xF2);
+            __m128 sum3 = _mm_dp_ps(first_rgb1_, matrix_row3, 0xF4);
+            __m128 sum4 = _mm_dp_ps(second_rgb1_, matrix_row1_, 0xF8);
+            __m128  sum5 = _mm_dp_ps(second_rgb1_, matrix_row2_, 0xF1);
+            __m128  sum6 = _mm_dp_ps(second_rgb1_, matrix_row3_, 0xF2);
+
+            __m128 result_float_rgbr = _mm_or_ps(_mm_or_ps(sum1, sum2), _mm_or_ps(sum3, sum4));
+            __m128 result_float_gb = _mm_or_ps(sum5, sum6);
+
+            __m128i result_uint32_rgbr = _mm_cvtps_epi32(result_float_rgbr);
+            __m128i result_uint32_gb = _mm_cvtps_epi32(result_float_gb);
+
+            __m128i result_uint16_rgbr = _mm_packus_epi32(result_uint32_rgbr, result_uint32_rgbr); // The same input is used twice as a trick to only use the low 4 values
+            __m128i result_uint16_gb = _mm_packus_epi32(result_uint32_gb, result_uint32_gb);
+
+            _mm_storeu_si64(reinterpret_cast<__m128i*>(pd), result_uint16_rgbr);
+            _mm_storeu_si32(pd + 8, result_uint16_gb);
+
+            ps += 12;
+            pd += 12;
+        }
+    }
+
+    return colortwist::StatusCode::OK;
+}
+
+
+
+
+colortwist::StatusCode _colorTwistRGB48_SSE(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
+{
+    __m128 matrix_row1 = _mm_setr_ps(twistMatrix[0], twistMatrix[1], twistMatrix[2], twistMatrix[3]);
+    __m128 matrix_row2 = _mm_setr_ps(twistMatrix[4], twistMatrix[5], twistMatrix[6], twistMatrix[7]);
+    __m128 matrix_row3 = _mm_setr_ps(twistMatrix[8], twistMatrix[9], twistMatrix[10], twistMatrix[11]);
+
     __m128i one_constant = _mm_set1_epi32(0x0010000);
     __m128i store_mask = _mm_set_epi8(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1);
 
@@ -286,10 +350,10 @@ colortwist::StatusCode colorTwistRGB48_SSE(const void* pSrc, uint32_t width, uin
         uint8_t* pd = static_cast<uint8_t*>(pDst) + static_cast<size_t>(y) * strideDst;
         for (uint32_t x = 0; x < width; ++x)
         {
-            //__m128i a = _mm_loadu_si32(ps);
-            __m128i a = _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float*>(ps)));
-            //__m128i b = _mm_loadu_si16(ps + 4); // load 2 bytes (the remainder of the SSE-register is zeroed)
-            __m128i b = custom_mm_loadu_si16(ps + 4); // load 2 bytes (the remainder of the SSE-register is zeroed)
+            __m128i a = _mm_loadu_si32(ps);
+            //__m128i a = _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float*>(ps)));
+            __m128i b = _mm_loadu_si16(ps + 4); // load 2 bytes (the remainder of the SSE-register is zeroed)
+            //__m128i b = custom_mm_loadu_si16(ps + 4); // load 2 bytes (the remainder of the SSE-register is zeroed)
             b = _mm_or_si128(b, one_constant);
 
             __m128i rgb1_ushort16 = _mm_unpacklo_epi32(a, b);
