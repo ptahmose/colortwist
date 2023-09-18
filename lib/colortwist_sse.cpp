@@ -312,8 +312,13 @@ colortwist::StatusCode colorTwistRGB48_SSE(const void* pSrc, uint32_t width, uin
             __m128 sum3 = _mm_dp_ps(first_rgb1_, matrix_row3, 0xF4);
             __m128 sum4 = _mm_dp_ps(second_rgb1_, _mm_shuffle_ps(matrix_row1, matrix_row1, _MM_SHUFFLE(2, 1, 0, 3)), 0xF8);*/
 
-            __m128 sum5 = _mm_dp_ps(second_rgb1_, _mm_shuffle_ps(matrix_row2, matrix_row2, _MM_SHUFFLE(2, 1, 0, 3)), 0xF1);
-            __m128 sum6 = _mm_dp_ps(second_rgb1_, _mm_shuffle_ps(matrix_row3, matrix_row3, _MM_SHUFFLE(2, 1, 0, 3)), 0xF2);
+            __m128 result_float_gb = _mm_or_ps(
+                _mm_dp_ps(second_rgb1_, _mm_shuffle_ps(matrix_row2, matrix_row2, _MM_SHUFFLE(2, 1, 0, 3)), 0xF1),
+                _mm_dp_ps(second_rgb1_, _mm_shuffle_ps(matrix_row3, matrix_row3, _MM_SHUFFLE(2, 1, 0, 3)), 0xF2));
+
+
+           /* __m128 sum5 = _mm_dp_ps(second_rgb1_, _mm_shuffle_ps(matrix_row2, matrix_row2, _MM_SHUFFLE(2, 1, 0, 3)), 0xF1);
+            __m128 sum6 = _mm_dp_ps(second_rgb1_, _mm_shuffle_ps(matrix_row3, matrix_row3, _MM_SHUFFLE(2, 1, 0, 3)), 0xF2);*/
 
             __m128 result_float_rgbr = _mm_or_ps(
                                          _mm_or_ps(
@@ -324,7 +329,7 @@ colortwist::StatusCode colorTwistRGB48_SSE(const void* pSrc, uint32_t width, uin
             
             
 
-            __m128 result_float_gb = _mm_or_ps(sum5, sum6);
+            //__m128 result_float_gb = _mm_or_ps(sum5, sum6);
             
             /*__m128 result_float_gb = _mm_or_ps(
                                        _mm_dp_ps(second_rgb1_, _mm_shuffle_ps(matrix_row2, matrix_row2, _MM_SHUFFLE(2, 1, 0, 3)), 0xF1),
