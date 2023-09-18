@@ -290,9 +290,9 @@ colortwist::StatusCode colorTwistRGB48_SSE(const void* pSrc, uint32_t width, uin
         uint8_t* pd = static_cast<uint8_t*>(pDst) + static_cast<size_t>(y) * strideDst;
         for (uint32_t x = 0; x < width / 2; ++x)
         {
-            __m128i a = _mm_loadu_si32(ps);
-            __m128i b = _mm_loadu_si32(ps + 4);
-            __m128i c = _mm_loadu_si32(ps + 8);
+            __m128i a = _mm_castps_si128(_mm_load_ss((const float*)ps)); //_mm_loadu_si32(ps);
+            __m128i b = _mm_castps_si128(_mm_load_ss((const float*)(ps+4))); //_mm_loadu_si32(ps + 4);
+            __m128i c = _mm_castps_si128(_mm_load_ss((const float*)(ps+8))); //_mm_loadu_si32(ps + 8);
 
             __m128i first_rgb1_ushort16 = _mm_unpacklo_epi32(a, b);
             first_rgb1_ushort16 = _mm_insert_epi16(first_rgb1_ushort16, 0x0001, 3);
