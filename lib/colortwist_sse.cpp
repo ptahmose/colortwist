@@ -321,10 +321,10 @@ colortwist::StatusCode colorTwistRGB48_SSE(const void* pSrc, uint32_t width, uin
             __m128 sum6 = _mm_dp_ps(second_rgb1_, _mm_shuffle_ps(matrix_row3, matrix_row3, _MM_SHUFFLE(2, 1, 0, 3)), 0xF2);*/
 
             __m128 result_float_rgbr = _mm_or_ps(
-                                         _mm_or_ps(
-                                           _mm_or_ps(_mm_dp_ps(first_rgb1_, matrix_row1, 0xF1), _mm_dp_ps(first_rgb1_, matrix_row2, 0xF2)),
-                                           _mm_dp_ps(first_rgb1_, matrix_row3, 0xF4)),
-                                         _mm_dp_ps(second_rgb1_, _mm_shuffle_ps(matrix_row1, matrix_row1, _MM_SHUFFLE(2, 1, 0, 3)), 0xF8));
+                                           _mm_or_ps(
+                                                _mm_or_ps(_mm_dp_ps(first_rgb1_, matrix_row1, 0xF1), _mm_dp_ps(first_rgb1_, matrix_row2, 0xF2)),
+                                                _mm_dp_ps(first_rgb1_, matrix_row3, 0xF4)),
+                                           _mm_dp_ps(second_rgb1_, _mm_shuffle_ps(matrix_row1, matrix_row1, _MM_SHUFFLE(2, 1, 0, 3)), 0xF8));
 
             
             
@@ -336,12 +336,13 @@ colortwist::StatusCode colorTwistRGB48_SSE(const void* pSrc, uint32_t width, uin
                                        _mm_dp_ps(second_rgb1_, _mm_shuffle_ps(matrix_row3, matrix_row3, _MM_SHUFFLE(2, 1, 0, 3)), 0xF2));*/
 
             __m128i result_uint32_rgbr = _mm_cvtps_epi32(result_float_rgbr);
-            __m128i result_uint32_gb = _mm_cvtps_epi32(result_float_gb);
-
             __m128i result_uint16_rgbr = _mm_packus_epi32(result_uint32_rgbr, result_uint32_rgbr); // The same input is used twice as a trick to only use the low 4 values
-            __m128i result_uint16_gb = _mm_packus_epi32(result_uint32_gb, result_uint32_gb);
 
             _mm_storeu_si64(reinterpret_cast<__m128i*>(pd), result_uint16_rgbr);
+
+            __m128i result_uint32_gb = _mm_cvtps_epi32(result_float_gb);
+            __m128i result_uint16_gb = _mm_packus_epi32(result_uint32_gb, result_uint32_gb);
+
             // _mm_storeu_si32(pd + 8, result_uint16_gb);
             _mm_store_ss((float*)(pd + 8), _mm_castsi128_ps(result_uint16_gb));
 
