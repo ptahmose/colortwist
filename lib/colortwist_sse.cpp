@@ -2,9 +2,6 @@
 #include "colortwist_config.h"
 #include "colortwist_sse.h"
 
-#include <immintrin.h>
-
-
 #if COLORTWISTLIB_HASSSE42_INTRINSICS
 #include "utils.h"
 #include <limits>
