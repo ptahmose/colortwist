@@ -292,10 +292,12 @@ colortwist::StatusCode colorTwistRGB48_SSE(const void* pSrc, uint32_t width, uin
         {
             __m128i a = _mm_castps_si128(_mm_load_ss((const float*)ps)); //_mm_loadu_si32(ps);
             __m128i b = _mm_castps_si128(_mm_load_ss((const float*)(ps + 4))); //_mm_loadu_si32(ps + 4);
-            __m128i c = _mm_castps_si128(_mm_load_ss((const float*)(ps + 8))); //_mm_loadu_si32(ps + 8);
+            //__m128i c = _mm_castps_si128(_mm_load_ss((const float*)(ps + 8))); //_mm_loadu_si32(ps + 8);
 
             __m128i first_rgb1_ushort16 = _mm_unpacklo_epi32(a, b);
             first_rgb1_ushort16 = _mm_insert_epi16(first_rgb1_ushort16, 0x0001, 3);
+
+            __m128i c = _mm_castps_si128(_mm_load_ss((const float*)(ps + 8)));
             __m128i second_rgb1_ushort16 = _mm_unpacklo_epi32(b, c);
             second_rgb1_ushort16 = _mm_insert_epi16(second_rgb1_ushort16, 0x0001, 0);
 
@@ -337,13 +339,10 @@ colortwist::StatusCode colorTwistRGB48_SSE(const void* pSrc, uint32_t width, uin
 
             __m128i result_uint32_rgbr = _mm_cvtps_epi32(result_float_rgbr);
             __m128i result_uint16_rgbr = _mm_packus_epi32(result_uint32_rgbr, result_uint32_rgbr); // The same input is used twice as a trick to only use the low 4 values
-
             _mm_storeu_si64(reinterpret_cast<__m128i*>(pd), result_uint16_rgbr);
 
             __m128i result_uint32_gb = _mm_cvtps_epi32(result_float_gb);
             __m128i result_uint16_gb = _mm_packus_epi32(result_uint32_gb, result_uint32_gb);
-
-            // _mm_storeu_si32(pd + 8, result_uint16_gb);
             _mm_store_ss((float*)(pd + 8), _mm_castsi128_ps(result_uint16_gb));
 
             ps += 12;
