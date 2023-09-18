@@ -281,7 +281,8 @@ colortwist::StatusCode colorTwistRGB48_SSE(const void* pSrc, uint32_t width, uin
         uint8_t* pd = static_cast<uint8_t*>(pDst) + static_cast<size_t>(y) * strideDst;
         for (uint32_t x = 0; x < width; ++x)
         {
-            __m128i a = _mm_loadu_si32(ps);
+            //__m128i a = _mm_loadu_si32(ps);
+            __m128i a = _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float*>(ps)));
             __m128i b = _mm_loadu_si16(ps + 4); // load 2 bytes (the remainder of the SSE-register is zeroed)
             b = _mm_or_si128(b, one_constant);
 
