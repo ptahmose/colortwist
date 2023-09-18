@@ -307,22 +307,26 @@ colortwist::StatusCode colorTwistRGB48_SSE(const void* pSrc, uint32_t width, uin
 
             //__m128 second_rgb1__ = _mm_shuffle_ps(second_rgb1_, second_rgb1_, _MM_SHUFFLE(0, 3, 2, 1));
 
-            __m128 sum1 = _mm_dp_ps(first_rgb1_, matrix_row1, 0xF1);
+            /*__m128 sum1 = _mm_dp_ps(first_rgb1_, matrix_row1, 0xF1);
             __m128 sum2 = _mm_dp_ps(first_rgb1_, matrix_row2, 0xF2);
             __m128 sum3 = _mm_dp_ps(first_rgb1_, matrix_row3, 0xF4);
-            // __m128 shuffled = _mm_shuffle_ps(matrix_row1, matrix_row1, _MM_SHUFFLE( 2, 1,0,3));
-             /*__m128 sum4 = _mm_dp_ps(second_rgb1_, matrix_row1_, 0xF8);
-             __m128  sum5 = _mm_dp_ps(second_rgb1_, matrix_row2_, 0xF1);
-             __m128  sum6 = _mm_dp_ps(second_rgb1_, matrix_row3_, 0xF2);*/
-            __m128 sum4 = _mm_dp_ps(second_rgb1_, _mm_shuffle_ps(matrix_row1, matrix_row1, _MM_SHUFFLE(2, 1, 0, 3)), 0xF8);
+            __m128 sum4 = _mm_dp_ps(second_rgb1_, _mm_shuffle_ps(matrix_row1, matrix_row1, _MM_SHUFFLE(2, 1, 0, 3)), 0xF8);*/
+
+            __m128 result_float_rgbr = _mm_or_ps(
+                                         _mm_or_ps(
+                                           _mm_or_ps(_mm_dp_ps(first_rgb1_, matrix_row1, 0xF1), _mm_dp_ps(first_rgb1_, matrix_row2, 0xF2)),
+                                           _mm_dp_ps(first_rgb1_, matrix_row3, 0xF4)),
+                                         _mm_dp_ps(second_rgb1_, _mm_shuffle_ps(matrix_row1, matrix_row1, _MM_SHUFFLE(2, 1, 0, 3)), 0xF8));
+
+            /*
             __m128 sum5 = _mm_dp_ps(second_rgb1_, _mm_shuffle_ps(matrix_row2, matrix_row2, _MM_SHUFFLE(2, 1, 0, 3)), 0xF1);
             __m128 sum6 = _mm_dp_ps(second_rgb1_, _mm_shuffle_ps(matrix_row3, matrix_row3, _MM_SHUFFLE(2, 1, 0, 3)), 0xF2);
-            /*__m128 sum4 = _mm_dp_ps(second_rgb1__, matrix_row1, 0xF8);
-            __m128 sum5 = _mm_dp_ps(second_rgb1__, matrix_row2, 0xF1);
-            __m128 sum6 = _mm_dp_ps(second_rgb1__, matrix_row3, 0xF2);*/
 
-            __m128 result_float_rgbr = _mm_or_ps(_mm_or_ps(sum1, sum2), _mm_or_ps(sum3, sum4));
             __m128 result_float_gb = _mm_or_ps(sum5, sum6);
+            */
+            __m128 result_float_gb = _mm_or_ps(
+                                       _mm_dp_ps(second_rgb1_, _mm_shuffle_ps(matrix_row2, matrix_row2, _MM_SHUFFLE(2, 1, 0, 3)), 0xF1),
+                                       _mm_dp_ps(second_rgb1_, _mm_shuffle_ps(matrix_row3, matrix_row3, _MM_SHUFFLE(2, 1, 0, 3)), 0xF2));
 
             __m128i result_uint32_rgbr = _mm_cvtps_epi32(result_float_rgbr);
             __m128i result_uint32_gb = _mm_cvtps_epi32(result_float_gb);
