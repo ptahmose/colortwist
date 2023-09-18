@@ -23,6 +23,7 @@ int main(int argc, char** argv)
     return 0;
 }
 
+#if 0
 void Test()
 {
     size_t bitmapSize = 32 * 3;
@@ -47,6 +48,31 @@ void Test()
     int is_ok = memcmp(upDstC.get(), upDst.get(), bitmapSize);
     //colorTwistRGB24(ImplementationType::X64_AVX3, upSrc.get(), 32, 1, 32 * 3, upDst.get(), 32 * 3, twistMatrix);
 }
+#endif
+
+void Test()
+{
+    size_t bitmapSize = 32 * 3;
+    std::unique_ptr<uint16_t, void (*)(uint16_t*)> upSrc((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
+    for (size_t i = 0; i < bitmapSize / 2; ++i)
+    {
+        upSrc.get()[i] = (uint16_t)(1 + i);
+    }
+    std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstSse((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
+    std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDst((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
+
+    static const float twistMatrix[4 * 3] =
+    {
+        1, 2, 3, 4,
+        5, 6, 7, 8,
+        1.1f, 1.2f, 1.3f, 1.4f
+    };
+    colorTwistRGB48(ImplementationType::PlainC, upSrc.get(), 16, 1, 32 * 3, upDst.get(), 32 * 3, twistMatrix);
+    colorTwistRGB48(ImplementationType::X86_SSE, upSrc.get(), 16, 1, 32 * 3, upDstSse.get(), 32 * 3, twistMatrix);
+
+    int is_ok = memcmp(upDst.get(), upDst.get(), bitmapSize);
+}
+
 
 //void Test()
 //{
@@ -91,6 +117,8 @@ void Test()
 //    colorTwistRGB48(ImplementationType::PlainC, upSrc.get(), 16, 1, 32 * 3, upDst.get(), 32 * 3, twistMatrix);
 //    colorTwistRGB48(ImplementationType::X64_AVX2, upSrc.get(), 16, 1, 32 * 3, upDstAvx.get(), 32 * 3, twistMatrix);
 //}
+
+
 
 
 void FillWithRandom(void* p, size_t size)
@@ -201,6 +229,13 @@ void TestBgr48()
         std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstAvx3((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
         TestBgr48("colorTwistRGB48_AVX3", ImplementationType::X64_AVX3, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstAvx3.get(), StrideDst);
         CompareUint16("colorTwistRGB48: C vs AVX3", upDstC.get(), upDstAvx3.get(), bitmapSize / 2, 1);
+    }
+
+    if (isOperationalRgb24(ImplementationType::X86_SSE))
+    {
+        std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstSse((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
+        TestBgr48("colorTwistRGB48_SSE", ImplementationType::X86_SSE, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstSse.get(), StrideDst);
+        CompareUint16("colorTwistRGB48: C vs SSE", upDstC.get(), upDstSse.get(), bitmapSize / 2, 1);
     }
 
     if (isOperationalRgb48(ImplementationType::ARM_NEON))

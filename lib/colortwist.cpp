@@ -94,6 +94,12 @@ StatusCode colortwist::colorTwistRGB48(ImplementationType type, const void* pSrc
 #else
             return StatusCode::InvalidISA;
 #endif
+        case ImplementationType::X86_SSE:
+#if COLORTWISTLIB_HASAVX
+            return CanSse41() ? colorTwistRGB48_SSE(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
+#else
+            return StatusCode::InvalidISA;
+#endif
     }
 
     return StatusCode::UnknownImplementation;
@@ -212,6 +218,12 @@ bool colortwist::isOperationalRgb48(ImplementationType type)
         case ImplementationType::ARM_NEON2:
 #if COLORTWISTLIB_HASNEON
             return CanNeon();
+#else
+            return false;
+#endif
+        case ImplementationType::X86_SSE:
+#if COLORTWISTLIB_HASAVX
+            return CanSse41();
 #else
             return false;
 #endif
