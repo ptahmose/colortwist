@@ -322,7 +322,8 @@ colortwist::StatusCode colorTwistRGB48_SSE(const void* pSrc, uint32_t width, uin
             __m128i result_uint16_gb = _mm_packus_epi32(result_uint32_gb, result_uint32_gb);
 
             _mm_storeu_si64(reinterpret_cast<__m128i*>(pd), result_uint16_rgbr);
-            _mm_storeu_si32(pd + 8, result_uint16_gb);
+           // _mm_storeu_si32(pd + 8, result_uint16_gb);
+            _mm_store_ss((float*)(pd + 8), _mm_castsi128_ps(result_uint16_gb));
 
             ps += 12;
             pd += 12;
@@ -350,10 +351,10 @@ colortwist::StatusCode _colorTwistRGB48_SSE(const void* pSrc, uint32_t width, ui
         uint8_t* pd = static_cast<uint8_t*>(pDst) + static_cast<size_t>(y) * strideDst;
         for (uint32_t x = 0; x < width; ++x)
         {
-            __m128i a = _mm_loadu_si32(ps);
-            //__m128i a = _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float*>(ps)));
-            __m128i b = _mm_loadu_si16(ps + 4); // load 2 bytes (the remainder of the SSE-register is zeroed)
-            //__m128i b = custom_mm_loadu_si16(ps + 4); // load 2 bytes (the remainder of the SSE-register is zeroed)
+            //__m128i a = _mm_loadu_si32(ps);
+            __m128i a = _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float*>(ps)));
+            //__m128i b = _mm_loadu_si16(ps + 4); // load 2 bytes (the remainder of the SSE-register is zeroed)
+            __m128i b = custom_mm_loadu_si16(ps + 4); // load 2 bytes (the remainder of the SSE-register is zeroed)
             b = _mm_or_si128(b, one_constant);
 
             __m128i rgb1_ushort16 = _mm_unpacklo_epi32(a, b);
