@@ -31,18 +31,18 @@ endif()
 # check whether we can use AVX2-instructions -> we check for the presence of the file
 CHECK_INCLUDE_FILES(immintrin.h IMMINTRINFOUND)
 if (IMMINTRINFOUND)
- set(COLORTWISE_HAS_AVX 1)
+ set(COLORTWISE_HAS_IMMINTRIN 1)
 else()
- set(COLORTWISE_HAS_AVX 0)
+ set(COLORTWISE_HAS_IMMINTRIN 0)
 endif()
 
 # check whether we can the SSE4.2-intrinsics are available -> we check for the presence of the file
-CHECK_INCLUDE_FILES(nmmintrin.h NMMINTRINFOUND)
-if (NMMINTRINFOUND)
- set(COLORTWISTLIB_HASSSE42_INTRINSICS 1)
-else()
- set(COLORTWISTLIB_HASSSE42_INTRINSICS 0)
-endif()
+#CHECK_INCLUDE_FILES(nmmintrin.h NMMINTRINFOUND)
+#if (NMMINTRINFOUND)
+# set(COLORTWISTLIB_HASSSE42_INTRINSICS 1)
+#else()
+# set(COLORTWISTLIB_HASSSE42_INTRINSICS 0)
+#endif()
 
 # check whether we can use ARM-Neon-instructions -> we check for the presence of the file
 CHECK_INCLUDE_FILES(arm_neon.h ARMNEONFOUND)

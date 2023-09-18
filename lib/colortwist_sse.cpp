@@ -2,18 +2,10 @@
 #include "colortwist_config.h"
 #include "colortwist_sse.h"
 
-#if COLORTWISTLIB_HASSSE42_INTRINSICS
+#if COLORTWISTLIB_HAS_INTEL_INTRINSICS
 #include "utils.h"
 #include <limits>
-#include <nmmintrin.h>
-//#include <emmintrin.h>
-//#include <immintrin.h>
-//#include <smmintrin.h>
-//#include <xmmintrin.h>  // ->  AVX, AVX2, FMA
-
-//#if defined(_MSC_VER) && !defined(__AVX2__)
-//#error "Must be compiled with option /arch:AVX2"
-//#endif
+#include <immintrin.h>
 
 using namespace std;
 using namespace colortwist;

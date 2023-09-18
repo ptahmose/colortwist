@@ -34,7 +34,7 @@ inline colortwist::StatusCode checkArgumentsRgb24(const void* pSrc, std::uint32_
     return colortwist::StatusCode::OK;
 }
 
-#if COLORTWISTLIB_HASAVX_INTRINSICS || COLORTWISTLIB_HASSSE42_INTRINSICS
+#if COLORTWISTLIB_HAS_INTEL_INTRINSICS 
 bool CheckWhetherCpuSupportsAVX2();
 bool CheckWhetherCpuSupportsSSE41();
 #endif
