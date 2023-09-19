@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.0.0)
 project(libcolortwist VERSION 0.1.0)
 
 INCLUDE(CheckIncludeFiles)
+include(CheckSymbolExists)
 
 set (LIBCOLORTWIST_SOURCES  colortwist.h
                             colortwist.cpp
@@ -31,9 +32,21 @@ endif()
 # check whether we can use AVX2-instructions -> we check for the presence of the file
 CHECK_INCLUDE_FILES(immintrin.h IMMINTRINFOUND)
 if (IMMINTRINFOUND)
- set(COLORTWISE_HAS_IMMINTRIN 1)
+ set(COLORTWIST_HAS_IMMINTRIN 1)
 else()
- set(COLORTWISE_HAS_IMMINTRIN 0)
+ set(COLORTWIST_HAS_IMMINTRIN 0)
+endif()
+
+if (COLORTWIST_HAS_IMMINTRIN )
+  check_symbol_exists(_mm_loadu_si16 immintrin.h HAS_MM_LOADU_SI16_INTRINSIC)
+  if (HAS_MMLOADUSI16_INTRINSIC)
+    message(STATUS "Found _mm_loadu_si16 intrinsic")
+    set(HAS_MM_LOADU_SI16_INTRINSIC 1)
+  else()
+    set(HAS_MM_LOADU_SI16_INTRINSIC 0)
+  endif()
+else()
+  set(HAS_MM_LOADU_SI16_INTRINSIC 0)
 endif()
 
 # check whether we can the SSE4.2-intrinsics are available -> we check for the presence of the file

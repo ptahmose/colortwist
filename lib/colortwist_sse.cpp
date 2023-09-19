@@ -153,10 +153,10 @@ colortwist::StatusCode colorTwistRGB24_SSE(const void* pSrc, uint32_t width, uin
     }
 }
 
-inline __m128i custom_mm_loadu_si16(const void* mem_addr) {
-    uint16_t value = *(uint16_t*)mem_addr;
-    return _mm_cvtsi32_si128((int)value);
-}
+//inline __m128i custom_mm_loadu_si16(const void* mem_addr) {
+//    uint16_t value = *(uint16_t*)mem_addr;
+//    return _mm_cvtsi32_si128((int)value);
+//}
 
 template <bool deal_with_remainder> struct ColorTwistRgb48Generic
 {
@@ -217,7 +217,11 @@ template <bool deal_with_remainder> struct ColorTwistRgb48Generic
                     static const __m128i kStoreMask = _mm_set_epi8(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1);
 
                     __m128i a = _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float*>(ps)));
+#if 0 && COLORTWISTLIB_HAS_MM_LOADU_SI16_INTRINSICS
                     __m128i b = _mm_loadu_si16(ps + 4); // load 2 bytes (the remainder of the SSE-register is zeroed)
+#else
+                    __m128i b = _mm_cvtsi32_si128((*reinterpret_cast<const uint16_t*>(ps + 4)));
+#endif
                     //__m128i b = custom_mm_loadu_si16(ps + 4); // load 2 bytes (the remainder of the SSE-register is zeroed)
                     //b = _mm_or_si128(b, one_constant);
                     b = _mm_insert_epi16(b, 0x0001, 3);
@@ -307,7 +311,7 @@ colortwist::StatusCode colorTwistRGB48_SSE(const void* pSrc, uint32_t width, uin
 
 
 
-
+#if 0
 colortwist::StatusCode _colorTwistRGB48_SSE(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
     __m128 matrix_row1 = _mm_setr_ps(twistMatrix[0], twistMatrix[1], twistMatrix[2], twistMatrix[3]);
@@ -351,8 +355,9 @@ colortwist::StatusCode _colorTwistRGB48_SSE(const void* pSrc, uint32_t width, ui
 
     return colortwist::StatusCode::OK;
 }
+#endif
 
-
+#if 0
 colortwist::StatusCode _colorTwistRGB24_SSE(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
     __m128 matrix_row1 = _mm_setr_ps(twistMatrix[0], twistMatrix[1], twistMatrix[2], twistMatrix[3]);
@@ -406,6 +411,6 @@ colortwist::StatusCode _colorTwistRGB24_SSE(const void* pSrc, uint32_t width, ui
     }
     return colortwist::StatusCode::OK;
 }
-
+#endif
 
 #endif
