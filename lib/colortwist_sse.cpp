@@ -172,15 +172,15 @@ template <bool deal_with_remainder> struct ColorTwistRgb48Generic
                 __m128i second_rgb1_uint32 = _mm_unpacklo_epi16(second_rgb1_ushort16, _mm_setzero_si128());
                 __m128  second_rgb1_ = _mm_cvtepi32_ps(second_rgb1_uint32);
 
-                __m128 result_float_gb = _mm_or_ps(
-                    _mm_dp_ps(second_rgb1_, _mm_shuffle_ps(matrix_row2, matrix_row2, _MM_SHUFFLE(2, 1, 0, 3)), 0xF1),
-                    _mm_dp_ps(second_rgb1_, _mm_shuffle_ps(matrix_row3, matrix_row3, _MM_SHUFFLE(2, 1, 0, 3)), 0xF2));
-
                 __m128 result_float_rgbr = _mm_or_ps(
                     _mm_or_ps(
                         _mm_or_ps(_mm_dp_ps(first_rgb1_, matrix_row1, 0xF1), _mm_dp_ps(first_rgb1_, matrix_row2, 0xF2)),
                         _mm_dp_ps(first_rgb1_, matrix_row3, 0xF4)),
                     _mm_dp_ps(second_rgb1_, _mm_shuffle_ps(matrix_row1, matrix_row1, _MM_SHUFFLE(2, 1, 0, 3)), 0xF8));
+
+                __m128 result_float_gb = _mm_or_ps(
+                    _mm_dp_ps(second_rgb1_, _mm_shuffle_ps(matrix_row2, matrix_row2, _MM_SHUFFLE(2, 1, 0, 3)), 0xF1),
+                    _mm_dp_ps(second_rgb1_, _mm_shuffle_ps(matrix_row3, matrix_row3, _MM_SHUFFLE(2, 1, 0, 3)), 0xF2));
 
                 __m128i result_uint32_rgbr = _mm_cvtps_epi32(result_float_rgbr);
                 __m128i result_uint16_rgbr = _mm_packus_epi32(result_uint32_rgbr, result_uint32_rgbr); // The same input is used twice as a trick to only use the low 4 values
