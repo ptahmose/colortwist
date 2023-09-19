@@ -33,8 +33,11 @@ template <bool deal_with_remainder> struct ColorTwistRgb24Generic
             for (uint32_t x = 0; x < width_over_four; ++x)
             {
                 __m128i a = _mm_loadu_si64(ps);
-                //__m128i b = /*_mm_loadu_si32*/load_unaligned_dword(ps + 8);
+#if COLORTWISTLIB_HAS_MM_LOADU_SI32_INTRINSICS
+                __m128i b = _mm_loadu_si32(ps + 8);
+#else
                 __m128i b = _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float*>(ps + 8)));
+#endif
 
                 __m128i c = _mm_unpacklo_epi8(a, _mm_setzero_si128());
 
@@ -92,8 +95,11 @@ template <bool deal_with_remainder> struct ColorTwistRgb24Generic
                 __m128i result12_ui8 = _mm_packus_epi16(result12_ui16, result12_ui16);
 
                 _mm_storeu_si64(reinterpret_cast<__m128i*>(pd), result12_ui8);
-                //        /*_mm_storeu_si32*/store_unaligned_dword(pd + 8, result3_ui8);
+#if COLORTWISTLIB_HAS_MM_STOREU_SI32_INTRINSICS
+                _mm_storeu_si32(pd + 8, result3_ui8);
+#else
                 _mm_store_ss(reinterpret_cast<float*>(pd + 8), _mm_castsi128_ps(result3_ui8));
+#endif
 
                 pd += 12;
                 ps += 12;
