@@ -158,8 +158,103 @@ inline __m128i custom_mm_loadu_si16(const void* mem_addr) {
     return _mm_cvtsi32_si128((int)value);
 }
 
+template <bool deal_with_remainder> struct ColorTwistRgb48Generic
+{
+    static colortwist::StatusCode do_it(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
+    {
+        const __m128 matrix_row1 = _mm_setr_ps(twistMatrix[0], twistMatrix[1], twistMatrix[2], twistMatrix[3]);
+        const __m128 matrix_row2 = _mm_setr_ps(twistMatrix[4], twistMatrix[5], twistMatrix[6], twistMatrix[7]);
+        const __m128 matrix_row3 = _mm_setr_ps(twistMatrix[8], twistMatrix[9], twistMatrix[10], twistMatrix[11]);
+
+        const uint32_t width_over_two = width / 2;
+        const uint32_t width_mod_two = width % 2;
+
+        for (uint32_t y = 0; y < height; ++y)
+        {
+            const uint8_t* ps = static_cast<const uint8_t*>(pSrc) + static_cast<size_t>(y) * strideSrc;
+            uint8_t* pd = static_cast<uint8_t*>(pDst) + static_cast<size_t>(y) * strideDst;
+            for (uint32_t x = 0; x < width_over_two; ++x)
+            {
+                __m128i first_rgbr_ushort16 = _mm_loadu_si64(ps);
+                __m128i first_rgb1_ushort16 = _mm_insert_epi16(first_rgbr_ushort16, 0x0001, 3);
+
+                __m128i c = _mm_castps_si128(_mm_load_ss((const float*)(ps + 8)));
+                __m128i second_rgb1_ushort16 = _mm_unpacklo_epi32(_mm_shuffle_epi32(first_rgbr_ushort16, 0x55), c);
+                second_rgb1_ushort16 = _mm_insert_epi16(second_rgb1_ushort16, 0x0001, 0);
+
+                __m128i first_rgb1_uint32 = _mm_unpacklo_epi16(first_rgb1_ushort16, _mm_setzero_si128());
+                __m128  first_rgb1_ = _mm_cvtepi32_ps(first_rgb1_uint32);
+
+                __m128i second_rgb1_uint32 = _mm_unpacklo_epi16(second_rgb1_ushort16, _mm_setzero_si128());
+                __m128  second_rgb1_ = _mm_cvtepi32_ps(second_rgb1_uint32);
+
+                __m128 result_float_gb = _mm_or_ps(
+                    _mm_dp_ps(second_rgb1_, _mm_shuffle_ps(matrix_row2, matrix_row2, _MM_SHUFFLE(2, 1, 0, 3)), 0xF1),
+                    _mm_dp_ps(second_rgb1_, _mm_shuffle_ps(matrix_row3, matrix_row3, _MM_SHUFFLE(2, 1, 0, 3)), 0xF2));
+
+                __m128 result_float_rgbr = _mm_or_ps(
+                    _mm_or_ps(
+                        _mm_or_ps(_mm_dp_ps(first_rgb1_, matrix_row1, 0xF1), _mm_dp_ps(first_rgb1_, matrix_row2, 0xF2)),
+                        _mm_dp_ps(first_rgb1_, matrix_row3, 0xF4)),
+                    _mm_dp_ps(second_rgb1_, _mm_shuffle_ps(matrix_row1, matrix_row1, _MM_SHUFFLE(2, 1, 0, 3)), 0xF8));
+
+                __m128i result_uint32_rgbr = _mm_cvtps_epi32(result_float_rgbr);
+                __m128i result_uint16_rgbr = _mm_packus_epi32(result_uint32_rgbr, result_uint32_rgbr); // The same input is used twice as a trick to only use the low 4 values
+                _mm_storeu_si64(reinterpret_cast<__m128i*>(pd), result_uint16_rgbr);
+
+                __m128i result_uint32_gb = _mm_cvtps_epi32(result_float_gb);
+                __m128i result_uint16_gb = _mm_packus_epi32(result_uint32_gb, result_uint32_gb);
+                _mm_store_ss((float*)(pd + 8), _mm_castsi128_ps(result_uint16_gb));
+
+                ps += 12;
+                pd += 12;
+            }
+
+            if (deal_with_remainder)
+            {
+                if (width_mod_two > 0)
+                {
+                    static const __m128i kStoreMask = _mm_set_epi8(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1);
+
+                    __m128i a = _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float*>(ps)));
+                    __m128i b = _mm_loadu_si16(ps + 4); // load 2 bytes (the remainder of the SSE-register is zeroed)
+                    //__m128i b = custom_mm_loadu_si16(ps + 4); // load 2 bytes (the remainder of the SSE-register is zeroed)
+                    //b = _mm_or_si128(b, one_constant);
+                    b = _mm_insert_epi16(b, 0x0001, 3);
+
+                    __m128i rgb1_ushort16 = _mm_unpacklo_epi32(a, b);
+                    __m128i rgb1_uint32 = _mm_unpacklo_epi16(rgb1_ushort16, _mm_setzero_si128());
+
+                    __m128 rgb1_float = _mm_cvtepi32_ps(rgb1_uint32);
+
+                    __m128 sum1 = _mm_dp_ps(rgb1_float, matrix_row1, 0xF1);
+                    __m128 sum2 = _mm_dp_ps(rgb1_float, matrix_row2, 0xF2);
+                    __m128 sum3 = _mm_dp_ps(rgb1_float, matrix_row3, 0xF4);
+                    __m128 result_float = _mm_or_ps(sum1, _mm_or_ps(sum2, sum3));
+
+                    __m128i result_ui32 = _mm_cvtps_epi32(result_float);
+                    __m128i result1_ui16 = _mm_packus_epi32(result_ui32, result_ui32);
+
+                    _mm_maskmoveu_si128(result1_ui16, kStoreMask, reinterpret_cast<char*>(pd));
+                }
+            }
+        }
+
+        return colortwist::StatusCode::OK;
+    }
+};
+
 colortwist::StatusCode colorTwistRGB48_SSE(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
+    if ((width % 2) != 0)
+    {
+        return ColorTwistRgb48Generic<true>::do_it(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
+    }
+    else
+    {
+        return ColorTwistRgb48Generic<false>::do_it(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
+    }
+    /*
     const __m128 matrix_row1 = _mm_setr_ps(twistMatrix[0], twistMatrix[1], twistMatrix[2], twistMatrix[3]);
     const __m128 matrix_row2 = _mm_setr_ps(twistMatrix[4], twistMatrix[5], twistMatrix[6], twistMatrix[7]);
     const __m128 matrix_row3 = _mm_setr_ps(twistMatrix[8], twistMatrix[9], twistMatrix[10], twistMatrix[11]);
@@ -207,6 +302,7 @@ colortwist::StatusCode colorTwistRGB48_SSE(const void* pSrc, uint32_t width, uin
     }
 
     return colortwist::StatusCode::OK;
+    */
 }
 
 

@@ -52,9 +52,10 @@ void Test()
 
 void Test()
 {
-    size_t bitmapSize = 32 * 3;
+    const int kWidth = 15;
+    size_t bitmapSize = (kWidth * 2) * 3;
     std::unique_ptr<uint16_t, void (*)(uint16_t*)> upSrc((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
-    for (size_t i = 0; i < bitmapSize / 2; ++i)
+    for (size_t i = 0; i < kWidth; ++i)
     {
         upSrc.get()[i] = (uint16_t)(1 + i);
     }
@@ -67,8 +68,8 @@ void Test()
         5, 6, 7, 8,
         1.1f, 1.2f, 1.3f, 1.4f
     };
-    colorTwistRGB48(ImplementationType::PlainC, upSrc.get(), 16, 1, 32 * 3, upDst.get(), 32 * 3, twistMatrix);
-    colorTwistRGB48(ImplementationType::X86_SSE, upSrc.get(), 16, 1, 32 * 3, upDstSse.get(), 32 * 3, twistMatrix);
+    colorTwistRGB48(ImplementationType::PlainC, upSrc.get(), kWidth, 1, (kWidth * 2) * 3, upDst.get(), (kWidth * 2) * 3, twistMatrix);
+    colorTwistRGB48(ImplementationType::X86_SSE, upSrc.get(), kWidth, 1, (kWidth * 2) * 3, upDstSse.get(), (kWidth * 2) * 3, twistMatrix);
 
     int is_ok = memcmp(upDst.get(), upDst.get(), bitmapSize);
 }
