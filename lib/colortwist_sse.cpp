@@ -87,11 +87,8 @@ template <bool deal_with_remainder> struct ColorTwistRgb24Generic
 
                 __m128i result12_ui16 = _mm_unpacklo_epi64(result1_ui16, result2_ui16);
 
-                // __m128i result1_ui8 = _mm_packus_epi16(result1_ui16, result1_ui16);
-                // __m128i result2_ui8 = _mm_packus_epi16(result2_ui16, result2_ui16);
                 __m128i result3_ui8 = _mm_packus_epi16(result3_ui16, result3_ui16);
 
-                //__m128i result12_ui8 = _mm_unpackhi_epi32(result1_ui8, result2_ui8);
                 __m128i result12_ui8 = _mm_packus_epi16(result12_ui16, result12_ui16);
 
                 _mm_storeu_si64(reinterpret_cast<__m128i*>(pd), result12_ui8);
@@ -201,7 +198,7 @@ template <bool deal_with_remainder> struct ColorTwistRgb48Generic
             {
                 if (width_mod_two > 0)
                 {
-                    static const __m128i kStoreMask = _mm_set_epi8(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1);
+                    const __m128i kStoreMask = _mm_set_epi8(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1);
 
                     __m128i a = _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float*>(ps)));
 #if 0 && COLORTWISTLIB_HAS_MM_LOADU_SI16_INTRINSICS
