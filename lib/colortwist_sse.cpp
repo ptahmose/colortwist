@@ -200,7 +200,11 @@ template <bool deal_with_remainder> struct ColorTwistRgb48Generic
 
                 __m128i result_uint32_gb = _mm_cvtps_epi32(result_float_gb);
                 __m128i result_uint16_gb = _mm_packus_epi32(result_uint32_gb, result_uint32_gb);
+#if COLORTWISTLIB_HAS_MM_STOREU_SI32_INTRINSICS
+                _mm_storeu_si32(pd + 8, result_uint16_gb);
+ #else
                 _mm_store_ss((float*)(pd + 8), _mm_castsi128_ps(result_uint16_gb));
+ #endif
 
                 ps += 12;
                 pd += 12;
