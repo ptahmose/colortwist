@@ -244,7 +244,7 @@ template <bool deal_with_remainder> struct ColorTwistRgb48Generic
 
 colortwist::StatusCode colorTwistRGB48_SSE(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
-    const colortwist::StatusCode status = checkArgumentsRgb24(pSrc, width, strideSrc, pDst, strideDst, twistMatrix);
+    const colortwist::StatusCode status = checkArgumentsRgb48(pSrc, width, strideSrc, pDst, strideDst, twistMatrix);
     if (status != colortwist::StatusCode::OK)
     {
         return status;
