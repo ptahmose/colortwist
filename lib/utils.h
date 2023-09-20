@@ -11,7 +11,7 @@ inline colortwist::StatusCode checkArgumentsRgb48(const void* pSrc, std::uint32_
         return colortwist::StatusCode::InvalidPointer;
     }
 
-    if (width * 3 * 2 < (std::uint32_t)abs(strideSrc) || width * 3 * 2 < (std::uint32_t)abs(strideDst))
+    if (width * 3 * 2 < static_cast<std::uint32_t>(abs(strideSrc)) || width * 3 * 2 < static_cast<std::uint32_t>(abs(strideDst)))
     {
         return colortwist::StatusCode::InvalidStride;
     }
@@ -26,7 +26,7 @@ inline colortwist::StatusCode checkArgumentsRgb24(const void* pSrc, std::uint32_
         return colortwist::StatusCode::InvalidPointer;
     }
 
-    if (width * 3 < (std::uint32_t)abs(strideSrc) || width * 3 < (std::uint32_t)abs(strideDst))
+    if (width * 3 < static_cast<std::uint32_t>(abs(strideSrc)) || width * 3 < static_cast<std::uint32_t>(abs(strideDst)))
     {
         return colortwist::StatusCode::InvalidStride;
     }

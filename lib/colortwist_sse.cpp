@@ -138,6 +138,12 @@ template <bool deal_with_remainder> struct ColorTwistRgb24Generic
 
 colortwist::StatusCode colorTwistRGB24_SSE(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
+    const colortwist::StatusCode status = checkArgumentsRgb24(pSrc, width, strideSrc, pDst, strideDst, twistMatrix);
+    if (status != colortwist::StatusCode::OK)
+    {
+        return status;
+    }
+
     if ((width % 4) != 0)
     {
         return ColorTwistRgb24Generic<true>::do_it(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
@@ -238,6 +244,12 @@ template <bool deal_with_remainder> struct ColorTwistRgb48Generic
 
 colortwist::StatusCode colorTwistRGB48_SSE(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
+    const colortwist::StatusCode status = checkArgumentsRgb24(pSrc, width, strideSrc, pDst, strideDst, twistMatrix);
+    if (status != colortwist::StatusCode::OK)
+    {
+        return status;
+    }
+
     if ((width % 2) != 0)
     {
         return ColorTwistRgb48Generic<true>::do_it(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
