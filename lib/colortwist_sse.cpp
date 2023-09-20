@@ -32,14 +32,14 @@ template <bool deal_with_remainder> struct ColorTwistRgb24Generic
             uint8_t* pd = static_cast<uint8_t*>(pDst) + static_cast<size_t>(y) * strideDst;
             for (uint32_t x = 0; x < width_over_four; ++x)
             {
-                __m128i a = _mm_loadu_si64(ps);
+                __m128i a = _mm_loadu_si64(ps);         // load 8 bytes  R0 G0 B0 R1 | G1 B1 R2 G2
 #if COLORTWISTLIB_HAS_MM_LOADU_SI32_INTRINSICS
-                __m128i b = _mm_loadu_si32(ps + 8);
+                __m128i b = _mm_loadu_si32(ps + 8);     // load 4 bytes  B2 R3 G3 B3
 #else
                 __m128i b = _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float*>(ps + 8)));
 #endif
 
-                __m128i c = _mm_unpacklo_epi8(a, _mm_setzero_si128());
+                __m128i c = _mm_unpacklo_epi8(a, _mm_setzero_si128());  // convert from 8-bit to 16-bit (and 
 
                 __m128i first_pixel_rgb1 = _mm_insert_epi16(c, 0x0001, 3);
 
@@ -213,12 +213,12 @@ template <bool deal_with_remainder> struct ColorTwistRgb48Generic
                     const __m128i kStoreMask = _mm_set_epi8(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1);
 
                     __m128i a = _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float*>(ps)));
-#if 0 && COLORTWISTLIB_HAS_MM_LOADU_SI16_INTRINSICS
+#if COLORTWISTLIB_HAS_MM_LOADU_SI16_INTRINSICS
                     __m128i b = _mm_loadu_si16(ps + 4); // load 2 bytes (the remainder of the SSE-register is zeroed)
 #else
                     __m128i b = _mm_cvtsi32_si128((*reinterpret_cast<const uint16_t*>(ps + 4)));
 #endif
-                    b = _mm_insert_epi16(b, 0x0001, 3);
+                    b = _mm_insert_epi16(b, 0x0001, 1);
 
                     __m128i rgb1_ushort16 = _mm_unpacklo_epi32(a, b);
                     __m128i rgb1_uint32 = _mm_unpacklo_epi16(rgb1_ushort16, _mm_setzero_si128());

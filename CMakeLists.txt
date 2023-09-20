@@ -14,5 +14,8 @@ FIND_PACKAGE (IPP REQUIRED )
 
 set(CMAKE_CXX_STANDARD 11)
 
+enable_testing()
+
 add_subdirectory (lib)
+add_subdirectory (unittests)
 add_subdirectory (test)

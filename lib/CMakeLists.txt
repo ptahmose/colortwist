@@ -21,7 +21,7 @@ set (LIBCOLORTWIST_SOURCES  colortwist.h
                             utils.h
                             utils.cpp)
 
-add_library(libcolortwist 
+add_library(libcolortwist STATIC
                 ${LIBCOLORTWIST_SOURCES})
 
 if(IPP_FOUND)
@@ -41,7 +41,7 @@ endif()
 
 if (COLORTWIST_HAS_IMMINTRIN )
   check_symbol_exists(_mm_loadu_si16 immintrin.h HAS_MM_LOADU_SI16_INTRINSIC)
-  if (HAS_MMLOADUSI16_INTRINSIC)
+  if (HAS_MM_LOADU_SI16_INTRINSIC)
     set(HAS_MM_LOADU_SI16_INTRINSIC 1)
   else()
     set(HAS_MM_LOADU_SI16_INTRINSIC 0)
@@ -65,14 +65,6 @@ else()
   set(HAS_MM_LOADU_SI32_INTRINSIC 0)
   set(HAS_MM_STOREU_SI32_INTRINSIC 0)
 endif()
-
-# check whether we can the SSE4.2-intrinsics are available -> we check for the presence of the file
-#CHECK_INCLUDE_FILES(nmmintrin.h NMMINTRINFOUND)
-#if (NMMINTRINFOUND)
-# set(COLORTWISTLIB_HASSSE42_INTRINSICS 1)
-#else()
-# set(COLORTWISTLIB_HASSSE42_INTRINSICS 0)
-#endif()
 
 # check whether we can use ARM-Neon-instructions -> we check for the presence of the file
 CHECK_INCLUDE_FILES(arm_neon.h ARMNEONFOUND)
