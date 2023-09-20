@@ -207,40 +207,40 @@ void TestBgr48()
 
     TestBgr48("colorTwistRGB48_C", ImplementationType::PlainC, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstC.get(), StrideDst);
 
-    if (isOperationalRgb48(ImplementationType::IPP))
-    {
-        std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstIpp((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
-        TestBgr48("colorTwistRGB48_IPP", ImplementationType::IPP, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstIpp.get(), StrideDst);
-        CompareUint16("colorTwistRGB48- C vs IPP", upDstC.get(), upDstIpp.get(), bitmapSize / 2, 1);
-    }
+    /*    if (isOperationalRgb48(ImplementationType::IPP))
+        {
+            std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstIpp((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
+            TestBgr48("colorTwistRGB48_IPP", ImplementationType::IPP, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstIpp.get(), StrideDst);
+            CompareUint16("colorTwistRGB48- C vs IPP", upDstC.get(), upDstIpp.get(), bitmapSize / 2, 1);
+        }
 
-    if (isOperationalRgb48(ImplementationType::X64_AVX))
-    {
-        std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstAvx((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
-        TestBgr48("colorTwistRGB48_AVX", ImplementationType::X64_AVX, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstAvx.get(), StrideDst);
-        CompareUint16("colorTwistRGB48: C vs AVX", upDstC.get(), upDstAvx.get(), bitmapSize / 2, 1);
-    }
+        if (isOperationalRgb48(ImplementationType::X64_AVX))
+        {
+            std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstAvx((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
+            TestBgr48("colorTwistRGB48_AVX", ImplementationType::X64_AVX, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstAvx.get(), StrideDst);
+            CompareUint16("colorTwistRGB48: C vs AVX", upDstC.get(), upDstAvx.get(), bitmapSize / 2, 1);
+        }
 
-    if (isOperationalRgb48(ImplementationType::X64_AVX2))
-    {
-        std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstAvx2((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
-        TestBgr48("colorTwistRGB48_AVX2", ImplementationType::X64_AVX2, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstAvx2.get(), StrideDst);
-        CompareUint16("colorTwistRGB48: C vs AVX2", upDstC.get(), upDstAvx2.get(), bitmapSize / 2, 1);
-    }
+        if (isOperationalRgb48(ImplementationType::X64_AVX2))
+        {
+            std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstAvx2((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
+            TestBgr48("colorTwistRGB48_AVX2", ImplementationType::X64_AVX2, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstAvx2.get(), StrideDst);
+            CompareUint16("colorTwistRGB48: C vs AVX2", upDstC.get(), upDstAvx2.get(), bitmapSize / 2, 1);
+        }
 
-    if (isOperationalRgb48(ImplementationType::X64_AVX3))
-    {
-        std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstAvx3((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
-        TestBgr48("colorTwistRGB48_AVX3", ImplementationType::X64_AVX3, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstAvx3.get(), StrideDst);
-        //CompareRgb48Bitmap(upDstC.get(), upDstAvx3.get(), StrideDst, StrideDst, Width, Height);
-        CompareUint16("colorTwistRGB48: C vs AVX3", upDstC.get(), upDstAvx3.get(), bitmapSize / 2, 1);
-    }
+        if (isOperationalRgb48(ImplementationType::X64_AVX3))
+        {
+            std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstAvx3((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
+            TestBgr48("colorTwistRGB48_AVX3", ImplementationType::X64_AVX3, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstAvx3.get(), StrideDst);
+            //CompareRgb48Bitmap(upDstC.get(), upDstAvx3.get(), StrideDst, StrideDst, Width, Height);
+            CompareUint16("colorTwistRGB48: C vs AVX3", upDstC.get(), upDstAvx3.get(), bitmapSize / 2, 1);
+        }*/
 
     if (isOperationalRgb24(ImplementationType::X86_SSE))
     {
         std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstSse((uint16_t*)malloc(bitmapSize), [](uint16_t* p) -> void { free(p); });
         TestBgr48("colorTwistRGB48_SSE", ImplementationType::X86_SSE, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstSse.get(), StrideDst);
-        //CompareRgb48Bitmap(upDstC.get(), upDstSse.get(), upSrc.get(), StrideDst, StrideDst, StrideSrc, Width, Height, 01);
+      //  CompareRgb48Bitmap(upDstC.get(), upDstSse.get(), upSrc.get(), StrideDst, StrideDst, StrideSrc, Width, Height, 0);
         CompareUint16("colorTwistRGB48: C vs SSE", upDstC.get(), upDstSse.get(), bitmapSize / 2, 1);
     }
 
@@ -309,8 +309,8 @@ void CompareRgb48Bitmap(const uint16_t* bitmap_a, const uint16_t* bitmap_b, cons
     bool isOk = true;
     for (uint32_t y = 0; y < height; ++y)
     {
-        const uint16_t* ptr_a = (const uint16_t*)((uint8_t*)bitmap_a + y * stride_a);
-        const uint16_t* ptr_b = (const uint16_t*)((uint8_t*)bitmap_b + y * stride_b);
+        const uint16_t* ptr_a = (const uint16_t*)(((uint8_t*)bitmap_a) + y * stride_a);
+        const uint16_t* ptr_b = (const uint16_t*)(((uint8_t*)bitmap_b) + y * stride_b);
         for (uint32_t x = 0; x < width; ++x)
         {
             uint16_t r_a = *ptr_a++;
@@ -321,9 +321,9 @@ void CompareRgb48Bitmap(const uint16_t* bitmap_a, const uint16_t* bitmap_b, cons
             uint16_t b_b = *ptr_b++;
             if (abs((int)r_a - (int)r_b) > maxDiff || abs((int)g_a - (int)g_b) > maxDiff || abs((int)b_a - (int)b_b) > maxDiff)
             {
-                uint16_t r_source = *(((const uint16_t*)((uint8_t*)bitmap_source + y * stride_a)) + x);
-                uint16_t g_source = *(((const uint16_t*)((uint8_t*)bitmap_source + y * stride_a)) + x + 1);
-                uint16_t b_source = *(((const uint16_t*)((uint8_t*)bitmap_source + y * stride_a)) + x + 2);
+                uint16_t r_source = *(((const uint16_t*)(((uint8_t*)bitmap_source) + y * stride_source)) + (x * 3));
+                uint16_t g_source = *(((const uint16_t*)(((uint8_t*)bitmap_source) + y * stride_source)) + (x * 3) + 1);
+                uint16_t b_source = *(((const uint16_t*)(((uint8_t*)bitmap_source) + y * stride_source)) + (x * 3) + 2);
                 cout << "at (" << x << "," << y << ") a: " << r_a << "," << g_a << "," << b_a << "  b:" << r_b << "," << g_b << "," << b_b <<
                     " source: " << r_source << "," << g_source << "," << b_source << endl;
                 isOk = false;

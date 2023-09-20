@@ -56,4 +56,10 @@ namespace colortwist
     /// \param type The implementation type.
     /// \returns True if operational, false if not.
     bool isOperationalRgb48(ImplementationType type);
+
+    /// Gets implementation type as an informal string. The returned string is a pointer to a statically allocated string
+    /// (and must not be freed).
+    /// \param  type    The implementation type.
+    /// \returns    The implementation type as informal string.
+    const char* GetImplementationTypeAsInformalString(ImplementationType type);
 }

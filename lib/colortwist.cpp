@@ -231,3 +231,28 @@ bool colortwist::isOperationalRgb48(ImplementationType type)
 
     return false;
 }
+
+const char* colortwist::GetImplementationTypeAsInformalString(ImplementationType type)
+{
+    switch (type)
+    {
+        case ImplementationType::PlainC:
+            return "C";
+        case ImplementationType::X64_AVX:
+            return "X64 AVX";
+        case ImplementationType::X64_AVX2:
+            return "X64 AVX2";
+        case ImplementationType::X64_AVX3:
+            return "X64 AVX3";
+        case ImplementationType::IPP:
+            return "IPP";
+        case ImplementationType::ARM_NEON:
+            return "ARM NEON";
+        case ImplementationType::ARM_NEON2:
+            return "ARM NEON2";
+        case ImplementationType::X86_SSE:
+            return "X86 SSE";
+    }
+
+    return "Unknown";
+}

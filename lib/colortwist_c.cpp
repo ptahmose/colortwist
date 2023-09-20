@@ -1,5 +1,6 @@
 #include "colortwist_c.h"
 #include <limits>
+#include <cmath>
 
 using namespace std;
 using namespace  colortwist;
@@ -13,7 +14,8 @@ static t floatToInteger(float f)
     if (f < numeric_limits<t>::min())
         return numeric_limits<t>::min();
 
-    return static_cast<t>(f + 0.5f);
+    //return static_cast<t>(f + 0.5f);
+    return static_cast<t>(lrintf(f));
 }
 
 template <typename t>
