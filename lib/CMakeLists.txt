@@ -164,7 +164,7 @@ target_include_directories (libcolortwist PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 # this is necessary so that we can find "colortwist_config.h" which we created above
 target_include_directories(libcolortwist PRIVATE  ${CMAKE_CURRENT_BINARY_DIR})  
 
-message(STATUS "HOST-ARCHITECTURE: " ${CMAKE_SYSTEM_PROCESSOR}  ${CMAKE_CXX_COMPILER_ID})
+message(STATUS "HOST-ARCHITECTURE: " ${CMAKE_SYSTEM_PROCESSOR})
 
 if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "AMD64" OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "amd64" OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64") 
   if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
