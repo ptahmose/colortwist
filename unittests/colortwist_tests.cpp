@@ -9,6 +9,14 @@ struct ImplementationTypeFixture : public testing::TestWithParam<ImplementationT
 
 TEST_P(ImplementationTypeFixture, Bgr48SinglePixelCheckResult1)
 {
+    const ImplementationType implementation_type = GetParam();
+
+    if (!isOperationalRgb48(implementation_type))
+    {
+        GTEST_SKIP() << "type '" << GetImplementationTypeAsInformalString(implementation_type) << "' not operational.";
+        return;
+    }
+
     static const float kTwistMatrix[4 * 3] =
     {
       1, 2, 3, 4,
@@ -20,7 +28,7 @@ TEST_P(ImplementationTypeFixture, Bgr48SinglePixelCheckResult1)
     uint16_t result[3] = {};
 
     const auto return_code = colorTwistRGB48(
-        ImplementationType::X86_SSE,
+        implementation_type,
         src,
         1,
         1,
