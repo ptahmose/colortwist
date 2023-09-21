@@ -41,31 +41,6 @@ using namespace colortwist;
 // https://developer.arm.com/architectures/instruction-sets/simd-isas/neon/intrinsics
 // https://github.com/thenifty/neon-guide
 
-static inline void DoOnePixelRgb48ReadOneByteBehind(const uint16_t* p, uint16_t* d, const float32x4_t& c0, const float32x4_t& c1, const float32x4_t& c2, const float32x4_t& c3)
-{
-    const uint16x4_t data = vld1_u16(static_cast<const uint16_t*>(p));
-    const uint32x4_t dataInt32 = vmovl_u16(data);
-    const float32x4_t dataFloat = vcvtq_f32_u32(dataInt32);
-
-    const float32x4_t r = vdupq_lane_f32(vget_low_f32(dataFloat), 0);
-    const float32x4_t g = vdupq_lane_f32(vget_low_f32(dataFloat), 1);
-    const float32x4_t b = vdupq_lane_f32(vget_high_f32(dataFloat), 0);
-
-    const float32x4_t m1 = vmlaq_f32(c3, r, c0);
-    const float32x4_t m2 = vmlaq_f32(m1, g, c1);
-    const float32x4_t m3 = vmlaq_f32(m2, b, c2);
-
-    // conversion to int with rounding -> the intrinsic is missing, was added here -> https://patchwork.ozlabs.org/project/gcc/patch/1601891882-13015-1-git-send-email-christophe.lyon@linaro.org/
-#if COLORTWISTLIB_CANUSENEONINTRINSIC_VCVTNQ_U32_F32
-    const uint16x4_t rShort = vqmovn_u32(vcvtnq_u32_f32(m3));
-#else
-    const uint16x4_t rShort = vqmovn_u32(vcvtq_u32_f32(m3));
-#endif
-
-    vst1_lane_u32(reinterpret_cast<uint32_t*>(d), vreinterpret_u32_u16(rShort), 0);
-    vst1_lane_u16((2 + d), rShort, 2);
-}
-
 static inline void DoOnePixelRgb48ReadExact(const uint16_t* p, uint16_t* d, const float32x4_t& c0, const float32x4_t& c1, const float32x4_t& c2, const float32x4_t& c3)
 {
     uint64_t _3pixels = p[0] + (((uint32_t)p[1]) << 16) + (((uint64_t)p[2]) << 32);
@@ -90,51 +65,6 @@ static inline void DoOnePixelRgb48ReadExact(const uint16_t* p, uint16_t* d, cons
 
     vst1_lane_u32(reinterpret_cast<uint32_t*>(d), vreinterpret_u32_u16(rShort), 0);
     vst1_lane_u16((2 + d), rShort, 2);
-}
-
-colortwist::StatusCode colorTwistRGB48_NEON(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
-{
-    StatusCode rc = checkArgumentsRgb48(pSrc, width, strideSrc, pDst, strideDst, twistMatrix);
-    if (rc != StatusCode::OK)
-    {
-        return rc;
-    }
-
-    // note: if adding "const" here, this produces incorrect results? Compiler-error or am I missing something? gcc 8.3 on Raspberry4
-    DECLARE_float32x4_t(c0,twistMatrix[0],twistMatrix[4],twistMatrix[8],0);
-    DECLARE_float32x4_t(c1, twistMatrix[1],twistMatrix[5],twistMatrix[9],0);
-    DECLARE_float32x4_t(c2, twistMatrix[2],twistMatrix[6],twistMatrix[10],0); 
-#if COLORTWISTLIB_CANUSENEONINTRINSIC_VCVTNQ_U32_F32
-    DECLARE_float32x4_t(c3, twistMatrix[3],twistMatrix[7],twistMatrix[11],0 );
-#else
-    DECLARE_float32x4_t(c3, twistMatrix[3] + 0.5f, twistMatrix[7] + 0.5f, twistMatrix[11] + 0.5f, 0);
-#endif
-
-    for (size_t y = 0; y < height - 1; ++y)
-    {
-        const uint16_t* p = reinterpret_cast<const uint16_t*>(static_cast<const uint8_t*>(pSrc) + y * strideSrc);
-        uint16_t* d = reinterpret_cast<uint16_t*>(static_cast<uint8_t*>(pDst) + y * strideDst);
-        for (size_t x = 0; x < width; ++x)
-        {
-            DoOnePixelRgb48ReadOneByteBehind(p, d, c0, c1, c2, c3);
-            p += 3;
-            d += 3;
-        }
-    }
-
-    // for the very last pixel, we have be careful not to read beyond the source buffer
-    const uint16_t* p = reinterpret_cast<const uint16_t*>(static_cast<const uint8_t*>(pSrc) + (height - 1) * strideSrc);
-    uint16_t* d = reinterpret_cast<uint16_t*>(static_cast<uint8_t*>(pDst) + (height - 1) * strideDst);
-    for (size_t x = 0; x < width - 1; ++x)
-    {
-        DoOnePixelRgb48ReadOneByteBehind(p, d, c0, c1, c2, c3);
-        p += 3;
-        d += 3;
-    }
-
-    DoOnePixelRgb48ReadExact(p, d, c0, c1, c2, c3);
-
-    return StatusCode::OK;
 }
 
 template <typename tUnevenWidthHandler>
@@ -490,6 +420,5 @@ StatusCode colorTwistRGB24_NEON2(const void* pSrc, uint32_t width, uint32_t heig
 
     return StatusCode::OK;
 }
-
 
 #endif
