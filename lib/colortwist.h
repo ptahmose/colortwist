@@ -44,7 +44,34 @@ namespace colortwist
         UnspecifiedError = 106
     };
 
+    /// Perform the color-twist operation on the specified RGB48-bitmap. If the operation is successful, the 
+    /// destination bitmap will contain the result of the operation. The source bitmap is not modified.
+    ///
+    /// \param          type        An enum choosing the implementation to be used.
+    /// \param          pSrc        Pointer to the source bitmap.
+    /// \param          width       The width of source (and destination) bitmap in pixels.
+    /// \param          height      The height of source (and destination) bitmap in pixels.
+    /// \param          strideSrc   The stride of the source bitmap in bytes.
+    /// \param [out]    pDst        Pointer to the destination bitmap in bytes.
+    /// \param          strideDst   The stride of the source bitmap in bytes.
+    /// \param          twistMatrix The color twist matrix.
+    ///
+    /// \returns    A status code indicating success or failure of the operation.
     StatusCode colorTwistRGB48(ImplementationType type, const void* pSrc, std::uint32_t width, std::uint32_t height, int strideSrc, void* pDst, std::int32_t strideDst, const float* twistMatrix);
+
+    /// Perform the color-twist operation on the specified RGB24-bitmap. If the operation is successful, the 
+    /// destination bitmap will contain the result of the operation. The source bitmap is not modified.
+    ///
+    /// \param          type        An enum choosing the implementation to be used.
+    /// \param          pSrc        Pointer to the source bitmap.
+    /// \param          width       The width of source (and destination) bitmap in pixels.
+    /// \param          height      The height of source (and destination) bitmap in pixels.
+    /// \param          strideSrc   The stride of the source bitmap in bytes.
+    /// \param [out]    pDst        Pointer to the destination bitmap in bytes.
+    /// \param          strideDst   The stride of the source bitmap in bytes.
+    /// \param          twistMatrix The color twist matrix.
+    ///
+    /// \returns    A status code indicating success or failure of the operation.
     StatusCode colorTwistRGB24(ImplementationType type, const void* pSrc, std::uint32_t width, std::uint32_t height, int strideSrc, void* pDst, std::int32_t strideDst, const float* twistMatrix);
 
     /// Query if the specified implementation type' is available for RGB24-bitmaps and operational.
