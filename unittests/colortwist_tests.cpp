@@ -17,7 +17,7 @@ TEST_P(ImplementationTypeFixture, Bgr48SinglePixelCheckResult1)
         return;
     }
 
-    static const float kTwistMatrix[4 * 3] =
+    static constexpr float kTwistMatrix[4 * 3] =
     {
       1, 2, 3, 4,
       5, 6, 7, 8,
@@ -161,7 +161,7 @@ TEST_P(ImplementationTypeFixture, Bgr24InvalidArgumentsExpectError)
 
     if (!isOperationalRgb24(implementation_type))
     {
-               GTEST_SKIP() << "type '" << GetImplementationTypeAsInformalString(implementation_type) << "' not operational.";
+        GTEST_SKIP() << "type '" << GetImplementationTypeAsInformalString(implementation_type) << "' not operational.";
         return;
     }
 
@@ -170,12 +170,12 @@ TEST_P(ImplementationTypeFixture, Bgr24InvalidArgumentsExpectError)
            0.1f, 0.2f, 0.3f, 0.4f,
            0.5f, 0.6f, 0.7f, 0.8f,
            1.1f, 1.2f, 1.3f, 1.4f
-       };
+    };
 
     constexpr uint8_t src[3] = { 41, 58,157 };
     uint8_t result[3] = {};
 
-    const auto return_code = colorTwistRGB24(
+    auto return_code = colorTwistRGB24(
         implementation_type,
         nullptr,
         1,
@@ -186,8 +186,43 @@ TEST_P(ImplementationTypeFixture, Bgr24InvalidArgumentsExpectError)
         kTwistMatrix);
 
     ASSERT_EQ(return_code, StatusCode::InvalidPointer);
-}
 
+    return_code = colorTwistRGB24(
+        implementation_type,
+        src,
+        1,
+        1,
+        3 * 1,
+        nullptr,
+        3 * 1,
+        kTwistMatrix);
+
+    ASSERT_EQ(return_code, StatusCode::InvalidPointer);
+
+    return_code = colorTwistRGB24(
+        implementation_type,
+        src,
+        1,
+        1,
+        3 * 1 - 1,
+        result,
+        3 * 1,
+        kTwistMatrix);
+
+    ASSERT_EQ(return_code, StatusCode::InvalidStride);
+
+    return_code = colorTwistRGB24(
+        implementation_type,
+        src,
+        1,
+        1,
+        3 * 1,
+        result,
+        3 * 1 - 1,
+        kTwistMatrix);
+
+    ASSERT_EQ(return_code, StatusCode::InvalidStride);
+}
 
 INSTANTIATE_TEST_SUITE_P(
     ColorTwist,
