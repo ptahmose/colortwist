@@ -6,7 +6,7 @@ using namespace std;
 using namespace  colortwist;
 
 template <typename t>
-static t floatToInteger(float f)
+inline static t floatToInteger(float f)
 {
     if (f > numeric_limits<t>::max())
         return numeric_limits<t>::max();
