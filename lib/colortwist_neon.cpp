@@ -390,7 +390,7 @@ inline static void colorTwistRGB24_NEON2_MultipleOfFourAndRemainder(const void* 
         RemainingPixelsHandler(const float* twistMatrix) :twistMatrix(twistMatrix) {}
         inline void DoRemainingPixels(const uint8_t* pSrc, uint8_t* pDst, size_t remainingPixels)
         {
-            colorTwistRGB24_C(pSrc, remainingPixels, 1, remainingPixels, pDst, remainingPixels, this->twistMatrix);
+            colorTwistRGB24_C_Line(pSrc, remainingPixels, pDst, this->twistMatrix);
         }
     };
 

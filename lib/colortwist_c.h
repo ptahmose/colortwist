@@ -4,3 +4,5 @@
 
 colortwist::StatusCode colorTwistRGB48_C(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix);
 colortwist::StatusCode colorTwistRGB24_C(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix);
+
+void colorTwistRGB24_C_Line(const void* pSrc, uint32_t width, void* pDst, const float* twistMatrix);

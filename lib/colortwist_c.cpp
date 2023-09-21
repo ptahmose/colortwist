@@ -15,7 +15,7 @@ inline static t floatToInteger(float f)
     if (f < numeric_limits<t>::min())
         return numeric_limits<t>::min();
 
-    return static_cast<t>(lrintf(f));
+    return static_cast<t>(f + 0.5f);
 }
 
 template <typename t>
@@ -42,6 +42,26 @@ StatusCode colorTwistRGB_Generic(const void* pSrc, std::uint32_t width, std::uin
     }
 
     return StatusCode::OK;
+}
+
+void colorTwistRGB24_C_Line(const void* pSrc, uint32_t width, void* pDst, const float* twistMatrix)
+{
+    const uint8_t* ps = static_cast<const uint8_t*>(pSrc);
+    uint8_t* pd = static_cast<uint8_t*>(pDst);
+    for (size_t x = 0; x < width; ++x)
+    {
+        const float r = *ps++;
+        const float g = *ps++;
+        const float b = *ps++;
+
+        const float rDst = r * twistMatrix[0] + g * twistMatrix[1] + b * twistMatrix[2] + twistMatrix[3];
+        const float gDst = r * twistMatrix[4] + g * twistMatrix[5] + b * twistMatrix[6] + twistMatrix[7];
+        const float bDst = r * twistMatrix[8] + g * twistMatrix[9] + b * twistMatrix[10] + twistMatrix[11];
+
+        *pd++ = floatToInteger<uint8_t>(rDst);
+        *pd++ = floatToInteger<uint8_t>(gDst);
+        *pd++ = floatToInteger<uint8_t>(bDst);
+    }
 }
 
 StatusCode colorTwistRGB24_C(const void* pSrc, std::uint32_t width, std::uint32_t height, std::int32_t strideSrc, void* pDst, int strideDst, const float* twistMatrix)
