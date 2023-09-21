@@ -12,6 +12,7 @@
 using namespace std;
 using namespace colortwist;
 
+#if 0
 StatusCode colorTwistRGB48_AVX(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
     StatusCode rc = checkArgumentsRgb48(pSrc, width, strideSrc, pDst, strideDst, twistMatrix);
@@ -60,7 +61,9 @@ StatusCode colorTwistRGB48_AVX(const void* pSrc, uint32_t width, uint32_t height
     _mm256_zeroupper();
     return StatusCode::OK;
 }
+#endif
 
+#if 0
 StatusCode colorTwistRGB48_AVX2(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
     StatusCode rc = checkArgumentsRgb48(pSrc, width, strideSrc, pDst, strideDst, twistMatrix);
@@ -179,6 +182,7 @@ StatusCode colorTwistRGB48_AVX2(const void* pSrc, uint32_t width, uint32_t heigh
     _mm256_zeroupper();
     return StatusCode::OK;
 }
+#endif
 
 template <typename tUnevenWidthHandler>
 static void colorTwistRGB48_AVX3_Generic(const void* pSrc, size_t widthOver8, size_t widthRemainder, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)

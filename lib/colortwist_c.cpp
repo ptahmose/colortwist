@@ -1,4 +1,5 @@
 #include "colortwist_c.h"
+#include "utils.h"
 #include <limits>
 #include <cmath>
 
@@ -45,10 +46,22 @@ StatusCode colorTwistRGB_Generic(const void* pSrc, std::uint32_t width, std::uin
 
 StatusCode colorTwistRGB24_C(const void* pSrc, std::uint32_t width, std::uint32_t height, std::int32_t strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
+    const colortwist::StatusCode status = checkArgumentsRgb24(pSrc, width, strideSrc, pDst, strideDst, twistMatrix);
+    if (status != colortwist::StatusCode::OK)
+    {
+        return status;
+    }
+
     return colorTwistRGB_Generic<uint8_t>(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
 }
 
 StatusCode colorTwistRGB48_C(const void* pSrc, std::uint32_t width, std::uint32_t height, std::int32_t strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
+    const colortwist::StatusCode status = checkArgumentsRgb48(pSrc, width, strideSrc, pDst, strideDst, twistMatrix);
+    if (status != colortwist::StatusCode::OK)
+    {
+        return status;
+    }
+
     return colorTwistRGB_Generic<uint16_t>(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix);
 }
