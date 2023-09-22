@@ -8,9 +8,7 @@ namespace colortwist
     {
         PlainC,
         IPP,
-/*        X64_AVX,
-        X64_AVX2,*/
-        X64_AVX3,
+        X64_AVX,
         //ARM_NEON,
         ARM_NEON2,
         X86_SSE,
