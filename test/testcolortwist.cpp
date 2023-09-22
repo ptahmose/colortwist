@@ -216,7 +216,7 @@ void TestBgr48()
     if (isOperationalRgb48(ImplementationType::X64_AVX))
     {
         std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstAvx(static_cast<uint16_t*>(malloc(bitmapSize)), [](uint16_t* p) -> void { free(p); });
-        TestBgr48("colorTwistRGB48_AVX3", ImplementationType::X64_AVX, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstAvx.get(), StrideDst);
+        TestBgr48("colorTwistRGB48_AVX", ImplementationType::X64_AVX, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstAvx.get(), StrideDst);
         //CompareRgb48Bitmap(upDstC.get(), upDstAvx3.get(), StrideDst, StrideDst, Width, Height);
         CompareUint16("colorTwistRGB48: C vs AVX", upDstC.get(), upDstAvx.get(), bitmapSize / 2, 1);
     }
@@ -232,8 +232,8 @@ void TestBgr48()
     if (isOperationalRgb48(ImplementationType::ARM_NEON2))
     {
         std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstNeon2(static_cast<uint16_t*>(malloc(bitmapSize)), [](uint16_t* p) -> void { free(p); });
-        TestBgr48("colorTwistRGB48_NEON2", ImplementationType::ARM_NEON2, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstNeon2.get(), StrideDst);
-        CompareUint16("colorTwistRGB48: C vs NEON2", upDstC.get(), upDstNeon2.get(), bitmapSize / 2, 1);
+        TestBgr48("colorTwistRGB48_NEON", ImplementationType::ARM_NEON2, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstNeon2.get(), StrideDst);
+        CompareUint16("colorTwistRGB48: C vs NEON", upDstC.get(), upDstNeon2.get(), bitmapSize / 2, 1);
     }
 }
 
@@ -263,7 +263,7 @@ void TestBgr24()
     if (isOperationalRgb24(ImplementationType::X64_AVX))
     {
         std::unique_ptr<uint8_t, void (*)(uint8_t*)> upDstAvx(static_cast<uint8_t*>(malloc(bitmapSize)), [](uint8_t* p) -> void { free(p); });
-        TestBgr24("colorTwistRGB24_AVX3", ImplementationType::X64_AVX, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstAvx.get(), StrideDst);
+        TestBgr24("colorTwistRGB24_AVX", ImplementationType::X64_AVX, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstAvx.get(), StrideDst);
         CompareUint8("colorTwistRGB24: C vs AVX", upDstC.get(), upDstAvx.get(), bitmapSize, 1);
     }
 
@@ -277,8 +277,8 @@ void TestBgr24()
     if (isOperationalRgb24(ImplementationType::ARM_NEON2))
     {
         std::unique_ptr<uint8_t, void (*)(uint8_t*)> upDstNeon2(static_cast<uint8_t*>(malloc(bitmapSize)), [](uint8_t* p) -> void { free(p); });
-        TestBgr24("colorTwistRGB24_NEON2", ImplementationType::ARM_NEON2, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstNeon2.get(), StrideDst);
-        CompareUint8("colorTwistRGB24: C vs NEON2", upDstC.get(), upDstNeon2.get(), bitmapSize, 1);
+        TestBgr24("colorTwistRGB24_NEON", ImplementationType::ARM_NEON2, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstNeon2.get(), StrideDst);
+        CompareUint8("colorTwistRGB24: C vs NEON", upDstC.get(), upDstNeon2.get(), bitmapSize, 1);
     }
 }
 
