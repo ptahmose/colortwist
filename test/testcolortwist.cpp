@@ -96,7 +96,7 @@ void Test()
 //    };
 //
 //    colorTwistRGB48(ImplementationType::PlainC, upSrc.get(), 16, 1, 32 * 3, upDstC.get(), 32 * 3, twistMatrix);
-//    //colorTwistRGB48(ImplementationType::ARM_NEON2, upSrc.get(), 16, 1, 32 * 3, upDst.get(), 32 * 3, twistMatrix);
+//    //colorTwistRGB48(ImplementationType::ARM_NEON, upSrc.get(), 16, 1, 32 * 3, upDst.get(), 32 * 3, twistMatrix);
 //    colorTwistRGB48(ImplementationType::X64_AVX, upSrc.get(), 16, 1, 32 * 3, upDst.get(), 32 * 3, twistMatrix);
 //}
 
@@ -229,10 +229,10 @@ void TestBgr48()
         CompareUint16("colorTwistRGB48: C vs SSE", upDstC.get(), upDstSse.get(), bitmapSize / 2, 1);
     }
 
-    if (isOperationalRgb48(ImplementationType::ARM_NEON2))
+    if (isOperationalRgb48(ImplementationType::ARM_NEON))
     {
         std::unique_ptr<uint16_t, void (*)(uint16_t*)> upDstNeon2(static_cast<uint16_t*>(malloc(bitmapSize)), [](uint16_t* p) -> void { free(p); });
-        TestBgr48("colorTwistRGB48_NEON", ImplementationType::ARM_NEON2, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstNeon2.get(), StrideDst);
+        TestBgr48("colorTwistRGB48_NEON", ImplementationType::ARM_NEON, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstNeon2.get(), StrideDst);
         CompareUint16("colorTwistRGB48: C vs NEON", upDstC.get(), upDstNeon2.get(), bitmapSize / 2, 1);
     }
 }
@@ -274,10 +274,10 @@ void TestBgr24()
         CompareUint8("colorTwistRGB24: C vs SSE", upDstC.get(), upDstSse.get(), bitmapSize, 1);
     }
 
-    if (isOperationalRgb24(ImplementationType::ARM_NEON2))
+    if (isOperationalRgb24(ImplementationType::ARM_NEON))
     {
         std::unique_ptr<uint8_t, void (*)(uint8_t*)> upDstNeon2(static_cast<uint8_t*>(malloc(bitmapSize)), [](uint8_t* p) -> void { free(p); });
-        TestBgr24("colorTwistRGB24_NEON", ImplementationType::ARM_NEON2, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstNeon2.get(), StrideDst);
+        TestBgr24("colorTwistRGB24_NEON", ImplementationType::ARM_NEON, Repeats, Width, Height, upSrc.get(), StrideSrc, upDstNeon2.get(), StrideDst);
         CompareUint8("colorTwistRGB24: C vs NEON", upDstC.get(), upDstNeon2.get(), bitmapSize, 1);
     }
 }

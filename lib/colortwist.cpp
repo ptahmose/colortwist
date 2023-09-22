@@ -70,7 +70,7 @@ StatusCode colortwist::colorTwistRGB48(ImplementationType type, const void* pSrc
 #else
             return StatusCode::NotAvailable;
 #endif
-        case ImplementationType::ARM_NEON2:
+        case ImplementationType::ARM_NEON:
 #if COLORTWISTLIB_HASNEON
             return CanNeon() ? colorTwistRGB48_NEON2(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;;
 #else
@@ -105,7 +105,7 @@ StatusCode colortwist::colorTwistRGB24(ImplementationType type, const void* pSrc
 #else
             return StatusCode::NotAvailable;
 #endif
-        case ImplementationType::ARM_NEON2:
+        case ImplementationType::ARM_NEON:
 #if COLORTWISTLIB_HASNEON
             return CanNeon() ? colorTwistRGB24_NEON2(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
 #else
@@ -140,7 +140,7 @@ bool colortwist::isOperationalRgb24(ImplementationType type)
 #else
             return false;
 #endif
-        case ImplementationType::ARM_NEON2:
+        case ImplementationType::ARM_NEON:
 #if COLORTWISTLIB_HASNEON
             return CanNeon();
 #else
@@ -175,7 +175,7 @@ bool colortwist::isOperationalRgb48(ImplementationType type)
 #else
             return false;
 #endif
-        case ImplementationType::ARM_NEON2:
+        case ImplementationType::ARM_NEON:
 #if COLORTWISTLIB_HASNEON
             return CanNeon();
 #else
@@ -202,7 +202,7 @@ const char* colortwist::GetImplementationTypeAsInformalString(ImplementationType
             return "X64 AVX3";
         case ImplementationType::IPP:
             return "IPP";
-        case ImplementationType::ARM_NEON2:
+        case ImplementationType::ARM_NEON:
             return "ARM NEON2";
         case ImplementationType::X86_SSE:
             return "X86 SSE";

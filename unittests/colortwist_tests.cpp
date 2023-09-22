@@ -227,4 +227,4 @@ TEST_P(ImplementationTypeFixture, Bgr24InvalidArgumentsExpectError)
 INSTANTIATE_TEST_SUITE_P(
     ColorTwist,
     ImplementationTypeFixture,
-    testing::Values(ImplementationType::PlainC, ImplementationType::X86_SSE, ImplementationType::X64_AVX, ImplementationType::ARM_NEON2));
+    testing::Values(ImplementationType::PlainC, ImplementationType::X86_SSE, ImplementationType::X64_AVX, ImplementationType::ARM_NEON));
