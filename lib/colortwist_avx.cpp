@@ -166,7 +166,7 @@ inline void colorTwistRGB48_AVX3_MultipleOfEightAndRemainder(const void* pSrc, s
     colorTwistRGB48_AVX3_Generic<RemainingPixelsHandler>(pSrc, widthOver8, widthRemainder, height, strideSrc, pDst, strideDst, twistMatrix);
 }
 
-colortwist::StatusCode colorTwistRGB48_AVX3(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
+colortwist::StatusCode colorTwistRGB48_AVX(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
     StatusCode rc = checkArgumentsRgb48(pSrc, width, strideSrc, pDst, strideDst, twistMatrix);
     if (rc != StatusCode::OK)
@@ -352,7 +352,7 @@ inline void colorTwistRGB24_AVX3_MultipleOfEightAndRemainder(const void* pSrc, s
     colorTwistRGB24_AVX3_Generic<RemainingPixelsHandler>(pSrc, widthOver8, widthRemainder, height, strideSrc, pDst, strideDst, twistMatrix);
 }
 
-colortwist::StatusCode colorTwistRGB24_AVX3(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
+colortwist::StatusCode colorTwistRGB24_AVX(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
 {
     StatusCode rc = checkArgumentsRgb24(pSrc, width, strideSrc, pDst, strideDst, twistMatrix);
     if (rc != StatusCode::OK)
