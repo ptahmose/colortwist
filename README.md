@@ -3,11 +3,17 @@
 This is a little finger exercise in SIMD-optimization. The example we try to optimize is an image processing operation known as "color twist". It is a matrix-multication of an RGB-triple and a given matrix.
 So, if we have the source pixel values r, g, b, then the destination pixels R, G, B are calculated as 
 
-$R = t_{11} \cdot r + t_{12} \cdot g + t_{13} \cdot b + t_{14}$
+$$
+R = t_{11} \cdot r + t_{12} \cdot g + t_{13} \cdot b + t_{14}
+$$
 
-$G = t_{21} \cdot r + t_{22} \cdot g + t_{23} \cdot b + t_{24}$
+$$
+G = t_{21} \cdot r + t_{22} \cdot g + t_{23} \cdot b + t_{24}
+$$
 
-$B = t_{31} \cdot r + t_{32} \cdot g + t_{33} \cdot b + t_{34}$
+$$
+B = t_{31} \cdot r + t_{32} \cdot g + t_{33} \cdot b + t_{34}
+$$
 
 where 
 
