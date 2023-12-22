@@ -4,7 +4,9 @@ This is a little finger exercise in SIMD-optimization. The example we try to opt
 So, if we have the source pixel values r, g, b, then the destination pixels R, G, B are calculated as 
 
 $R = t_{11} \cdot r + t_{12} \cdot g + t_{13} \cdot b + t_{14}$
+
 $G = t_{21} \cdot r + t_{22} \cdot g + t_{23} \cdot b + t_{24}$
+
 $B = t_{31} \cdot r + t_{32} \cdot g + t_{33} \cdot b + t_{34}$
 
 where
@@ -15,7 +17,16 @@ where
 
 where 
 
-$T = \begin{pmatrix}t_{11} t_{12}  t_{13} t_{14} \\ t_{21} t_{22}  t_{23}  t_{24} \\ t_{31}  t_{32}  t_{33}  t_{34} \end{pmatrix}$
+$$
+\begin{equation}
+T = \begin{pmatrix}
+    t_{11} & t_{12} & t_{13} \\
+    t_{21} & t_{22} & t_{23} \\
+    t_{31} & t_{32} & t_{33} \\
+    t_{41} & t_{42} & t_{43}
+\end{pmatrix}
+\end{equation}
+$$
 
 <img src="https://render.githubusercontent.com/render/math?math=T=\begin{pmatrix}t_11 %26 t_12 %26 t_13 %26 t_14\\t_21 %26 t_22 %26 t_23 %26 t_24\\t_31 %26 t_32 %26 t_33 %26 t_34 \end{pmatrix} ">
 
