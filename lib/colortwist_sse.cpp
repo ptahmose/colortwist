@@ -10,6 +10,27 @@
 using namespace std;
 using namespace colortwist;
 
+#if !COLORTWISTLIB_HAS_MM_LOADU_SI32_INTRINSICS
+inline __m128i mm_loadu_si32_workaround(const void* p)
+{
+    return _mm_cvtsi32_si128(*reinterpret_cast<const uint32_t*>(p));
+}
+#endif
+
+#if !COLORTWISTLIB_HAS_MM_STOREU_SI32_INTRINSICS
+inline void mm_storeu_si32_workaround(void* p, __m128i a)
+{
+    *reinterpret_cast<uint32_t*>(p) = _mm_cvtsi128_si32(a);
+}
+#endif
+
+#if !COLORTWISTLIB_HAS_MM_LOADU_SI16_INTRINSICS
+inline __m128i mm_loadu_si16_workaround(const void* p)
+{
+    return _mm_cvtsi32_si128(*reinterpret_cast<const uint16_t*>(p));
+}
+#endif
+
 /// This template is parametrized by a flag indicating whether the width is a multiple of 4. The idea is that we can create specialized
 /// versions of the function where we deal with not-multiple-of-4 widths or we do not. The execution time of the function is improved
 /// by not dealing with a remainder in the inner loop (if there is no remainder). The performance improvement is small but significant.
@@ -36,7 +57,7 @@ template <bool deal_with_remainder> struct ColorTwistRgb24Generic
 #if COLORTWISTLIB_HAS_MM_LOADU_SI32_INTRINSICS
                 __m128i b = _mm_loadu_si32(ps + 8);     // load 4 bytes  B2 R3 G3 B3
 #else
-                __m128i b = _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float*>(ps + 8)));
+                __m128i b = mm_loadu_si32_workaround(ps + 8);// _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float*>(ps + 8)));
 #endif
 
                 __m128i c = _mm_unpacklo_epi8(a, _mm_setzero_si128());  // convert from 8-bit to 16-bit (and 
@@ -98,7 +119,8 @@ template <bool deal_with_remainder> struct ColorTwistRgb24Generic
 #if COLORTWISTLIB_HAS_MM_STOREU_SI32_INTRINSICS
                 _mm_storeu_si32(pd + 8, result3_ui8);
 #else
-                _mm_store_ss(reinterpret_cast<float*>(pd + 8), _mm_castsi128_ps(result3_ui8));
+                mm_storeu_si32_workaround(pd + 8, result3_ui8);
+                //_mm_store_ss(reinterpret_cast<float*>(pd + 8), _mm_castsi128_ps(result3_ui8));
 #endif
 
                 pd += 12;
@@ -174,7 +196,12 @@ template <bool deal_with_remainder> struct ColorTwistRgb48Generic
                 __m128i first_rgbr_ushort16 = _mm_loadu_si64(ps);
                 __m128i first_rgb1_ushort16 = _mm_insert_epi16(first_rgbr_ushort16, 0x0001, 3);
 
-                __m128i c = _mm_loadu_si64(ps+8); // _mm_castps_si128(_mm_load_ss((const float*)(ps + 8)));
+#if COLORTWISTLIB_HAS_MM_LOADU_SI32_INTRINSICS
+                __m128i c = _mm_loadu_si32(ps+8); // _mm_castps_si128(_mm_load_ss((const float*)(ps + 8)));
+#else
+                __m128i c = mm_loadu_si32_workaround(ps + 8); // _mm_castps_si128(_mm_load_ss((const float*)(ps + 8)));
+#endif
+
                 __m128i second_rgb1_ushort16 = _mm_unpacklo_epi32(_mm_shuffle_epi32(first_rgbr_ushort16, 0x55), c);
                 second_rgb1_ushort16 = _mm_insert_epi16(second_rgb1_ushort16, 0x0001, 0);
 
@@ -203,7 +230,8 @@ template <bool deal_with_remainder> struct ColorTwistRgb48Generic
 #if COLORTWISTLIB_HAS_MM_STOREU_SI32_INTRINSICS
                 _mm_storeu_si32(pd + 8, result_uint16_gb);
  #else
-                _mm_store_ss((float*)(pd + 8), _mm_castsi128_ps(result_uint16_gb));
+                mm_storeu_si32_workaround(pd + 8, result_uint16_gb);
+                //_mm_store_ss((float*)(pd + 8), _mm_castsi128_ps(result_uint16_gb));
  #endif
 
                 ps += 12;
@@ -220,7 +248,8 @@ template <bool deal_with_remainder> struct ColorTwistRgb48Generic
 #if COLORTWISTLIB_HAS_MM_LOADU_SI16_INTRINSICS
                     __m128i b = _mm_loadu_si16(ps + 4); // load 2 bytes (the remainder of the SSE-register is zeroed)
 #else
-                    __m128i b = _mm_cvtsi32_si128((*reinterpret_cast<const uint16_t*>(ps + 4)));
+                    __m128i b = mm_loadu_si16_workaround(ps + 4); // _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float*>(ps + 4)));
+                    //__m128i b = _mm_cvtsi32_si128((*reinterpret_cast<const uint16_t*>(ps + 4)));
 #endif
                     b = _mm_insert_epi16(b, 0x0001, 1);
 
