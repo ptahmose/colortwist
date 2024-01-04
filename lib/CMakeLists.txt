@@ -52,7 +52,6 @@ if (COLORTWIST_HAS_IMMINTRIN )
     set(HAS_MM_LOADU_SI16_INTRINSIC 0)
   endif()
 
-  include(CheckSourceCompiles)
   check_cxx_source_runs(
   "#include <immintrin.h>
   int main(void) { unsigned int u=12345678; _mm_loadu_si32(&u); return 0; }"
@@ -64,7 +63,6 @@ if (COLORTWIST_HAS_IMMINTRIN )
     set(HAS_MM_LOADU_SI32_INTRINSIC 0)
   endif()
 
-include(CheckSourceCompiles)
   check_cxx_source_runs(
   "#include <immintrin.h>
   int main(void) { unsigned int u=0;  __m128i mmreg = _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15); _mm_storeu_si32(&u, mmreg); return 0; }"
