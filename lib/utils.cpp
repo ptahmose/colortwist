@@ -85,7 +85,8 @@ static int check_sse41_support()
 
 bool CheckWhetherCpuSupportsAVX2()
 {
-    return check_4th_gen_intel_core_features() > 0;
+    return false;
+    //return check_4th_gen_intel_core_features() > 0;
 }
 
 bool CheckWhetherCpuSupportsSSE41()

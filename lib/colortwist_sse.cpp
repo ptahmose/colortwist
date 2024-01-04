@@ -174,7 +174,7 @@ template <bool deal_with_remainder> struct ColorTwistRgb48Generic
                 __m128i first_rgbr_ushort16 = _mm_loadu_si64(ps);
                 __m128i first_rgb1_ushort16 = _mm_insert_epi16(first_rgbr_ushort16, 0x0001, 3);
 
-                __m128i c = _mm_castps_si128(_mm_load_ss((const float*)(ps + 8)));
+                __m128i c = _mm_loadu_si64(ps+8); // _mm_castps_si128(_mm_load_ss((const float*)(ps + 8)));
                 __m128i second_rgb1_ushort16 = _mm_unpacklo_epi32(_mm_shuffle_epi32(first_rgbr_ushort16, 0x55), c);
                 second_rgb1_ushort16 = _mm_insert_epi16(second_rgb1_ushort16, 0x0001, 0);
 
