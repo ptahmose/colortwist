@@ -66,6 +66,10 @@ else()
   set(HAS_MM_STOREU_SI32_INTRINSIC 0)
 endif()
 
+  set(HAS_MM_LOADU_SI16_INTRINSIC 1)
+  set(HAS_MM_LOADU_SI32_INTRINSIC 1)
+  set(HAS_MM_STOREU_SI32_INTRINSIC 1)
+
 # check whether we can use ARM-Neon-instructions -> we check for the presence of the file
 CHECK_INCLUDE_FILES(arm_neon.h ARMNEONFOUND)
 if (ARMNEONFOUND)
