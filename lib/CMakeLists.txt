@@ -41,6 +41,7 @@ endif()
 
 if (COLORTWIST_HAS_IMMINTRIN )
   include(CheckCXXSourceRuns)
+  set(CMAKE_REQUIRED_FLAGS "-march=native")
   check_cxx_source_runs(
   "#include <immintrin.h>
   int main(void) { unsigned short u=1234; _mm_loadu_si16(&u); return 0; }"
