@@ -41,12 +41,16 @@ endif()
 
 if (COLORTWIST_HAS_IMMINTRIN )
   include(CheckCXXSourceRuns)
-  set(CMAKE_REQUIRED_FLAGS "-march=native")
+
+  # Save the original value of CMAKE_REQUIRED_FLAGS
+  set(ORIGINAL_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}")
+  # Add the -march=native flag
+  set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -march=native")
+
   check_cxx_source_runs(
   "#include <immintrin.h>
   int main(void) { unsigned short u=1234; _mm_loadu_si16(&u); return 0; }"
   HAS_MM_LOADU_SI16_INTRINSIC)
-#  check_symbol_exists(_mm_loadu_si16 immintrin.h HAS_MM_LOADU_SI16_INTRINSIC)
   if (HAS_MM_LOADU_SI16_INTRINSIC)
     set(HAS_MM_LOADU_SI16_INTRINSIC 1)
   else()
@@ -57,7 +61,6 @@ if (COLORTWIST_HAS_IMMINTRIN )
   "#include <immintrin.h>
   int main(void) { unsigned int u=12345678; _mm_loadu_si32(&u); return 0; }"
   HAS_MM_LOADU_SI32_INTRINSIC)
-#  check_symbol_exists(_mm_loadu_si32 immintrin.h HAS_MM_LOADU_SI32_INTRINSIC)
   if (HAS_MM_LOADU_SI32_INTRINSIC)
     set(HAS_MM_LOADU_SI32_INTRINSIC 1)
   else()
@@ -68,21 +71,19 @@ if (COLORTWIST_HAS_IMMINTRIN )
   "#include <immintrin.h>
   int main(void) { unsigned int u=0;  __m128i mmreg = _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15); _mm_storeu_si32(&u, mmreg); return 0; }"
   HAS_MM_STOREU_SI32_INTRINSIC)
-#  check_symbol_exists(_mm_storeu_si32 immintrin.h HAS_MM_STOREU_SI32_INTRINSIC)
   if (HAS_MM_STOREU_SI32_INTRINSIC)
     set(HAS_MM_STOREU_SI32_INTRINSIC 1)
   else()
     set(HAS_MM_STOREU_SI32_INTRINSIC 0)
   endif()
+
+  # Restore the original CMAKE_REQUIRED_FLAGS
+  set(CMAKE_REQUIRED_FLAGS "${ORIGINAL_CMAKE_REQUIRED_FLAGS}")
 else()
   set(HAS_MM_LOADU_SI16_INTRINSIC 0)
   set(HAS_MM_LOADU_SI32_INTRINSIC 0)
   set(HAS_MM_STOREU_SI32_INTRINSIC 0)
 endif()
-
-#  set(HAS_MM_LOADU_SI16_INTRINSIC 1)
-#  set(HAS_MM_LOADU_SI32_INTRINSIC 1)
-#  set(HAS_MM_STOREU_SI32_INTRINSIC 1)
 
 # check whether we can use ARM-Neon-instructions -> we check for the presence of the file
 CHECK_INCLUDE_FILES(arm_neon.h ARMNEONFOUND)
