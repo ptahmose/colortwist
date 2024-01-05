@@ -1,10 +1,5 @@
-#cmake_minimum_required(VERSION 3.0.0)
-#cmake_policy(SET CMP0054 NEW)
-
-#project(libcolortwist VERSION 0.1.0)
 
 INCLUDE(CheckIncludeFiles)
-include(CheckSymbolExists)
 
 set (LIBCOLORTWIST_SOURCES  colortwist.h
                             colortwist.cpp

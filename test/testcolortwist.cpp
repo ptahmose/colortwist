@@ -1,21 +1,16 @@
 #include <iostream>
 #include <memory>
 #include <chrono>
-#include <cstring>
 #include <colortwist.h>
 #include <random>
 
 using namespace std;
 using namespace colortwist;
 
-static void Test();
-
 static void TestBgr48(int repeats);
 static void TestBgr24(int repeats);
 static void CompareUint16(const char* functionName, const uint16_t* ptr1, const uint16_t* ptr2, size_t length, uint8_t maxDiff);
 static void CompareUint8(const char* functionName, const uint8_t* ptr1, const uint8_t* ptr2, size_t length, uint8_t maxDiff);
-
-//static void CompareRgb48Bitmap(const uint16_t* bitmap_a, const uint16_t* bitmap_b, const uint16_t* bitmap_source, uint32_t stride_a, uint32_t stride_b, uint32_t stride_source, uint32_t width, uint32_t height, uint8_t maxDiff);
 
 int main(int argc, char** argv)
 {
@@ -39,6 +34,7 @@ int main(int argc, char** argv)
 
     TestBgr24(repeats);
     TestBgr48(repeats);
+
     return 0;
 }
 
@@ -191,36 +187,6 @@ void TestBgr24(int repeats)
         CompareUint8("colorTwistRGB24: C vs NEON", upDstC.get(), upDstNeon2.get(), bitmapSize, 1);
     }
 }
-
-//void CompareRgb48Bitmap(const uint16_t* bitmap_a, const uint16_t* bitmap_b, const uint16_t* bitmap_source, uint32_t stride_a, uint32_t stride_b, uint32_t stride_source, uint32_t width, uint32_t height, uint8_t maxDiff)
-//{
-//    bool isOk = true;
-//    for (uint32_t y = 0; y < height; ++y)
-//    {
-//        const uint16_t* ptr_a = (const uint16_t*)(((uint8_t*)bitmap_a) + y * stride_a);
-//        const uint16_t* ptr_b = (const uint16_t*)(((uint8_t*)bitmap_b) + y * stride_b);
-//        for (uint32_t x = 0; x < width; ++x)
-//        {
-//            uint16_t r_a = *ptr_a++;
-//            uint16_t g_a = *ptr_a++;
-//            uint16_t b_a = *ptr_a++;
-//            uint16_t r_b = *ptr_b++;
-//            uint16_t g_b = *ptr_b++;
-//            uint16_t b_b = *ptr_b++;
-//            if (abs((int)r_a - (int)r_b) > maxDiff || abs((int)g_a - (int)g_b) > maxDiff || abs((int)b_a - (int)b_b) > maxDiff)
-//            {
-//                uint16_t r_source = *(((const uint16_t*)(((uint8_t*)bitmap_source) + y * stride_source)) + (x * 3));
-//                uint16_t g_source = *(((const uint16_t*)(((uint8_t*)bitmap_source) + y * stride_source)) + (x * 3) + 1);
-//                uint16_t b_source = *(((const uint16_t*)(((uint8_t*)bitmap_source) + y * stride_source)) + (x * 3) + 2);
-//                cout << "at (" << x << "," << y << ") a: " << r_a << "," << g_a << "," << b_a << "  b:" << r_b << "," << g_b << "," << b_b <<
-//                    " source: " << r_source << "," << g_source << "," << b_source << endl;
-//                isOk = false;
-//            }
-//        }
-//    }
-//
-//    cout << "CompareRgb48Bitmap -> " << ((isOk) ? "OK" : "FAILURE") << endl;
-//}
 
 void CompareUint16(const char* functionName, const uint16_t* ptr1, const uint16_t* ptr2, size_t length, uint8_t maxDiff)
 {
