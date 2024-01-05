@@ -245,7 +245,11 @@ template <bool deal_with_remainder> struct ColorTwistRgb48Generic
                 {
                     const __m128i kStoreMask = _mm_set_epi8(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1);
 
-                    __m128i a = _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float*>(ps)));
+#if COLORTWISTLIB_HAS_MM_LOADU_SI32_INTRINSICS
+                    __m128i a = _mm_loadu_si32(ps);
+#else
+                    __m128i a =mm_loadu_si32_workaround(ps);
+#endif
 #if COLORTWISTLIB_HAS_MM_LOADU_SI16_INTRINSICS
                     __m128i b = _mm_loadu_si16(ps + 4); // load 2 bytes (the remainder of the SSE-register is zeroed)
 #else
