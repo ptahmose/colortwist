@@ -34,3 +34,4 @@
 build/
 buildintel/
 .vs/
+/CMakeSettings.json
