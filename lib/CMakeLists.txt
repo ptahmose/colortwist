@@ -1,10 +1,5 @@
-#cmake_minimum_required(VERSION 3.0.0)
-#cmake_policy(SET CMP0054 NEW)
-
-#project(libcolortwist VERSION 0.1.0)
 
 INCLUDE(CheckIncludeFiles)
-include(CheckSymbolExists)
 
 set (LIBCOLORTWIST_SOURCES  colortwist.h
                             colortwist.cpp
@@ -40,26 +35,45 @@ else()
 endif()
 
 if (COLORTWIST_HAS_IMMINTRIN )
-  check_symbol_exists(_mm_loadu_si16 immintrin.h HAS_MM_LOADU_SI16_INTRINSIC)
+  include(CheckCXXSourceRuns)
+
+  # Save the original value of CMAKE_REQUIRED_FLAGS
+  set(ORIGINAL_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}")
+  # Add the -march=native flag
+  set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -march=native")
+
+  check_cxx_source_runs(
+  "#include <immintrin.h>
+  int main(void) { unsigned short u=1234; _mm_loadu_si16(&u); return 0; }"
+  HAS_MM_LOADU_SI16_INTRINSIC)
   if (HAS_MM_LOADU_SI16_INTRINSIC)
     set(HAS_MM_LOADU_SI16_INTRINSIC 1)
   else()
     set(HAS_MM_LOADU_SI16_INTRINSIC 0)
   endif()
 
-  check_symbol_exists(_mm_loadu_si32 immintrin.h HAS_MM_LOADU_SI32_INTRINSIC)
+  check_cxx_source_runs(
+  "#include <immintrin.h>
+  int main(void) { unsigned int u=12345678; _mm_loadu_si32(&u); return 0; }"
+  HAS_MM_LOADU_SI32_INTRINSIC)
   if (HAS_MM_LOADU_SI32_INTRINSIC)
     set(HAS_MM_LOADU_SI32_INTRINSIC 1)
   else()
     set(HAS_MM_LOADU_SI32_INTRINSIC 0)
   endif()
 
-  check_symbol_exists(_mm_storeu_si32 immintrin.h HAS_MM_STOREU_SI32_INTRINSIC)
+  check_cxx_source_runs(
+  "#include <immintrin.h>
+  int main(void) { unsigned int u=0;  __m128i mmreg = _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15); _mm_storeu_si32(&u, mmreg); return 0; }"
+  HAS_MM_STOREU_SI32_INTRINSIC)
   if (HAS_MM_STOREU_SI32_INTRINSIC)
     set(HAS_MM_STOREU_SI32_INTRINSIC 1)
   else()
     set(HAS_MM_STOREU_SI32_INTRINSIC 0)
   endif()
+
+  # Restore the original CMAKE_REQUIRED_FLAGS
+  set(CMAKE_REQUIRED_FLAGS "${ORIGINAL_CMAKE_REQUIRED_FLAGS}")
 else()
   set(HAS_MM_LOADU_SI16_INTRINSIC 0)
   set(HAS_MM_LOADU_SI32_INTRINSIC 0)
