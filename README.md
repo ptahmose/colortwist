@@ -195,7 +195,7 @@ Samsung Galaxy Book Go ([Snapdragon 7c Gen2 @ 2.55GHz](https://www.qualcomm.com/
 | colorTwistRGB24_C      | 2863.86             |
 | colorTwistRGB24_NEON2  | 4584.36             |
 
-[Lenovo Slim 7x](https://www.lenovo.com/us/en/p/laptops/yoga/yoga-slim-series/yoga-slim-7x-gen-9-14-inch-snapdragon/len101y0049), MSVC 19.41.34123.0, arm64 : 2048x2048 bitmap
+[Lenovo Yoga Slim 7x](https://www.lenovo.com/us/en/p/laptops/yoga/yoga-slim-series/yoga-slim-7x-gen-9-14-inch-snapdragon/len101y0049), MSVC 19.41.34123.0, arm64 : 2048x2048 bitmap
 
 | version                | performance in MB/s |
 | ---------------------- | ------------------- |
