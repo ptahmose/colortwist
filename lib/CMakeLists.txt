@@ -13,6 +13,8 @@ set (LIBCOLORTWIST_SOURCES  colortwist.h
                             colortwist_sse.cpp
                             colortwist_neon.h
                             colortwist_neon.cpp
+                            colortwist_riscv.h
+                            colortwist_riscv.cpp
                             utils.h
                             utils.cpp)
 
@@ -70,6 +72,16 @@ if (COLORTWIST_HAS_IMMINTRIN )
     set(HAS_MM_STOREU_SI32_INTRINSIC 1)
   else()
     set(HAS_MM_STOREU_SI32_INTRINSIC 0)
+  endif()
+
+  check_cxx_source_runs(
+  "#include <riscv_vector.h>
+  int main(void) { (void)__riscv_vsetvl_e32m1(128);return 0; }"
+  HAS_RISCV_VECTOR_INTRINISCS)
+  if (HAS_RISCV_VECTOR_INTRINISCS)
+    set(HAS_RISCV_VECTOR_INTRINISCS 1)
+  else()
+    set(HAS_RISCV_VECTOR_INTRINISCS 0)
   endif()
 
   # Restore the original CMAKE_REQUIRED_FLAGS
@@ -153,6 +165,11 @@ if (ARMNEONFOUND)
  endif()
 endif()
 
+if (HAS_RISCV_VECTOR_INTRINISCS)
+  set(COLORTWIST_HAS_RISCV_VECTOREXTENSIONS 1)
+else()
+  set(COLORTWIST_HAS_RISCV_VECTOREXTENSIONS 0)
+endif()
 
 configure_file (
   "${CMAKE_CURRENT_SOURCE_DIR}/colortwist_config.h.in"
@@ -185,6 +202,10 @@ elseif(${CMAKE_SYSTEM_PROCESSOR} MATCHES "i686" OR ${CMAKE_SYSTEM_PROCESSOR} MAT
   elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
    set_source_files_properties(colortwist_avx.cpp PROPERTIES COMPILE_FLAGS "-mfma -mavx2")
    set_source_files_properties(colortwist_sse.cpp PROPERTIES COMPILE_FLAGS "-msse4.1")
+  endif()
+elseif(${CMAKE_SYSTEM_PROCESSOR} MATCHES "riscv")
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+   set_source_files_properties(colortwist_riscv.cpp PROPERTIES COMPILE_FLAGS "-march=rv64gc_zve64d -mabi=lp64d")
   endif()
 endif()
 

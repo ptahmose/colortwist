@@ -4,6 +4,8 @@
 #include <colortwist.h>
 #include <random>
 
+//#include <riscv_vector.h>
+
 using namespace std;
 using namespace colortwist;
 
@@ -15,6 +17,9 @@ static void CompareUint8(const char* functionName, const uint8_t* ptr1, const ui
 int main(int argc, char** argv)
 {
     int repeats = 100;
+
+    //size_t vl;
+    //vl = __riscv_vsetvl_e32m1(128);
 
     for (int i = 1; i < argc; ++i)
     {

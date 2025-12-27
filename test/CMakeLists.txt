@@ -1,5 +1,9 @@
 add_executable (testcolortwist testcolortwist.cpp)
 
+#if(CMAKE_SYSTEM_PROCESSOR MATCHES "riscv")
+#  target_compile_options(testcolortwist PRIVATE -march=rv64gc_zve64d -mabi=lp64d)
+#endif()
+
 target_link_libraries (testcolortwist LINK_PUBLIC libcolortwist)
 
 #message(STATUS "IPP-Libraries: ${IPP_LIBRARIES}")
