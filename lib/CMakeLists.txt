@@ -145,7 +145,13 @@ if (COLORTWIST_HAS_NEON)
      endif()
 endif()
 
+# check whether we can use RISCV-Vector-instructions -> we check for the presence of the file
+CHECK_INCLUDE_FILES(riscv_vector.h RISCVVECTORINTRINSICSFOUND)
+if (RISCVVECTORINTRINSICSFOUND)
+     message(STATUS "************ riscv_vector.h found ************")
+endif()
 
+#[[
   check_cxx_source_runs(
   "#include <riscv_vector.h>
   int main(void) { (void)__riscv_vsetvl_e32m1(128);return 0; }"
@@ -156,6 +162,7 @@ endif()
   else()
     set(HAS_RISCV_VECTOR_INTRINISCS 0)
   endif()
+]]#
 
 set(COLORTWIST_HAS_SYS_AUXV_H 0)
 if (ARMNEONFOUND OR HAS_RISCV_VECTOR_INTRINISCS)
