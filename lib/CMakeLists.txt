@@ -1,5 +1,6 @@
 
 INCLUDE(CheckIncludeFiles)
+include(CheckCXXSourceRuns)
 
 set (LIBCOLORTWIST_SOURCES  colortwist.h
                             colortwist.cpp
@@ -37,8 +38,6 @@ else()
 endif()
 
 if (COLORTWIST_HAS_IMMINTRIN )
-  include(CheckCXXSourceRuns)
-
   # Save the original value of CMAKE_REQUIRED_FLAGS
   set(ORIGINAL_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}")
   # Add the -march=native flag
@@ -72,17 +71,6 @@ if (COLORTWIST_HAS_IMMINTRIN )
     set(HAS_MM_STOREU_SI32_INTRINSIC 1)
   else()
     set(HAS_MM_STOREU_SI32_INTRINSIC 0)
-  endif()
-
-  check_cxx_source_runs(
-  "#include <riscv_vector.h>
-  int main(void) { (void)__riscv_vsetvl_e32m1(128);return 0; }"
-  HAS_RISCV_VECTOR_INTRINISCS)
-  message(STATUS "************ RISCV-Test: {HAS_RISCV_VECTOR_INTRINISCS} ************")
-  if (HAS_RISCV_VECTOR_INTRINISCS)
-    set(HAS_RISCV_VECTOR_INTRINISCS 1)
-  else()
-    set(HAS_RISCV_VECTOR_INTRINISCS 0)
   endif()
 
   # Restore the original CMAKE_REQUIRED_FLAGS
@@ -158,8 +146,19 @@ if (COLORTWIST_HAS_NEON)
 endif()
 
 
+  check_cxx_source_runs(
+  "#include <riscv_vector.h>
+  int main(void) { (void)__riscv_vsetvl_e32m1(128);return 0; }"
+  HAS_RISCV_VECTOR_INTRINISCS)
+  message(STATUS "************ RISCV-Test: {HAS_RISCV_VECTOR_INTRINISCS} ************")
+  if (HAS_RISCV_VECTOR_INTRINISCS)
+    set(HAS_RISCV_VECTOR_INTRINISCS 1)
+  else()
+    set(HAS_RISCV_VECTOR_INTRINISCS 0)
+  endif()
+
 set(COLORTWIST_HAS_SYS_AUXV_H 0)
-if (ARMNEONFOUND)
+if (ARMNEONFOUND OR HAS_RISCV_VECTOR_INTRINISCS)
  CHECK_INCLUDE_FILES("sys/auxv.h" SYSAUXHFOUND)
  if (SYSAUXHFOUND)
   set(COLORTWIST_HAS_SYS_AUXV_H 1)
