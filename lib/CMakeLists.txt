@@ -150,7 +150,7 @@ endif()
   "#include <riscv_vector.h>
   int main(void) { (void)__riscv_vsetvl_e32m1(128);return 0; }"
   HAS_RISCV_VECTOR_INTRINISCS)
-  message(STATUS "************ RISCV-Test: {HAS_RISCV_VECTOR_INTRINISCS} ************")
+  message(STATUS "************ RISCV-Test: ${HAS_RISCV_VECTOR_INTRINISCS} ************")
   if (HAS_RISCV_VECTOR_INTRINISCS)
     set(HAS_RISCV_VECTOR_INTRINISCS 1)
   else()
