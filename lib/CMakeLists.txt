@@ -185,6 +185,8 @@ else()
   set(COLORTWIST_HAS_RISCV_VECTOREXTENSIONS 0)
 endif()
 
+ message(STATUS "************ RISCV-Test: ${COLORTWIST_HAS_RISCV_VECTOREXTENSIONS} ************")
+
 configure_file (
   "${CMAKE_CURRENT_SOURCE_DIR}/colortwist_config.h.in"
   "${CMAKE_CURRENT_BINARY_DIR}/colortwist_config.h"
@@ -219,7 +221,8 @@ elseif(${CMAKE_SYSTEM_PROCESSOR} MATCHES "i686" OR ${CMAKE_SYSTEM_PROCESSOR} MAT
   endif()
 elseif(${CMAKE_SYSTEM_PROCESSOR} MATCHES "riscv")
   if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-   set_source_files_properties(colortwist_riscv.cpp PROPERTIES COMPILE_FLAGS "-march=rv64gc_zve64d -mabi=lp64d")
+  message(STATUS "Setting RISC-V specific compile flags for colortwist_riscv.cpp")
+   set_source_files_properties(colortwist_riscv.cpp PROPERTIES COMPILE_FLAGS "-march=rv64gcv -mabi=lp64d")
   endif()
 endif()
 

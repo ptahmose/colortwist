@@ -11,6 +11,7 @@ namespace colortwist
         X64_AVX,
         ARM_NEON,
         X86_SSE,
+		RISCV_VECTOREXTENSIONS,
     };
 
     /// Values that represent the status of an operation.
