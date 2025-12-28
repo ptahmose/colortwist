@@ -14,7 +14,7 @@ using namespace colortwist;
 // GCC 14 requires an explicit rounding mode for narrowing clips.
 // =============================================================================
 
-#if COLORTWIST_USE_RVV_TUPLES
+#if COLORTWISTLIB_USE_RVV_TUPLES
     // --- GCC 14+ Wrappers (4 Arguments) ---
     // We use __RISCV_VXRM_RNU (Round-to-Nearest-Up)
 
@@ -68,7 +68,7 @@ colortwist::StatusCode colorTwistRGB24_RISCV(const void* pSrc, uint32_t width, u
             vl = __riscv_vsetvl_e32m4(w);
             vuint8m1_t v_r8, v_g8, v_b8;
 
-#if COLORTWIST_USE_RVV_TUPLES
+#if COLORTWISTLIB_USE_RVV_TUPLES
             // GCC 14+ (Tuple Load)
             vuint8m1x3_t v_src_tuple = __riscv_vlseg3e8_v_u8m1x3(ptrSrc, vl);
             v_r8 = __riscv_vget_v_u8m1x3_u8m1(v_src_tuple, 0);
@@ -119,7 +119,7 @@ colortwist::StatusCode colorTwistRGB24_RISCV(const void* pSrc, uint32_t width, u
             v_g8 = vnclipu_u8m1(v_gi16, 0, vl);
             v_b8 = vnclipu_u8m1(v_bi16, 0, vl);
 
-#if COLORTWIST_USE_RVV_TUPLES
+#if COLORTWISTLIB_USE_RVV_TUPLES
             // GCC 14+ (Tuple Store)
             vuint8m1x3_t v_dst_tuple = __riscv_vcreate_v_u8m1x3(v_r8, v_g8, v_b8);
             __riscv_vsseg3e8_v_u8m1x3(ptrDst, v_dst_tuple, vl);
@@ -167,7 +167,7 @@ colortwist::StatusCode colorTwistRGB48_RISCV(const void* pSrc, uint32_t width, u
             vl = __riscv_vsetvl_e32m4(w);
             vuint16m2_t v_r16, v_g16, v_b16;
 
-#if COLORTWIST_USE_RVV_TUPLES
+#if COLORTWISTLIB_USE_RVV_TUPLES
             // GCC 14+ (Tuple Load)
             vuint16m2x3_t v_src_tuple = __riscv_vlseg3e16_v_u16m2x3(ptrSrc, vl);
             v_r16 = __riscv_vget_v_u16m2x3_u16m2(v_src_tuple, 0);
@@ -209,7 +209,7 @@ colortwist::StatusCode colorTwistRGB48_RISCV(const void* pSrc, uint32_t width, u
             v_g16 = vnclipu_u16m2(v_gi32, 0, vl);
             v_b16 = vnclipu_u16m2(v_bi32, 0, vl);
 
-#if COLORTWIST_USE_RVV_TUPLES
+#if COLORTWISTLIB_USE_RVV_TUPLES
             // GCC 14+ (Tuple Store)
             vuint16m2x3_t v_dst_tuple = __riscv_vcreate_v_u16m2x3(v_r16, v_g16, v_b16);
             __riscv_vsseg3e16_v_u16m2x3(ptrDst, v_dst_tuple, vl);
