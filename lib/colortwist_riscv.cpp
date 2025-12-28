@@ -20,7 +20,7 @@ StatusCode colorTwistRGB48_RISCV(const void* pSrc,
     const float m10 = twistMatrix[4], m11 = twistMatrix[5], m12 = twistMatrix[6], b1 = twistMatrix[7];
     const float m20 = twistMatrix[8], m21 = twistMatrix[9], m22 = twistMatrix[10], b2 = twistMatrix[11];
 
-    constexpr std::ptrdiff_t kPixStrideBytes = 3 * (std::ptrdiff_t)sizeof(std::uint16_t); // 6 bytes
+    constexpr std::ptrdiff_t kPixStrideBytes = 3 * (std::ptrdiff_t)sizeof(std::uint16_t); // 6
 
     for (uint32_t y = 0; y < height; ++y)
     {
@@ -35,23 +35,30 @@ StatusCode colorTwistRGB48_RISCV(const void* pSrc,
         uint32_t x = 0;
         while (x < width)
         {
-            // Phase 1 (loads): set VL for u16m1
-            size_t vl = __riscv_vsetvl_e16m1(width - x);
+            // --- Load phase: u16m1 ---
+            size_t vl16 = __riscv_vsetvl_e16m1(width - x);
 
             const std::uint16_t* base = ps + (std::ptrdiff_t)x * 3;
 
-            vuint16m1_t r16 = __riscv_vlse16_v_u16m1(base + 0, kPixStrideBytes, vl);
-            vuint16m1_t g16 = __riscv_vlse16_v_u16m1(base + 1, kPixStrideBytes, vl);
-            vuint16m1_t b16 = __riscv_vlse16_v_u16m1(base + 2, kPixStrideBytes, vl);
+            vuint16m1_t r16 = __riscv_vlse16_v_u16m1(base + 0, kPixStrideBytes, vl16);
+            vuint16m1_t g16 = __riscv_vlse16_v_u16m1(base + 1, kPixStrideBytes, vl16);
+            vuint16m1_t b16 = __riscv_vlse16_v_u16m1(base + 2, kPixStrideBytes, vl16);
 
-            // Phase 2 (compute): set VL for f32m2 and use direct widening convert u16 -> f32
-            vl = __riscv_vsetvl_e32m2(width - x);
+            // --- Widen+convert phase: u32m2 / f32m2 ---
+            // Use e32,m2 so widening and float ops are in a consistent vtype.
+            size_t vl = __riscv_vsetvl_e32m2(width - x);
 
-            // Direct widening convert: vfwcvt.f.xu.v (u16 -> f32)
-            vfloat32m2_t vr = __riscv_vfwcvt_f_xu_v_f32m2(r16, vl);
-            vfloat32m2_t vg = __riscv_vfwcvt_f_xu_v_f32m2(g16, vl);
-            vfloat32m2_t vb = __riscv_vfwcvt_f_xu_v_f32m2(b16, vl);
+            // IMPORTANT: unsigned widen u16 -> u32
+            vuint32m2_t r32 = __riscv_vwcvtu_x_x_v_u32m2(r16, vl);
+            vuint32m2_t g32 = __riscv_vwcvtu_x_x_v_u32m2(g16, vl);
+            vuint32m2_t b32 = __riscv_vwcvtu_x_x_v_u32m2(b16, vl);
 
+            // IMPORTANT: unsigned int -> float
+            vfloat32m2_t vr = __riscv_vfcvt_f_xu_v_f32m2(r32, vl);
+            vfloat32m2_t vg = __riscv_vfcvt_f_xu_v_f32m2(g32, vl);
+            vfloat32m2_t vb = __riscv_vfcvt_f_xu_v_f32m2(b32, vl);
+
+            // Compute
             vfloat32m2_t rDst = __riscv_vfmv_v_f_f32m2(b0, vl);
             rDst = __riscv_vfmacc_vf_f32m2(rDst, m00, vr, vl);
             rDst = __riscv_vfmacc_vf_f32m2(rDst, m01, vg, vl);
@@ -78,24 +85,25 @@ StatusCode colorTwistRGB48_RISCV(const void* pSrc,
             bDst = __riscv_vfmax_vv_f32m2(bDst, f0, vl);
             bDst = __riscv_vfmin_vv_f32m2(bDst, f65535, vl);
 
-            // f32 -> u32
+            // Float -> unsigned int
             vuint32m2_t ro32 = __riscv_vfcvt_xu_f_v_u32m2(rDst, vl);
             vuint32m2_t go32 = __riscv_vfcvt_xu_f_v_u32m2(gDst, vl);
             vuint32m2_t bo32 = __riscv_vfcvt_xu_f_v_u32m2(bDst, vl);
 
-            // Phase 3 (stores): set VL for u16m1 and narrow
-            vl = __riscv_vsetvl_e16m1(width - x);
+            // --- Store phase: u16m1 ---
+            // Set back to e16,m1 for narrowing+stores and increment using the same vl.
+            vl16 = __riscv_vsetvl_e16m1(width - x);
 
-            vuint16m1_t ro16 = __riscv_vnclipu_wx_u16m1(ro32, 0, vl);
-            vuint16m1_t go16 = __riscv_vnclipu_wx_u16m1(go32, 0, vl);
-            vuint16m1_t bo16 = __riscv_vnclipu_wx_u16m1(bo32, 0, vl);
+            vuint16m1_t ro16 = __riscv_vnclipu_wx_u16m1(ro32, 0, vl16);
+            vuint16m1_t go16 = __riscv_vnclipu_wx_u16m1(go32, 0, vl16);
+            vuint16m1_t bo16 = __riscv_vnclipu_wx_u16m1(bo32, 0, vl16);
 
             std::uint16_t* outBase = pd + (std::ptrdiff_t)x * 3;
-            __riscv_vsse16_v_u16m1(outBase + 0, kPixStrideBytes, ro16, vl);
-            __riscv_vsse16_v_u16m1(outBase + 1, kPixStrideBytes, go16, vl);
-            __riscv_vsse16_v_u16m1(outBase + 2, kPixStrideBytes, bo16, vl);
+            __riscv_vsse16_v_u16m1(outBase + 0, kPixStrideBytes, ro16, vl16);
+            __riscv_vsse16_v_u16m1(outBase + 1, kPixStrideBytes, go16, vl16);
+            __riscv_vsse16_v_u16m1(outBase + 2, kPixStrideBytes, bo16, vl16);
 
-            x += (uint32_t)vl;
+            x += (uint32_t)vl16;
         }
     }
 
