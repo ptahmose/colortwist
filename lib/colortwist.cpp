@@ -171,6 +171,13 @@ bool colortwist::isOperationalRgb24(ImplementationType type)
 #else
             return false;
 #endif
+		case ImplementationType::RISCV_VECTOREXTENSIONS:
+#if COLORTWISTLIB_HAS_RISCV_VECTOREXTENSIONS
+            return CanRiscV_rv64gcv();
+#else
+            return false;
+#endif
+
     }
 
     return false;
