@@ -174,7 +174,7 @@ endif()
 
 set(COLORTWIST_RVV_HAS_TUPLE_TYPES 0)
 if (HAS_RISCV_VECTOR_INTRINISCS)
-  check_rvv_tuple_support(COLORTWIST_USE_RVV_TUPLES)
+  check_rvv_vcreate_support(COLORTWIST_USE_RVV_TUPLES)
   if(COLORTWIST_RVV_HAS_TUPLE_TYPES)
     message(STATUS "RISC-V Vector Tuple Types Detected (GCC 14+ mode)")
     set(COLORTWIST_RVV_HAS_TUPLE_TYPES 1)
