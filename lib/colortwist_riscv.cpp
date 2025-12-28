@@ -16,19 +16,18 @@ StatusCode colorTwistRGB48_RISCV(const void* pSrc,
     int strideDst,
     const float* twistMatrix)
 {
-    // Hoist matrix scalars (row-major 3x4)
     const float m00 = twistMatrix[0], m01 = twistMatrix[1], m02 = twistMatrix[2], b0 = twistMatrix[3];
     const float m10 = twistMatrix[4], m11 = twistMatrix[5], m12 = twistMatrix[6], b1 = twistMatrix[7];
     const float m20 = twistMatrix[8], m21 = twistMatrix[9], m22 = twistMatrix[10], b2 = twistMatrix[11];
 
-    constexpr std::ptrdiff_t kElemStrideBytes = 3 * static_cast<std::ptrdiff_t>(sizeof(std::uint16_t)); // 6 bytes
+    constexpr std::ptrdiff_t kPixStrideBytes = 3 * (std::ptrdiff_t)sizeof(std::uint16_t); // 6 bytes
 
     for (uint32_t y = 0; y < height; ++y)
     {
         const std::uint8_t* rowSrcBytes =
-            static_cast<const std::uint8_t*>(pSrc) + static_cast<std::ptrdiff_t>(y) * strideSrc;
+            static_cast<const std::uint8_t*>(pSrc) + (std::ptrdiff_t)y * (std::ptrdiff_t)strideSrc;
         std::uint8_t* rowDstBytes =
-            static_cast<std::uint8_t*>(pDst) + static_cast<std::ptrdiff_t>(y) * strideDst;
+            static_cast<std::uint8_t*>(pDst) + (std::ptrdiff_t)y * (std::ptrdiff_t)strideDst;
 
         const std::uint16_t* ps = reinterpret_cast<const std::uint16_t*>(rowSrcBytes);
         std::uint16_t* pd = reinterpret_cast<std::uint16_t*>(rowDstBytes);
@@ -36,26 +35,23 @@ StatusCode colorTwistRGB48_RISCV(const void* pSrc,
         uint32_t x = 0;
         while (x < width)
         {
-            // IMPORTANT: set vtype for the compute vectors (f32m2 => e32,m2)
-            size_t vl = __riscv_vsetvl_e32m2(width - x);
+            // Phase 1 (loads): set VL for u16m1
+            size_t vl = __riscv_vsetvl_e16m1(width - x);
 
-            const std::uint16_t* base = ps + static_cast<std::ptrdiff_t>(x) * 3;
+            const std::uint16_t* base = ps + (std::ptrdiff_t)x * 3;
 
-            // Strided loads for interleaved RGB
-            vuint16m1_t r16 = __riscv_vlse16_v_u16m1(base + 0, kElemStrideBytes, vl);
-            vuint16m1_t g16 = __riscv_vlse16_v_u16m1(base + 1, kElemStrideBytes, vl);
-            vuint16m1_t b16 = __riscv_vlse16_v_u16m1(base + 2, kElemStrideBytes, vl);
+            vuint16m1_t r16 = __riscv_vlse16_v_u16m1(base + 0, kPixStrideBytes, vl);
+            vuint16m1_t g16 = __riscv_vlse16_v_u16m1(base + 1, kPixStrideBytes, vl);
+            vuint16m1_t b16 = __riscv_vlse16_v_u16m1(base + 2, kPixStrideBytes, vl);
 
-            // u16 -> u32 (widen) -> f32
-            vuint32m2_t r32 = __riscv_vwcvtu_x_x_v_u32m2(r16, vl);
-            vuint32m2_t g32 = __riscv_vwcvtu_x_x_v_u32m2(g16, vl);
-            vuint32m2_t b32 = __riscv_vwcvtu_x_x_v_u32m2(b16, vl);
+            // Phase 2 (compute): set VL for f32m2 and use direct widening convert u16 -> f32
+            vl = __riscv_vsetvl_e32m2(width - x);
 
-            vfloat32m2_t vr = __riscv_vfcvt_f_xu_v_f32m2(r32, vl);
-            vfloat32m2_t vg = __riscv_vfcvt_f_xu_v_f32m2(g32, vl);
-            vfloat32m2_t vb = __riscv_vfcvt_f_xu_v_f32m2(b32, vl);
+            // Direct widening convert: vfwcvt.f.xu.v (u16 -> f32)
+            vfloat32m2_t vr = __riscv_vfwcvt_f_xu_v_f32m2(r16, vl);
+            vfloat32m2_t vg = __riscv_vfwcvt_f_xu_v_f32m2(g16, vl);
+            vfloat32m2_t vb = __riscv_vfwcvt_f_xu_v_f32m2(b16, vl);
 
-            // FMA chains
             vfloat32m2_t rDst = __riscv_vfmv_v_f_f32m2(b0, vl);
             rDst = __riscv_vfmacc_vf_f32m2(rDst, m00, vr, vl);
             rDst = __riscv_vfmacc_vf_f32m2(rDst, m01, vg, vl);
@@ -71,35 +67,35 @@ StatusCode colorTwistRGB48_RISCV(const void* pSrc,
             bDst = __riscv_vfmacc_vf_f32m2(bDst, m21, vg, vl);
             bDst = __riscv_vfmacc_vf_f32m2(bDst, m22, vb, vl);
 
-            // Clamp in float domain
+            // Clamp
             const vfloat32m2_t f0 = __riscv_vfmv_v_f_f32m2(0.0f, vl);
             const vfloat32m2_t f65535 = __riscv_vfmv_v_f_f32m2(65535.0f, vl);
 
             rDst = __riscv_vfmax_vv_f32m2(rDst, f0, vl);
             rDst = __riscv_vfmin_vv_f32m2(rDst, f65535, vl);
-
             gDst = __riscv_vfmax_vv_f32m2(gDst, f0, vl);
             gDst = __riscv_vfmin_vv_f32m2(gDst, f65535, vl);
-
             bDst = __riscv_vfmax_vv_f32m2(bDst, f0, vl);
             bDst = __riscv_vfmin_vv_f32m2(bDst, f65535, vl);
 
-            // f32 -> u32 -> narrow to u16
+            // f32 -> u32
             vuint32m2_t ro32 = __riscv_vfcvt_xu_f_v_u32m2(rDst, vl);
             vuint32m2_t go32 = __riscv_vfcvt_xu_f_v_u32m2(gDst, vl);
             vuint32m2_t bo32 = __riscv_vfcvt_xu_f_v_u32m2(bDst, vl);
+
+            // Phase 3 (stores): set VL for u16m1 and narrow
+            vl = __riscv_vsetvl_e16m1(width - x);
 
             vuint16m1_t ro16 = __riscv_vnclipu_wx_u16m1(ro32, 0, vl);
             vuint16m1_t go16 = __riscv_vnclipu_wx_u16m1(go32, 0, vl);
             vuint16m1_t bo16 = __riscv_vnclipu_wx_u16m1(bo32, 0, vl);
 
-            std::uint16_t* outBase = pd + static_cast<std::ptrdiff_t>(x) * 3;
+            std::uint16_t* outBase = pd + (std::ptrdiff_t)x * 3;
+            __riscv_vsse16_v_u16m1(outBase + 0, kPixStrideBytes, ro16, vl);
+            __riscv_vsse16_v_u16m1(outBase + 1, kPixStrideBytes, go16, vl);
+            __riscv_vsse16_v_u16m1(outBase + 2, kPixStrideBytes, bo16, vl);
 
-            __riscv_vsse16_v_u16m1(outBase + 0, kElemStrideBytes, ro16, vl);
-            __riscv_vsse16_v_u16m1(outBase + 1, kElemStrideBytes, go16, vl);
-            __riscv_vsse16_v_u16m1(outBase + 2, kElemStrideBytes, bo16, vl);
-
-            x += static_cast<uint32_t>(vl);
+            x += (uint32_t)vl;
         }
     }
 
