@@ -231,100 +231,110 @@ StatusCode colorTwistRGB24_RISCV(const void* pSrc,
 // Function: colorTwistRGB24_RISCV (uint8_t)
 // Optimization: Uses Strided Loads/Stores to avoid Tuple-Type compilation errors
 // -----------------------------------------------------------------------------
-colortwist::StatusCode colorTwistRGB24_RISCV(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
+colortwist::StatusCode colorTwistRGB24_RISCV(const void* pSrc,
+    uint32_t width,
+    uint32_t height,
+    int strideSrc,
+    void* pDst,
+    int strideDst,
+    const float* twistMatrix)
 {
-    // Matrix Offsets with 0.5 rounding bias
-    const float bias = 0.5f;
-    const float off_r = twistMatrix[3] + bias;
-    const float off_g = twistMatrix[7] + bias;
-    const float off_b = twistMatrix[11] + bias;
+    // 0.5 bias to match round-to-nearest when using rtz conversions
+    const float off_r = twistMatrix[3] + 0.5f;
+    const float off_g = twistMatrix[7] + 0.5f;
+    const float off_b = twistMatrix[11] + 0.5f;
 
-    // Matrix Coefficients
     const float c0 = twistMatrix[0], c1 = twistMatrix[1], c2 = twistMatrix[2];
     const float c4 = twistMatrix[4], c5 = twistMatrix[5], c6 = twistMatrix[6];
     const float c8 = twistMatrix[8], c9 = twistMatrix[9], c10 = twistMatrix[10];
 
-    const uint8_t* srcRow = static_cast<const uint8_t*>(pSrc);
-    uint8_t* dstRow = static_cast<uint8_t*>(pDst);
+    const std::uint8_t* __restrict srcRow = static_cast<const std::uint8_t*>(pSrc);
+    std::uint8_t* __restrict dstRow = static_cast<std::uint8_t*>(pDst);
 
-    // Stride for RGB24 is 3 bytes (R..G..B.. -> next pixel)
-    const ptrdiff_t rgb24_stride = 3;
+    constexpr std::ptrdiff_t rgb_stride = 3;
 
-    for (size_t y = 0; y < height; ++y)
+    for (uint32_t y = 0; y < height; ++y)
     {
-        const uint8_t* ptrSrc = srcRow;
-        uint8_t* ptrDst = dstRow;
+        const std::uint8_t* __restrict ptrSrc = srcRow;
+        std::uint8_t* __restrict ptrDst = dstRow;
+
         size_t w = width;
-        size_t vl;
-
-        for (; w > 0; w -= vl, ptrSrc += 3 * vl, ptrDst += 3 * vl)
+        while (w > 0)
         {
-            // Calculate Vector Length for 32-bit float elements (LMUL=4)
-            vl = __riscv_vsetvl_e32m4(w);
+            // Set VL based on bytes (often yields maximal VL). We'll still use this vl for the whole chunk.
+            const size_t vl = __riscv_vsetvl_e8m1(w);
 
-            // 1. Load Strided (De-interleave manually)
-            // Load R (start at offset 0, jump 3 bytes)
-            vuint8m1_t v_r8 = __riscv_vlse8_v_u8m1(ptrSrc + 0, rgb24_stride, vl);
-            // Load G (start at offset 1, jump 3 bytes)
-            vuint8m1_t v_g8 = __riscv_vlse8_v_u8m1(ptrSrc + 1, rgb24_stride, vl);
-            // Load B (start at offset 2, jump 3 bytes)
-            vuint8m1_t v_b8 = __riscv_vlse8_v_u8m1(ptrSrc + 2, rgb24_stride, vl);
+            // Strided loads for AoS RGB
+            const vuint8m1_t r8 = __riscv_vlse8_v_u8m1(ptrSrc + 0, rgb_stride, vl);
+            const vuint8m1_t g8 = __riscv_vlse8_v_u8m1(ptrSrc + 1, rgb_stride, vl);
+            const vuint8m1_t b8 = __riscv_vlse8_v_u8m1(ptrSrc + 2, rgb_stride, vl);
 
-            // 2. Promote U8 -> U16 -> F32
-            vuint16m2_t v_r16 = __riscv_vzext_vf2_u16m2(v_r8, vl);
-            vuint16m2_t v_g16 = __riscv_vzext_vf2_u16m2(v_g8, vl);
-            vuint16m2_t v_b16 = __riscv_vzext_vf2_u16m2(v_b8, vl);
+            // u8 -> u16 (zero extend, LMUL=2)
+            const vuint16m2_t r16 = __riscv_vzext_vf2_u16m2(r8, vl);
+            const vuint16m2_t g16 = __riscv_vzext_vf2_u16m2(g8, vl);
+            const vuint16m2_t b16 = __riscv_vzext_vf2_u16m2(b8, vl);
 
-            vfloat32m4_t v_rf = __riscv_vfwcvt_f_xu_v_f32m4(v_r16, vl);
-            vfloat32m4_t v_gf = __riscv_vfwcvt_f_xu_v_f32m4(v_g16, vl);
-            vfloat32m4_t v_bf = __riscv_vfwcvt_f_xu_v_f32m4(v_b16, vl);
+            // u16 -> f32 (widening convert to LMUL=4)
+            const vfloat32m4_t rf = __riscv_vfwcvt_f_xu_v_f32m4(r16, vl);
+            const vfloat32m4_t gf = __riscv_vfwcvt_f_xu_v_f32m4(g16, vl);
+            const vfloat32m4_t bf = __riscv_vfwcvt_f_xu_v_f32m4(b16, vl);
 
-            // 3. Matrix Math
-            // Init accumulators with bias
-            vfloat32m4_t v_dst_r = __riscv_vfmv_v_f_f32m4(off_r, vl);
-            vfloat32m4_t v_dst_g = __riscv_vfmv_v_f_f32m4(off_g, vl);
-            vfloat32m4_t v_dst_b = __riscv_vfmv_v_f_f32m4(off_b, vl);
+            // FMACC chains
+            vfloat32m4_t dst_r = __riscv_vfmv_v_f_f32m4(off_r, vl);
+            vfloat32m4_t dst_g = __riscv_vfmv_v_f_f32m4(off_g, vl);
+            vfloat32m4_t dst_b = __riscv_vfmv_v_f_f32m4(off_b, vl);
 
-            // Accumulate Red
-            v_dst_r = __riscv_vfmacc_vf_f32m4(v_dst_r, c0, v_rf, vl);
-            v_dst_r = __riscv_vfmacc_vf_f32m4(v_dst_r, c1, v_gf, vl);
-            v_dst_r = __riscv_vfmacc_vf_f32m4(v_dst_r, c2, v_bf, vl);
+            dst_r = __riscv_vfmacc_vf_f32m4(dst_r, c0, rf, vl);
+            dst_r = __riscv_vfmacc_vf_f32m4(dst_r, c1, gf, vl);
+            dst_r = __riscv_vfmacc_vf_f32m4(dst_r, c2, bf, vl);
 
-            // Accumulate Green
-            v_dst_g = __riscv_vfmacc_vf_f32m4(v_dst_g, c4, v_rf, vl);
-            v_dst_g = __riscv_vfmacc_vf_f32m4(v_dst_g, c5, v_gf, vl);
-            v_dst_g = __riscv_vfmacc_vf_f32m4(v_dst_g, c6, v_bf, vl);
+            dst_g = __riscv_vfmacc_vf_f32m4(dst_g, c4, rf, vl);
+            dst_g = __riscv_vfmacc_vf_f32m4(dst_g, c5, gf, vl);
+            dst_g = __riscv_vfmacc_vf_f32m4(dst_g, c6, bf, vl);
 
-            // Accumulate Blue
-            v_dst_b = __riscv_vfmacc_vf_f32m4(v_dst_b, c8, v_rf, vl);
-            v_dst_b = __riscv_vfmacc_vf_f32m4(v_dst_b, c9, v_gf, vl);
-            v_dst_b = __riscv_vfmacc_vf_f32m4(v_dst_b, c10, v_bf, vl);
+            dst_b = __riscv_vfmacc_vf_f32m4(dst_b, c8, rf, vl);
+            dst_b = __riscv_vfmacc_vf_f32m4(dst_b, c9, gf, vl);
+            dst_b = __riscv_vfmacc_vf_f32m4(dst_b, c10, bf, vl);
 
-            // 4. Convert F32 -> U32 (Truncate)
-            vuint32m4_t v_ri32 = __riscv_vfcvt_rtz_xu_f_v_u32m4(v_dst_r, vl);
-            vuint32m4_t v_gi32 = __riscv_vfcvt_rtz_xu_f_v_u32m4(v_dst_g, vl);
-            vuint32m4_t v_bi32 = __riscv_vfcvt_rtz_xu_f_v_u32m4(v_dst_b, vl);
+            // Convert to *signed* int32 with rtz, then clamp low at 0 in integer domain.
+            // High values will saturate during vnclipu.
+            vint32m4_t ri = __riscv_vfcvt_rtz_x_f_v_i32m4(dst_r, vl);
+            vint32m4_t gi = __riscv_vfcvt_rtz_x_f_v_i32m4(dst_g, vl);
+            vint32m4_t bi = __riscv_vfcvt_rtz_x_f_v_i32m4(dst_b, vl);
 
-            // 5. Narrow and Saturate
-            // Narrow to U16
-            vuint16m2_t v_ri16 = __riscv_vnclipu_wx_u16m2(v_ri32, 0, vl);
-            vuint16m2_t v_gi16 = __riscv_vnclipu_wx_u16m2(v_gi32, 0, vl);
-            vuint16m2_t v_bi16 = __riscv_vnclipu_wx_u16m2(v_bi32, 0, vl);
+            ri = __riscv_vmax_vx_i32m4(ri, 0, vl);
+            gi = __riscv_vmax_vx_i32m4(gi, 0, vl);
+            bi = __riscv_vmax_vx_i32m4(bi, 0, vl);
 
-            // Narrow to U8 (Result in v_r8, v_g8, v_b8)
-            v_r8 = __riscv_vnclipu_wx_u8m1(v_ri16, 0, vl);
-            v_g8 = __riscv_vnclipu_wx_u8m1(v_gi16, 0, vl);
-            v_b8 = __riscv_vnclipu_wx_u8m1(v_bi16, 0, vl);
+            // Reinterpret as unsigned for vnclipu
+            const vuint32m4_t ru = __riscv_vreinterpret_v_i32m4_u32m4(ri);
+            const vuint32m4_t gu = __riscv_vreinterpret_v_i32m4_u32m4(gi);
+            const vuint32m4_t bu = __riscv_vreinterpret_v_i32m4_u32m4(bi);
 
-            // 6. Store Strided (Re-interleave manually)
-            __riscv_vsse8_v_u8m1(ptrDst + 0, rgb24_stride, v_r8, vl);
-            __riscv_vsse8_v_u8m1(ptrDst + 1, rgb24_stride, v_g8, vl);
-            __riscv_vsse8_v_u8m1(ptrDst + 2, rgb24_stride, v_b8, vl);
+            // Narrow with saturation: u32 -> u16 -> u8
+            const vuint16m2_t r16n = __riscv_vnclipu_wx_u16m2(ru, 0, vl);
+            const vuint16m2_t g16n = __riscv_vnclipu_wx_u16m2(gu, 0, vl);
+            const vuint16m2_t b16n = __riscv_vnclipu_wx_u16m2(bu, 0, vl);
+
+            const vuint8m1_t r8n = __riscv_vnclipu_wx_u8m1(r16n, 0, vl);
+            const vuint8m1_t g8n = __riscv_vnclipu_wx_u8m1(g16n, 0, vl);
+            const vuint8m1_t b8n = __riscv_vnclipu_wx_u8m1(b16n, 0, vl);
+
+            // Strided stores
+            __riscv_vsse8_v_u8m1(ptrDst + 0, rgb_stride, r8n, vl);
+            __riscv_vsse8_v_u8m1(ptrDst + 1, rgb_stride, g8n, vl);
+            __riscv_vsse8_v_u8m1(ptrDst + 2, rgb_stride, b8n, vl);
+
+            ptrSrc += 3 * vl;
+            ptrDst += 3 * vl;
+            w -= vl;
         }
 
         srcRow += strideSrc;
         dstRow += strideDst;
     }
+
     return colortwist::StatusCode::OK;
 }
+
 #endif
