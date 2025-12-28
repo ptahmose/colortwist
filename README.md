@@ -30,6 +30,7 @@ $$
 is the color twist matrix.
 
 There are SIMD-optimized versions leveraging [AVX-instructions](https://en.wikipedia.org/wiki/Advanced_Vector_Extensions) (for x86) and [Neon-instructions](https://en.wikipedia.org/wiki/ARM_architecture#Advanced_SIMD_(NEON)) (for ARM).
+For RISC-V, there is an implementation using the [RISC-V Vector Extensions](https://en.wikipedia.org/wiki/RISC-V#Vector_extensions_(RVV)).
 
 # How fast is it?
 
