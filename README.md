@@ -204,6 +204,24 @@ Samsung Galaxy Book Go ([Snapdragon 7c Gen2 @ 2.55GHz](https://www.qualcomm.com/
 | colorTwistRGB24_C      | 353.98              |
 | colorTwistRGB24_NEON2  | 5184.21             |
 
+[OrangePi RV2](http://www.orangepi.org/html/hardWare/computerAndMicrocontrollers/details/Orange-Pi-RV2.html), GCC13.3.0, RISC-V RVV : 2048x2048 bitmap
+
+| version                                 | performance in MB/s |
+| --------------------------------------- | ------------------- |
+| colorTwistRGB48_C                       | 262.22              |
+| colorTwistRGB48_RISCV_VectorExtensions  | 657.26              |
+| colorTwistRGB24_C                       | 68.73               |
+| colorTwistRGB24_RISCV_VectorExtensions  | 399.37              |
+
+[OrangePi RV2](http://www.orangepi.org/html/hardWare/computerAndMicrocontrollers/details/Orange-Pi-RV2.html), GCC14.2.0, RISC-V RVV : 2048x2048 bitmap
+
+| version                                 | performance in MB/s |
+| --------------------------------------- | ------------------- |
+| colorTwistRGB48_C                       | 224.92              |
+| colorTwistRGB48_RISCV_VectorExtensions  | 779.32              |
+| colorTwistRGB24_C                       | 65.38               |
+| colorTwistRGB24_RISCV_VectorExtensions  | 835.76              |
+
 
 
 # Building
