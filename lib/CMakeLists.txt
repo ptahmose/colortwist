@@ -147,14 +147,15 @@ if (COLORTWIST_HAS_NEON)
 endif()
 
 # check whether we can use RISCV-Vector-instructions -> we check for the presence of the file
-
-cmake_push_check_state(RESET)
- set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}" " -march=rv64gc_zve64d -mabi=lp64d")
-CHECK_INCLUDE_FILE(riscv_vector.h RISCVVECTORINTRINSICSFOUND)
-if (RISCVVECTORINTRINSICSFOUND)
-     message(STATUS "************ riscv_vector.h found ************")
+if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "riscv")
+    cmake_push_check_state(RESET)
+    set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}" " -march=rv64gc_zve64d -mabi=lp64d")
+    CHECK_INCLUDE_FILE(riscv_vector.h RISCVVECTORINTRINSICSFOUND)
+    if (RISCVVECTORINTRINSICSFOUND)
+        message(STATUS "************ riscv_vector.h found ************")
+    endif()
+    cmake_pop_check_state()
 endif()
-cmake_pop_check_state()
 
 #[[
   check_cxx_source_runs(
