@@ -130,6 +130,7 @@ StatusCode colortwist::colorTwistRGB24(ImplementationType type, const void* pSrc
 #else
             return StatusCode::InvalidISA;
 #endif
+		case ImplementationType::RISCV_VECTOREXTENSIONS:
 #if COLORTWISTLIB_HAS_RISCV_VECTOREXTENSIONS
 			return CanRiscV_rv64gcv() ? colorTwistRGB24_RISCV(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
 #else
