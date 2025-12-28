@@ -239,12 +239,11 @@ colortwist::StatusCode colorTwistRGB24_RISCV(const void* pSrc,
     int strideDst,
     const float* twistMatrix)
 {
-    // Matrix Offsets with 0.5 rounding bias
+    // 0.5 bias to match round-to-nearest when using rtz conversions
     const float off_r = twistMatrix[3] + 0.5f;
     const float off_g = twistMatrix[7] + 0.5f;
     const float off_b = twistMatrix[11] + 0.5f;
 
-    // Matrix Coefficients
     const float c0 = twistMatrix[0], c1 = twistMatrix[1], c2 = twistMatrix[2];
     const float c4 = twistMatrix[4], c5 = twistMatrix[5], c6 = twistMatrix[6];
     const float c8 = twistMatrix[8], c9 = twistMatrix[9], c10 = twistMatrix[10];
@@ -260,133 +259,75 @@ colortwist::StatusCode colorTwistRGB24_RISCV(const void* pSrc,
         std::uint8_t* __restrict ptrDst = dstRow;
 
         size_t w = width;
-
         while (w > 0)
         {
-            // ---- Chunk A ----
-            const size_t vlA = __riscv_vsetvl_e32m4(w);
+            // Set VL based on bytes (often yields maximal VL). We'll still use this vl for the whole chunk.
+            const size_t vl = __riscv_vsetvl_e8m1(w);
 
-            // A: load
-            vuint8m1_t a_r8 = __riscv_vlse8_v_u8m1(ptrSrc + 0, rgb_stride, vlA);
-            vuint8m1_t a_g8 = __riscv_vlse8_v_u8m1(ptrSrc + 1, rgb_stride, vlA);
-            vuint8m1_t a_b8 = __riscv_vlse8_v_u8m1(ptrSrc + 2, rgb_stride, vlA);
+            // Strided loads for AoS RGB
+            const vuint8m1_t r8 = __riscv_vlse8_v_u8m1(ptrSrc + 0, rgb_stride, vl);
+            const vuint8m1_t g8 = __riscv_vlse8_v_u8m1(ptrSrc + 1, rgb_stride, vl);
+            const vuint8m1_t b8 = __riscv_vlse8_v_u8m1(ptrSrc + 2, rgb_stride, vl);
 
-            // A: promote u8 -> u16 -> f32
-            vuint16m2_t a_r16 = __riscv_vzext_vf2_u16m2(a_r8, vlA);
-            vuint16m2_t a_g16 = __riscv_vzext_vf2_u16m2(a_g8, vlA);
-            vuint16m2_t a_b16 = __riscv_vzext_vf2_u16m2(a_b8, vlA);
+            // u8 -> u16 (zero extend, LMUL=2)
+            const vuint16m2_t r16 = __riscv_vzext_vf2_u16m2(r8, vl);
+            const vuint16m2_t g16 = __riscv_vzext_vf2_u16m2(g8, vl);
+            const vuint16m2_t b16 = __riscv_vzext_vf2_u16m2(b8, vl);
 
-            vfloat32m4_t a_rf = __riscv_vfwcvt_f_xu_v_f32m4(a_r16, vlA);
-            vfloat32m4_t a_gf = __riscv_vfwcvt_f_xu_v_f32m4(a_g16, vlA);
-            vfloat32m4_t a_bf = __riscv_vfwcvt_f_xu_v_f32m4(a_b16, vlA);
+            // u16 -> f32 (widening convert to LMUL=4)
+            const vfloat32m4_t rf = __riscv_vfwcvt_f_xu_v_f32m4(r16, vl);
+            const vfloat32m4_t gf = __riscv_vfwcvt_f_xu_v_f32m4(g16, vl);
+            const vfloat32m4_t bf = __riscv_vfwcvt_f_xu_v_f32m4(b16, vl);
 
-            // Prepare pointers for chunk B
-            const std::uint8_t* __restrict ptrSrcB = ptrSrc + rgb_stride * (std::ptrdiff_t)vlA;
-            std::uint8_t* __restrict ptrDstB = ptrDst + rgb_stride * (std::ptrdiff_t)vlA;
-            const size_t wB = w - vlA;
+            // FMACC chains
+            vfloat32m4_t dst_r = __riscv_vfmv_v_f_f32m4(off_r, vl);
+            vfloat32m4_t dst_g = __riscv_vfmv_v_f_f32m4(off_g, vl);
+            vfloat32m4_t dst_b = __riscv_vfmv_v_f_f32m4(off_b, vl);
 
-            // ---- Chunk B (only if there is remaining work) ----
-            // We start B's loads early to create more independent work for the core.
-            size_t vlB = 0;
-            vuint8m1_t b_r8{}, b_g8{}, b_b8{};
-            vuint16m2_t b_r16{}, b_g16{}, b_b16{};
-            vfloat32m4_t b_rf{}, b_gf{}, b_bf{};
+            dst_r = __riscv_vfmacc_vf_f32m4(dst_r, c0, rf, vl);
+            dst_r = __riscv_vfmacc_vf_f32m4(dst_r, c1, gf, vl);
+            dst_r = __riscv_vfmacc_vf_f32m4(dst_r, c2, bf, vl);
 
-            if (wB > 0)
-            {
-                vlB = __riscv_vsetvl_e32m4(wB);
+            dst_g = __riscv_vfmacc_vf_f32m4(dst_g, c4, rf, vl);
+            dst_g = __riscv_vfmacc_vf_f32m4(dst_g, c5, gf, vl);
+            dst_g = __riscv_vfmacc_vf_f32m4(dst_g, c6, bf, vl);
 
-                b_r8 = __riscv_vlse8_v_u8m1(ptrSrcB + 0, rgb_stride, vlB);
-                b_g8 = __riscv_vlse8_v_u8m1(ptrSrcB + 1, rgb_stride, vlB);
-                b_b8 = __riscv_vlse8_v_u8m1(ptrSrcB + 2, rgb_stride, vlB);
+            dst_b = __riscv_vfmacc_vf_f32m4(dst_b, c8, rf, vl);
+            dst_b = __riscv_vfmacc_vf_f32m4(dst_b, c9, gf, vl);
+            dst_b = __riscv_vfmacc_vf_f32m4(dst_b, c10, bf, vl);
 
-                b_r16 = __riscv_vzext_vf2_u16m2(b_r8, vlB);
-                b_g16 = __riscv_vzext_vf2_u16m2(b_g8, vlB);
-                b_b16 = __riscv_vzext_vf2_u16m2(b_b8, vlB);
+            // Convert to *signed* int32 with rtz, then clamp low at 0 in integer domain.
+            // High values will saturate during vnclipu.
+            vint32m4_t ri = __riscv_vfcvt_rtz_x_f_v_i32m4(dst_r, vl);
+            vint32m4_t gi = __riscv_vfcvt_rtz_x_f_v_i32m4(dst_g, vl);
+            vint32m4_t bi = __riscv_vfcvt_rtz_x_f_v_i32m4(dst_b, vl);
 
-                b_rf = __riscv_vfwcvt_f_xu_v_f32m4(b_r16, vlB);
-                b_gf = __riscv_vfwcvt_f_xu_v_f32m4(b_g16, vlB);
-                b_bf = __riscv_vfwcvt_f_xu_v_f32m4(b_b16, vlB);
-            }
+            ri = __riscv_vmax_vx_i32m4(ri, 0, vl);
+            gi = __riscv_vmax_vx_i32m4(gi, 0, vl);
+            bi = __riscv_vmax_vx_i32m4(bi, 0, vl);
 
-            // ---- Compute+store A ----
-            vfloat32m4_t a_dst_r = __riscv_vfmv_v_f_f32m4(off_r, vlA);
-            vfloat32m4_t a_dst_g = __riscv_vfmv_v_f_f32m4(off_g, vlA);
-            vfloat32m4_t a_dst_b = __riscv_vfmv_v_f_f32m4(off_b, vlA);
+            // Reinterpret as unsigned for vnclipu
+            const vuint32m4_t ru = __riscv_vreinterpret_v_i32m4_u32m4(ri);
+            const vuint32m4_t gu = __riscv_vreinterpret_v_i32m4_u32m4(gi);
+            const vuint32m4_t bu = __riscv_vreinterpret_v_i32m4_u32m4(bi);
 
-            a_dst_r = __riscv_vfmacc_vf_f32m4(a_dst_r, c0, a_rf, vlA);
-            a_dst_r = __riscv_vfmacc_vf_f32m4(a_dst_r, c1, a_gf, vlA);
-            a_dst_r = __riscv_vfmacc_vf_f32m4(a_dst_r, c2, a_bf, vlA);
+            // Narrow with saturation: u32 -> u16 -> u8
+            const vuint16m2_t r16n = __riscv_vnclipu_wx_u16m2(ru, 0, vl);
+            const vuint16m2_t g16n = __riscv_vnclipu_wx_u16m2(gu, 0, vl);
+            const vuint16m2_t b16n = __riscv_vnclipu_wx_u16m2(bu, 0, vl);
 
-            a_dst_g = __riscv_vfmacc_vf_f32m4(a_dst_g, c4, a_rf, vlA);
-            a_dst_g = __riscv_vfmacc_vf_f32m4(a_dst_g, c5, a_gf, vlA);
-            a_dst_g = __riscv_vfmacc_vf_f32m4(a_dst_g, c6, a_bf, vlA);
+            const vuint8m1_t r8n = __riscv_vnclipu_wx_u8m1(r16n, 0, vl);
+            const vuint8m1_t g8n = __riscv_vnclipu_wx_u8m1(g16n, 0, vl);
+            const vuint8m1_t b8n = __riscv_vnclipu_wx_u8m1(b16n, 0, vl);
 
-            a_dst_b = __riscv_vfmacc_vf_f32m4(a_dst_b, c8, a_rf, vlA);
-            a_dst_b = __riscv_vfmacc_vf_f32m4(a_dst_b, c9, a_gf, vlA);
-            a_dst_b = __riscv_vfmacc_vf_f32m4(a_dst_b, c10, a_bf, vlA);
+            // Strided stores
+            __riscv_vsse8_v_u8m1(ptrDst + 0, rgb_stride, r8n, vl);
+            __riscv_vsse8_v_u8m1(ptrDst + 1, rgb_stride, g8n, vl);
+            __riscv_vsse8_v_u8m1(ptrDst + 2, rgb_stride, b8n, vl);
 
-            vuint32m4_t a_ri32 = __riscv_vfcvt_rtz_xu_f_v_u32m4(a_dst_r, vlA);
-            vuint32m4_t a_gi32 = __riscv_vfcvt_rtz_xu_f_v_u32m4(a_dst_g, vlA);
-            vuint32m4_t a_bi32 = __riscv_vfcvt_rtz_xu_f_v_u32m4(a_dst_b, vlA);
-
-            vuint16m2_t a_ri16 = __riscv_vnclipu_wx_u16m2(a_ri32, 0, vlA);
-            vuint16m2_t a_gi16 = __riscv_vnclipu_wx_u16m2(a_gi32, 0, vlA);
-            vuint16m2_t a_bi16 = __riscv_vnclipu_wx_u16m2(a_bi32, 0, vlA);
-
-            vuint8m1_t a_ro8 = __riscv_vnclipu_wx_u8m1(a_ri16, 0, vlA);
-            vuint8m1_t a_go8 = __riscv_vnclipu_wx_u8m1(a_gi16, 0, vlA);
-            vuint8m1_t a_bo8 = __riscv_vnclipu_wx_u8m1(a_bi16, 0, vlA);
-
-            __riscv_vsse8_v_u8m1(ptrDst + 0, rgb_stride, a_ro8, vlA);
-            __riscv_vsse8_v_u8m1(ptrDst + 1, rgb_stride, a_go8, vlA);
-            __riscv_vsse8_v_u8m1(ptrDst + 2, rgb_stride, a_bo8, vlA);
-
-            // Advance for A
-            ptrSrc += rgb_stride * (std::ptrdiff_t)vlA;
-            ptrDst += rgb_stride * (std::ptrdiff_t)vlA;
-            w -= vlA;
-
-            // ---- Compute+store B (if present) ----
-            if (vlB != 0)
-            {
-                vfloat32m4_t b_dst_r = __riscv_vfmv_v_f_f32m4(off_r, vlB);
-                vfloat32m4_t b_dst_g = __riscv_vfmv_v_f_f32m4(off_g, vlB);
-                vfloat32m4_t b_dst_b = __riscv_vfmv_v_f_f32m4(off_b, vlB);
-
-                b_dst_r = __riscv_vfmacc_vf_f32m4(b_dst_r, c0, b_rf, vlB);
-                b_dst_r = __riscv_vfmacc_vf_f32m4(b_dst_r, c1, b_gf, vlB);
-                b_dst_r = __riscv_vfmacc_vf_f32m4(b_dst_r, c2, b_bf, vlB);
-
-                b_dst_g = __riscv_vfmacc_vf_f32m4(b_dst_g, c4, b_rf, vlB);
-                b_dst_g = __riscv_vfmacc_vf_f32m4(b_dst_g, c5, b_gf, vlB);
-                b_dst_g = __riscv_vfmacc_vf_f32m4(b_dst_g, c6, b_bf, vlB);
-
-                b_dst_b = __riscv_vfmacc_vf_f32m4(b_dst_b, c8, b_rf, vlB);
-                b_dst_b = __riscv_vfmacc_vf_f32m4(b_dst_b, c9, b_gf, vlB);
-                b_dst_b = __riscv_vfmacc_vf_f32m4(b_dst_b, c10, b_bf, vlB);
-
-                vuint32m4_t b_ri32 = __riscv_vfcvt_rtz_xu_f_v_u32m4(b_dst_r, vlB);
-                vuint32m4_t b_gi32 = __riscv_vfcvt_rtz_xu_f_v_u32m4(b_dst_g, vlB);
-                vuint32m4_t b_bi32 = __riscv_vfcvt_rtz_xu_f_v_u32m4(b_dst_b, vlB);
-
-                vuint16m2_t b_ri16 = __riscv_vnclipu_wx_u16m2(b_ri32, 0, vlB);
-                vuint16m2_t b_gi16 = __riscv_vnclipu_wx_u16m2(b_gi32, 0, vlB);
-                vuint16m2_t b_bi16 = __riscv_vnclipu_wx_u16m2(b_bi32, 0, vlB);
-
-                vuint8m1_t b_ro8 = __riscv_vnclipu_wx_u8m1(b_ri16, 0, vlB);
-                vuint8m1_t b_go8 = __riscv_vnclipu_wx_u8m1(b_gi16, 0, vlB);
-                vuint8m1_t b_bo8 = __riscv_vnclipu_wx_u8m1(b_bi16, 0, vlB);
-
-                __riscv_vsse8_v_u8m1(ptrDstB + 0, rgb_stride, b_ro8, vlB);
-                __riscv_vsse8_v_u8m1(ptrDstB + 1, rgb_stride, b_go8, vlB);
-                __riscv_vsse8_v_u8m1(ptrDstB + 2, rgb_stride, b_bo8, vlB);
-
-                // Advance for B
-                ptrSrc += rgb_stride * (std::ptrdiff_t)vlB;
-                ptrDst += rgb_stride * (std::ptrdiff_t)vlB;
-                w -= vlB;
-            }
+            ptrSrc += 3 * vl;
+            ptrDst += 3 * vl;
+            w -= vl;
         }
 
         srcRow += strideSrc;
