@@ -8,6 +8,36 @@ using namespace std;
 using namespace colortwist;
 
 // =============================================================================
+// COMPATIBILITY WRAPPERS (GCC 13 vs GCC 14)
+// =============================================================================
+// GCC 14 (RVV 1.0) requires an explicit Rounding Mode argument for vnclip.
+// GCC 13 (Legacy) does not.
+// We uses COLORTWIST_USE_RVV_TUPLES as a proxy for GCC 14 detection.
+// =============================================================================
+#if COLORTWIST_USE_RVV_TUPLES
+    // --- GCC 14+ Wrappers (4 Arguments) ---
+    // We use __RISCV_VXRM_RNU (Round-to-Nearest-Up)
+
+static inline vuint16m2_t vnclipu_u16m2(vuint32m4_t src, size_t shift, size_t vl) {
+    return __riscv_vnclipu_wx_u16m2(src, shift, __RISCV_VXRM_RNU, vl);
+}
+
+static inline vuint8m1_t vnclipu_u8m1(vuint16m2_t src, size_t shift, size_t vl) {
+    return __riscv_vnclipu_wx_u8m1(src, shift, __RISCV_VXRM_RNU, vl);
+}
+#else
+    // --- GCC 13 Wrappers (3 Arguments) ---
+
+static inline vuint16m2_t vnclipu_u16m2(vuint32m4_t src, size_t shift, size_t vl) {
+    return __riscv_vnclipu_wx_u16m2(src, shift, vl);
+}
+
+static inline vuint8m1_t vnclipu_u8m1(vuint16m2_t src, size_t shift, size_t vl) {
+    return __riscv_vnclipu_wx_u8m1(src, shift, vl);
+}
+#endif
+
+// =============================================================================
 // Function: colorTwistRGB24_RISCV (8-bit per channel)
 // =============================================================================
 colortwist::StatusCode colorTwistRGB24_RISCV(const void* pSrc, uint32_t width, uint32_t height, int strideSrc, void* pDst, int strideDst, const float* twistMatrix)
@@ -25,6 +55,9 @@ colortwist::StatusCode colorTwistRGB24_RISCV(const void* pSrc, uint32_t width, u
     const uint8_t* srcRow = static_cast<const uint8_t*>(pSrc);
     uint8_t* dstRow = static_cast<uint8_t*>(pDst);
 
+    // Declare stride ONCE at function scope for both GCC paths
+    const ptrdiff_t stride = 3;
+
     for (size_t y = 0; y < height; ++y)
     {
         const uint8_t* ptrSrc = srcRow;
@@ -34,32 +67,23 @@ colortwist::StatusCode colorTwistRGB24_RISCV(const void* pSrc, uint32_t width, u
 
         for (; w > 0; w -= vl, ptrSrc += 3 * vl, ptrDst += 3 * vl)
         {
-            // Set VL based on heaviest requirement (Float32 with LMUL=4)
             vl = __riscv_vsetvl_e32m4(w);
-
             vuint8m1_t v_r8, v_g8, v_b8;
 
 #if COLORTWIST_USE_RVV_TUPLES
-            // ---------------------------------------------------------
-            // Path A: Modern GCC 14+ (RVV 1.0 Standard)
-            // ---------------------------------------------------------
-            // Load and unpack Tuple
+            // GCC 14+ (Tuple Load)
             vuint8m1x3_t v_src_tuple = __riscv_vlseg3e8_v_u8m1x3(ptrSrc, vl);
             v_r8 = __riscv_vget_v_u8m1x3_u8m1(v_src_tuple, 0);
             v_g8 = __riscv_vget_v_u8m1x3_u8m1(v_src_tuple, 1);
             v_b8 = __riscv_vget_v_u8m1x3_u8m1(v_src_tuple, 2);
 #else
-            // ---------------------------------------------------------
-            // Path B: GCC 13 / Legacy (Strided Workaround)
-            // ---------------------------------------------------------
-            // Manual de-interleaving via Strided Load (Stride=3 bytes)
-            ptrdiff_t stride = 3;
+            // GCC 13 (Strided Load)
             v_r8 = __riscv_vlse8_v_u8m1(ptrSrc + 0, stride, vl);
             v_g8 = __riscv_vlse8_v_u8m1(ptrSrc + 1, stride, vl);
             v_b8 = __riscv_vlse8_v_u8m1(ptrSrc + 2, stride, vl);
 #endif
 
-            // --- 2. Math Core (Identical for both paths) ---
+            // --- 2. Math Core ---
 
             // Promote U8 -> U16 -> F32
             vuint16m2_t v_r16 = __riscv_vzext_vf2_u16m2(v_r8, vl);
@@ -75,17 +99,14 @@ colortwist::StatusCode colorTwistRGB24_RISCV(const void* pSrc, uint32_t width, u
             vfloat32m4_t v_dst_g = __riscv_vfmv_v_f_f32m4(off_g, vl);
             vfloat32m4_t v_dst_b = __riscv_vfmv_v_f_f32m4(off_b, vl);
 
-            // Red Channel Accumulation
             v_dst_r = __riscv_vfmacc_vf_f32m4(v_dst_r, c0, v_rf, vl);
             v_dst_r = __riscv_vfmacc_vf_f32m4(v_dst_r, c1, v_gf, vl);
             v_dst_r = __riscv_vfmacc_vf_f32m4(v_dst_r, c2, v_bf, vl);
 
-            // Green Channel Accumulation
             v_dst_g = __riscv_vfmacc_vf_f32m4(v_dst_g, c4, v_rf, vl);
             v_dst_g = __riscv_vfmacc_vf_f32m4(v_dst_g, c5, v_gf, vl);
             v_dst_g = __riscv_vfmacc_vf_f32m4(v_dst_g, c6, v_bf, vl);
 
-            // Blue Channel Accumulation
             v_dst_b = __riscv_vfmacc_vf_f32m4(v_dst_b, c8, v_rf, vl);
             v_dst_b = __riscv_vfmacc_vf_f32m4(v_dst_b, c9, v_gf, vl);
             v_dst_b = __riscv_vfmacc_vf_f32m4(v_dst_b, c10, v_bf, vl);
@@ -96,24 +117,21 @@ colortwist::StatusCode colorTwistRGB24_RISCV(const void* pSrc, uint32_t width, u
             vuint32m4_t v_bi32 = __riscv_vfcvt_rtz_xu_f_v_u32m4(v_dst_b, vl);
 
             // Narrow U32 -> U16 -> U8 (Saturating)
-            vuint16m2_t v_ri16 = __riscv_vnclipu_wx_u16m2(v_ri32, 0, vl);
-            vuint16m2_t v_gi16 = __riscv_vnclipu_wx_u16m2(v_gi32, 0, vl);
-            vuint16m2_t v_bi16 = __riscv_vnclipu_wx_u16m2(v_bi32, 0, vl);
+            // FIX: Use our compatibility wrappers defined above
+            vuint16m2_t v_ri16 = vnclipu_u16m2(v_ri32, 0, vl);
+            vuint16m2_t v_gi16 = vnclipu_u16m2(v_gi32, 0, vl);
+            vuint16m2_t v_bi16 = vnclipu_u16m2(v_bi32, 0, vl);
 
-            v_r8 = __riscv_vnclipu_wx_u8m1(v_ri16, 0, vl);
-            v_g8 = __riscv_vnclipu_wx_u8m1(v_gi16, 0, vl);
-            v_b8 = __riscv_vnclipu_wx_u8m1(v_bi16, 0, vl);
+            v_r8 = vnclipu_u8m1(v_ri16, 0, vl);
+            v_g8 = vnclipu_u8m1(v_gi16, 0, vl);
+            v_b8 = vnclipu_u8m1(v_bi16, 0, vl);
 
 #if COLORTWIST_USE_RVV_TUPLES
-            // ---------------------------------------------------------
-            // Path A: Modern GCC 14+ (Tuple Create & Store)
-            // ---------------------------------------------------------
+            // GCC 14+ (Tuple Store)
             vuint8m1x3_t v_dst_tuple = __riscv_vcreate_v_u8m1x3(v_r8, v_g8, v_b8);
             __riscv_vsseg3e8_v_u8m1x3(ptrDst, v_dst_tuple, vl);
 #else
-            // ---------------------------------------------------------
-            // Path B: GCC 13 / Legacy (Strided Store)
-            // ---------------------------------------------------------
+            // GCC 13 (Strided Store)
             __riscv_vsse8_v_u8m1(ptrDst + 0, stride, v_r8, vl);
             __riscv_vsse8_v_u8m1(ptrDst + 1, stride, v_g8, vl);
             __riscv_vsse8_v_u8m1(ptrDst + 2, stride, v_b8, vl);
@@ -144,8 +162,6 @@ colortwist::StatusCode colorTwistRGB48_RISCV(const void* pSrc, uint32_t width, u
     const uint8_t* srcRow = static_cast<const uint8_t*>(pSrc);
     uint8_t* dstRow = static_cast<uint8_t*>(pDst);
 
-    // Stride note: vlse16 takes stride in BYTES.
-    // 3 channels * 2 bytes/channel = 6 bytes.
     const ptrdiff_t rgb48_stride = 6;
 
     for (size_t y = 0; y < height; ++y)
@@ -157,81 +173,59 @@ colortwist::StatusCode colorTwistRGB48_RISCV(const void* pSrc, uint32_t width, u
 
         for (; w > 0; w -= vl, ptrSrc += 3 * vl, ptrDst += 3 * vl)
         {
-            // Set VL for Float32 with LMUL=4
             vl = __riscv_vsetvl_e32m4(w);
-
-            // Use LMUL=2 for U16 to match element count of F32 LMUL=4
             vuint16m2_t v_r16, v_g16, v_b16;
 
 #if COLORTWIST_USE_RVV_TUPLES
-            // ---------------------------------------------------------
-            // Path A: Modern GCC 14+ (RVV 1.0 Standard)
-            // ---------------------------------------------------------
-            // Load tuple of 3x vectors (LMUL=2 each)
+            // GCC 14+ (Tuple Load)
             vuint16m2x3_t v_src_tuple = __riscv_vlseg3e16_v_u16m2x3(ptrSrc, vl);
-
-            // Extract using index 0, 1, 2
             v_r16 = __riscv_vget_v_u16m2x3_u16m2(v_src_tuple, 0);
             v_g16 = __riscv_vget_v_u16m2x3_u16m2(v_src_tuple, 1);
             v_b16 = __riscv_vget_v_u16m2x3_u16m2(v_src_tuple, 2);
 #else
-            // ---------------------------------------------------------
-            // Path B: GCC 13 / Legacy (Strided Workaround)
-            // ---------------------------------------------------------
-            // Note: vlse16 stride is in bytes (6)
+            // GCC 13 (Strided Load)
             v_r16 = __riscv_vlse16_v_u16m2(ptrSrc + 0, rgb48_stride, vl);
             v_g16 = __riscv_vlse16_v_u16m2(ptrSrc + 1, rgb48_stride, vl);
             v_b16 = __riscv_vlse16_v_u16m2(ptrSrc + 2, rgb48_stride, vl);
 #endif
 
             // --- 2. Math Core ---
-
-            // Direct Widen U16 -> F32
             vfloat32m4_t v_rf = __riscv_vfwcvt_f_xu_v_f32m4(v_r16, vl);
             vfloat32m4_t v_gf = __riscv_vfwcvt_f_xu_v_f32m4(v_g16, vl);
             vfloat32m4_t v_bf = __riscv_vfwcvt_f_xu_v_f32m4(v_b16, vl);
 
-            // Matrix Multiply
             vfloat32m4_t v_dst_r = __riscv_vfmv_v_f_f32m4(off_r, vl);
             vfloat32m4_t v_dst_g = __riscv_vfmv_v_f_f32m4(off_g, vl);
             vfloat32m4_t v_dst_b = __riscv_vfmv_v_f_f32m4(off_b, vl);
 
-            // Red
             v_dst_r = __riscv_vfmacc_vf_f32m4(v_dst_r, c0, v_rf, vl);
             v_dst_r = __riscv_vfmacc_vf_f32m4(v_dst_r, c1, v_gf, vl);
             v_dst_r = __riscv_vfmacc_vf_f32m4(v_dst_r, c2, v_bf, vl);
 
-            // Green
             v_dst_g = __riscv_vfmacc_vf_f32m4(v_dst_g, c4, v_rf, vl);
             v_dst_g = __riscv_vfmacc_vf_f32m4(v_dst_g, c5, v_gf, vl);
             v_dst_g = __riscv_vfmacc_vf_f32m4(v_dst_g, c6, v_bf, vl);
 
-            // Blue
             v_dst_b = __riscv_vfmacc_vf_f32m4(v_dst_b, c8, v_rf, vl);
             v_dst_b = __riscv_vfmacc_vf_f32m4(v_dst_b, c9, v_gf, vl);
             v_dst_b = __riscv_vfmacc_vf_f32m4(v_dst_b, c10, v_bf, vl);
 
-            // Convert F32 -> U32 (Truncate)
             vuint32m4_t v_ri32 = __riscv_vfcvt_rtz_xu_f_v_u32m4(v_dst_r, vl);
             vuint32m4_t v_gi32 = __riscv_vfcvt_rtz_xu_f_v_u32m4(v_dst_g, vl);
             vuint32m4_t v_bi32 = __riscv_vfcvt_rtz_xu_f_v_u32m4(v_dst_b, vl);
 
             // Narrow U32 -> U16 (Saturating)
-            // Results go back into v_r16, v_g16, v_b16
-            v_r16 = __riscv_vnclipu_wx_u16m2(v_ri32, 0, vl);
-            v_g16 = __riscv_vnclipu_wx_u16m2(v_gi32, 0, vl);
-            v_b16 = __riscv_vnclipu_wx_u16m2(v_bi32, 0, vl);
+            // FIX: Use wrappers (u16m2 result)
+            v_r16 = vnclipu_u16m2(v_ri32, 0, vl);
+            v_g16 = vnclipu_u16m2(v_gi32, 0, vl);
+            v_b16 = vnclipu_u16m2(v_bi32, 0, vl);
 
 #if COLORTWIST_USE_RVV_TUPLES
-            // ---------------------------------------------------------
-            // Path A: Modern GCC 14+ (Tuple Create & Store)
-            // ---------------------------------------------------------
+            // GCC 14+ (Tuple Store)
             vuint16m2x3_t v_dst_tuple = __riscv_vcreate_v_u16m2x3(v_r16, v_g16, v_b16);
             __riscv_vsseg3e16_v_u16m2x3(ptrDst, v_dst_tuple, vl);
 #else
-            // ---------------------------------------------------------
-            // Path B: GCC 13 / Legacy (Strided Store)
-            // ---------------------------------------------------------
+            // GCC 13 (Strided Store)
             __riscv_vsse16_v_u16m2(ptrDst + 0, rgb48_stride, v_r16, vl);
             __riscv_vsse16_v_u16m2(ptrDst + 1, rgb48_stride, v_g16, vl);
             __riscv_vsse16_v_u16m2(ptrDst + 2, rgb48_stride, v_b16, vl);
