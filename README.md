@@ -30,6 +30,7 @@ $$
 is the color twist matrix.
 
 There are SIMD-optimized versions leveraging [AVX-instructions](https://en.wikipedia.org/wiki/Advanced_Vector_Extensions) (for x86) and [Neon-instructions](https://en.wikipedia.org/wiki/ARM_architecture#Advanced_SIMD_(NEON)) (for ARM).
+For RISC-V, there is an implementation using the [RISC-V Vector Extensions](https://en.wikipedia.org/wiki/RISC-V#Vector_extensions_(RVV)).
 
 # How fast is it?
 
@@ -203,6 +204,24 @@ Samsung Galaxy Book Go ([Snapdragon 7c Gen2 @ 2.55GHz](https://www.qualcomm.com/
 | colorTwistRGB48_NEON   | 10817.1             |
 | colorTwistRGB24_C      | 353.98              |
 | colorTwistRGB24_NEON2  | 5184.21             |
+
+[OrangePi RV2](http://www.orangepi.org/html/hardWare/computerAndMicrocontrollers/details/Orange-Pi-RV2.html), GCC13.3.0, RISC-V RVV : 2048x2048 bitmap
+
+| version                                 | performance in MB/s |
+| --------------------------------------- | ------------------- |
+| colorTwistRGB48_C                       | 262.22              |
+| colorTwistRGB48_RISCV_VectorExtensions  | 657.26              |
+| colorTwistRGB24_C                       | 68.73               |
+| colorTwistRGB24_RISCV_VectorExtensions  | 399.37              |
+
+[OrangePi RV2](http://www.orangepi.org/html/hardWare/computerAndMicrocontrollers/details/Orange-Pi-RV2.html), GCC14.2.0, RISC-V RVV : 2048x2048 bitmap
+
+| version                                 | performance in MB/s |
+| --------------------------------------- | ------------------- |
+| colorTwistRGB48_C                       | 224.92              |
+| colorTwistRGB48_RISCV_VectorExtensions  | 779.32              |
+| colorTwistRGB24_C                       | 65.38               |
+| colorTwistRGB24_RISCV_VectorExtensions  | 835.76              |
 
 
 

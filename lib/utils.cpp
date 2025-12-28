@@ -111,9 +111,40 @@ bool CheckWhetherCpuSupportsNeon()
 ////#endif
 
     // There seems to be no reliable way (I could find) in order to detect
-    //  Neon-support at runtime, and it does not seem to be usual way on
+    //  Neon-support at runtime, and it does not seem to be the "usual way" on
     //  ARM (to detect support at runtime).
     return true;
+}
+
+#endif
+
+#if COLORTWISTLIB_HAS_RISCV_VECTOREXTENSIONS
+
+#if COLORTWISTLIB_HAS_SYS_AUXV_H
+
+#include <sys/auxv.h>
+
+// Standard HWCAP bit for Vector extension on Linux
+// If your system headers are old, this might not be defined.
+#ifndef COMPAT_HWCAP_ISA_V
+#define COMPAT_HWCAP_ISA_V (1 << ('v' - 'a'))
+#endif
+
+#endif
+
+bool CheckHasRiscvVectorExtensions()
+{
+#if COLORTWISTLIB_HAS_SYS_AUXV_H
+    // 1. Get Hardware Capabilities from the Kernel
+    unsigned long hwcap = getauxval(AT_HWCAP);
+
+    // 2. Check the 'V' bit
+    bool hasV = (hwcap & COMPAT_HWCAP_ISA_V);
+
+    return hasV;
+#else
+    return true;
+#endif
 }
 
 #endif

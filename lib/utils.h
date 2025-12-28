@@ -42,3 +42,7 @@ bool CheckWhetherCpuSupportsSSE41();
 #if COLORTWISTLIB_HASNEON
 bool CheckWhetherCpuSupportsNeon();
 #endif
+
+#if COLORTWISTLIB_HAS_RISCV_VECTOREXTENSIONS
+bool CheckHasRiscvVectorExtensions();
+#endif

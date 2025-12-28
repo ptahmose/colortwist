@@ -5,6 +5,7 @@
 #include "colortwist_c.h"
 #include "colortwist_ipp.h"
 #include "colortwist_neon.h"
+#include "colortwist_riscv.h"
 #include "utils.h"
 
 using namespace std;
@@ -52,6 +53,13 @@ bool CanNeon()
 }
 #endif
 
+#if COLORTWISTLIB_HAS_RISCV_VECTOREXTENSIONS
+bool CanRiscV_rv64gcv()
+{
+    return CheckHasRiscvVectorExtensions();
+}
+#endif
+
 StatusCode colortwist::colorTwistRGB48(ImplementationType type, const void* pSrc, std::uint32_t width, std::uint32_t height, int strideSrc, void* pDst, std::int32_t strideDst, const float* twistMatrix)
 {
     switch (type)
@@ -79,6 +87,12 @@ StatusCode colortwist::colorTwistRGB48(ImplementationType type, const void* pSrc
         case ImplementationType::X86_SSE:
 #if COLORTWISTLIB_HAS_INTEL_INTRINSICS
             return CanSse41() ? colorTwistRGB48_SSE(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
+#else
+            return StatusCode::InvalidISA;
+#endif
+		case ImplementationType::RISCV_VECTOREXTENSIONS:
+#if COLORTWISTLIB_HAS_RISCV_VECTOREXTENSIONS
+            return CanRiscV_rv64gcv() ? colorTwistRGB48_RISCV(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
 #else
             return StatusCode::InvalidISA;
 #endif
@@ -117,6 +131,12 @@ StatusCode colortwist::colorTwistRGB24(ImplementationType type, const void* pSrc
 #else
             return StatusCode::InvalidISA;
 #endif
+		case ImplementationType::RISCV_VECTOREXTENSIONS:
+#if COLORTWISTLIB_HAS_RISCV_VECTOREXTENSIONS
+			return CanRiscV_rv64gcv() ? colorTwistRGB24_RISCV(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
+#else
+            return StatusCode::InvalidISA;
+#endif
     }
 
     return StatusCode::UnknownImplementation;
@@ -152,6 +172,13 @@ bool colortwist::isOperationalRgb24(ImplementationType type)
 #else
             return false;
 #endif
+		case ImplementationType::RISCV_VECTOREXTENSIONS:
+#if COLORTWISTLIB_HAS_RISCV_VECTOREXTENSIONS
+            return CanRiscV_rv64gcv();
+#else
+            return false;
+#endif
+
     }
 
     return false;
@@ -187,6 +214,12 @@ bool colortwist::isOperationalRgb48(ImplementationType type)
 #else
             return false;
 #endif
+	    case ImplementationType::RISCV_VECTOREXTENSIONS:
+#if COLORTWISTLIB_HAS_RISCV_VECTOREXTENSIONS
+			return CanRiscV_rv64gcv();
+#else
+			return false;
+#endif
     }
 
     return false;
@@ -206,6 +239,8 @@ const char* colortwist::GetImplementationTypeAsInformalString(ImplementationType
             return "ARM NEON2";
         case ImplementationType::X86_SSE:
             return "X86 SSE";
+		case ImplementationType::RISCV_VECTOREXTENSIONS:
+			return "RISC-V Vector Extensions";
     }
 
     return "Unknown";

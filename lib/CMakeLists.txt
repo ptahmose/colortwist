@@ -1,5 +1,8 @@
-
+include(CheckIncludeFile)
 INCLUDE(CheckIncludeFiles)
+include(CheckCXXSourceRuns)
+include(CMakePushCheckState)
+include(CheckRVVTuples)
 
 set (LIBCOLORTWIST_SOURCES  colortwist.h
                             colortwist.cpp
@@ -13,6 +16,8 @@ set (LIBCOLORTWIST_SOURCES  colortwist.h
                             colortwist_sse.cpp
                             colortwist_neon.h
                             colortwist_neon.cpp
+                            colortwist_riscv.h
+                            colortwist_riscv.cpp
                             utils.h
                             utils.cpp)
 
@@ -35,8 +40,6 @@ else()
 endif()
 
 if (COLORTWIST_HAS_IMMINTRIN )
-  include(CheckCXXSourceRuns)
-
   # Save the original value of CMAKE_REQUIRED_FLAGS
   set(ORIGINAL_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}")
   # Add the -march=native flag
@@ -144,24 +147,46 @@ if (COLORTWIST_HAS_NEON)
      endif()
 endif()
 
+# check whether we can use RISCV-Vector-instructions -> we check for the presence of the file
+set(HAS_RISCV_VECTOR_INTRINISCS 0)
+if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "riscv")
+    cmake_push_check_state(RESET)
+    set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}" " -march=rv64gc_zve64d -mabi=lp64d")
+    CHECK_INCLUDE_FILE(riscv_vector.h RISCVVECTORINTRINSICSFOUND)
+    if (RISCVVECTORINTRINSICSFOUND)
+        set(HAS_RISCV_VECTOR_INTRINISCS 1)
+    endif()
+    cmake_pop_check_state()
+endif()
+
+set(COLORTWIST_RVV_HAS_TUPLE_TYPES 0)
+if (HAS_RISCV_VECTOR_INTRINISCS)
+  check_rvv_vcreate_support(COLORTWIST_USE_RVV_TUPLES)
+  if(COLORTWIST_USE_RVV_TUPLES)
+    message(STATUS "RISC-V Vector Tuple Types Detected (GCC 14+ mode)")
+    set(COLORTWIST_RVV_HAS_TUPLE_TYPES 1)
+  else()
+    message(STATUS "RISC-V Vector Tuple Types NOT Detected (Legacy/GCC 13 mode)")
+  endif()
+  set(COLORTWIST_HAS_RISCV_VECTOREXTENSIONS 1)
+else()
+  set(COLORTWIST_HAS_RISCV_VECTOREXTENSIONS 0)
+endif()
 
 set(COLORTWIST_HAS_SYS_AUXV_H 0)
-if (ARMNEONFOUND)
+if (ARMNEONFOUND OR HAS_RISCV_VECTOR_INTRINISCS)
  CHECK_INCLUDE_FILES("sys/auxv.h" SYSAUXHFOUND)
  if (SYSAUXHFOUND)
   set(COLORTWIST_HAS_SYS_AUXV_H 1)
  endif()
 endif()
 
+ message(STATUS "************ RISCV-Test: ${COLORTWIST_HAS_RISCV_VECTOREXTENSIONS} ************")
 
 configure_file (
   "${CMAKE_CURRENT_SOURCE_DIR}/colortwist_config.h.in"
   "${CMAKE_CURRENT_BINARY_DIR}/colortwist_config.h"
-	ESCAPE_QUOTES @ONLY)                
-
-#set(CPACK_PROJECT_NAME ${PROJECT_NAME})
-#set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
-#include(CPack)
+   ESCAPE_QUOTES @ONLY)                
 
 # Make sure the compiler can find include files for our Hello library
 # when other libraries or executables link to Hello
@@ -185,6 +210,11 @@ elseif(${CMAKE_SYSTEM_PROCESSOR} MATCHES "i686" OR ${CMAKE_SYSTEM_PROCESSOR} MAT
   elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
    set_source_files_properties(colortwist_avx.cpp PROPERTIES COMPILE_FLAGS "-mfma -mavx2")
    set_source_files_properties(colortwist_sse.cpp PROPERTIES COMPILE_FLAGS "-msse4.1")
+  endif()
+elseif(${CMAKE_SYSTEM_PROCESSOR} MATCHES "riscv")
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  message(STATUS "Setting RISC-V specific compile flags for colortwist_riscv.cpp")
+   set_source_files_properties(colortwist_riscv.cpp PROPERTIES COMPILE_FLAGS "-march=rv64gcv -mabi=lp64d")
   endif()
 endif()
 
