@@ -146,7 +146,7 @@ if (COLORTWIST_HAS_NEON)
 endif()
 
 # check whether we can use RISCV-Vector-instructions -> we check for the presence of the file
-CHECK_INCLUDE_FILES(riscv_vector.h RISCVVECTORINTRINSICSFOUND  -march=rv64gc_zve64d;-mabi=lp64d)
+CHECK_INCLUDE_FILE(riscv_vector.h RISCVVECTORINTRINSICSFOUND  -march=rv64gc_zve64d;-mabi=lp64d)
 if (RISCVVECTORINTRINSICSFOUND)
      message(STATUS "************ riscv_vector.h found ************")
 endif()
