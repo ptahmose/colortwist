@@ -90,6 +90,11 @@ StatusCode colortwist::colorTwistRGB48(ImplementationType type, const void* pSrc
 #else
             return StatusCode::InvalidISA;
 #endif
+#if COLORTWISTLIB_HAS_RISCV_VECTOREXTENSIONS
+            return CanRiscV_rv64gcv() ? colorTwistRGB48_RISCV(pSrc, width, height, strideSrc, pDst, strideDst, twistMatrix) : StatusCode::UnsupportedInstructionSet;
+#else
+            return StatusCode::InvalidISA;
+#endif
     }
 
     return StatusCode::UnknownImplementation;
