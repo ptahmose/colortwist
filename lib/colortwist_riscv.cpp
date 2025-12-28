@@ -7,29 +7,6 @@
 using namespace std;
 using namespace colortwist;
 
-You are absolutely correct.The error persists because in the previous "complete" code block, I defined the wrappers at the top but failed to actually use them inside the function body.I accidentally left the direct intrinsic calls(__riscv_vnclipu...) which take 3 arguments, instead of calling the new wrappers(vnclipu_...) that handle the argument count differences.
-
-Here is the Final, Verified Code.
-
-Changes made :
-
-Wrappers Defined : The vnclipu_... wrappers are defined at the top to handle the GCC 14 rounding mode argument automatically.
-
-Wrappers Used : The function bodies now call vnclipu_u16m2(...) and vnclipu_u8m1(...) instead of the raw intrinsics.
-
-This will compile with #define COLORTWIST_USE_RVV_TUPLES 1 on GCC 14.2.
-
-C++
-
-#include <riscv_vector.h>
-#include <cstdint>
-#include <cmath>
-#include <cstddef>
-
-namespace colortwist {
-    enum class StatusCode { OK = 0, ERROR = 1 };
-}
-
 // =============================================================================
 // COMPATIBILITY WRAPPERS
 // =============================================================================
