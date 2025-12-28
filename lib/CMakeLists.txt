@@ -2,6 +2,7 @@ include(CheckIncludeFile)
 INCLUDE(CheckIncludeFiles)
 include(CheckCXXSourceRuns)
 include(CMakePushCheckState)
+include(CheckRVVTuples)
 
 set (LIBCOLORTWIST_SOURCES  colortwist.h
                             colortwist.cpp
@@ -171,18 +172,26 @@ endif()
   endif()
 ]]#
 
+set(COLORTWIST_RVV_HAS_TUPLE_TYPES 0)
+if (HAS_RISCV_VECTOR_INTRINISCS)
+  check_rvv_tuple_support(COLORTWIST_USE_RVV_TUPLES)
+  if(COLORTWIST_RVV_HAS_TUPLE_TYPES)
+    message(STATUS "RISC-V Vector Tuple Types Detected (GCC 14+ mode)")
+    set(COLORTWIST_RVV_HAS_TUPLE_TYPES 1)
+else()
+    message(STATUS "RISC-V Vector Tuple Types NOT Detected (Legacy/GCC 13 mode)")
+endif()
+  set(COLORTWIST_HAS_RISCV_VECTOREXTENSIONS 1)
+else()
+  set(COLORTWIST_HAS_RISCV_VECTOREXTENSIONS 0)
+endif()
+
 set(COLORTWIST_HAS_SYS_AUXV_H 0)
 if (ARMNEONFOUND OR HAS_RISCV_VECTOR_INTRINISCS)
  CHECK_INCLUDE_FILES("sys/auxv.h" SYSAUXHFOUND)
  if (SYSAUXHFOUND)
   set(COLORTWIST_HAS_SYS_AUXV_H 1)
  endif()
-endif()
-
-if (HAS_RISCV_VECTOR_INTRINISCS)
-  set(COLORTWIST_HAS_RISCV_VECTOREXTENSIONS 1)
-else()
-  set(COLORTWIST_HAS_RISCV_VECTOREXTENSIONS 0)
 endif()
 
  message(STATUS "************ RISCV-Test: ${COLORTWIST_HAS_RISCV_VECTOREXTENSIONS} ************")
