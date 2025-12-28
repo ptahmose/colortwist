@@ -1,9 +1,11 @@
 include(CheckCXXSourceCompiles)
+include(CMakePushCheckState)
 
 # Function: check_rvv_vcreate_support
 # Checks if the compiler supports RVV 1.0 'vcreate' intrinsic for tuples.
 # This confirms we are on a modern GCC 14+ toolchain.
 function(check_rvv_vcreate_support OUT_VAR)
+    cmake_push_check_state(RESET)
     set(CMAKE_REQUIRED_FLAGS "-march=rv64gcv -mabi=lp64d")
     
     check_cxx_source_compiles("
@@ -27,4 +29,5 @@ function(check_rvv_vcreate_support OUT_VAR)
             return 0;
         }
     " ${OUT_VAR})
+    cmake_pop_check_state()
 endfunction()

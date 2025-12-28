@@ -159,19 +159,6 @@ if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "riscv")
     cmake_pop_check_state()
 endif()
 
-#[[
-  check_cxx_source_runs(
-  "#include <riscv_vector.h>
-  int main(void) { (void)__riscv_vsetvl_e32m1(128);return 0; }"
-  HAS_RISCV_VECTOR_INTRINISCS)
-  message(STATUS "************ RISCV-Test: ${HAS_RISCV_VECTOR_INTRINISCS} ************")
-  if (HAS_RISCV_VECTOR_INTRINISCS)
-    set(HAS_RISCV_VECTOR_INTRINISCS 1)
-  else()
-    set(HAS_RISCV_VECTOR_INTRINISCS 0)
-  endif()
-]]#
-
 set(COLORTWIST_RVV_HAS_TUPLE_TYPES 0)
 if (HAS_RISCV_VECTOR_INTRINISCS)
   check_rvv_vcreate_support(COLORTWIST_USE_RVV_TUPLES)
@@ -199,11 +186,7 @@ endif()
 configure_file (
   "${CMAKE_CURRENT_SOURCE_DIR}/colortwist_config.h.in"
   "${CMAKE_CURRENT_BINARY_DIR}/colortwist_config.h"
-	ESCAPE_QUOTES @ONLY)                
-
-#set(CPACK_PROJECT_NAME ${PROJECT_NAME})
-#set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
-#include(CPack)
+   ESCAPE_QUOTES @ONLY)                
 
 # Make sure the compiler can find include files for our Hello library
 # when other libraries or executables link to Hello
