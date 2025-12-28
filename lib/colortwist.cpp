@@ -56,7 +56,7 @@ bool CanNeon()
 #if COLORTWISTLIB_HAS_RISCV_VECTOREXTENSIONS
 bool CanRiscV_rv64gcv()
 {
-    return true;
+    return CheckHasRiscvVectorExtensions();
 }
 #endif
 

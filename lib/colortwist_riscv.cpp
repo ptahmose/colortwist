@@ -130,9 +130,11 @@ colortwist::StatusCode colorTwistRGB24_RISCV(const void* pSrc, uint32_t width, u
             __riscv_vsse8_v_u8m1(ptrDst + 2, stride, v_b8, vl);
 #endif
         }
+
         srcRow += strideSrc;
         dstRow += strideDst;
     }
+
     return colortwist::StatusCode::OK;
 }
 
@@ -220,9 +222,11 @@ colortwist::StatusCode colorTwistRGB48_RISCV(const void* pSrc, uint32_t width, u
             __riscv_vsse16_v_u16m2(ptrDst + 2, rgb48_stride, v_b16, vl);
 #endif
         }
+
         srcRow += strideSrc;
         dstRow += strideDst;
     }
+
     return colortwist::StatusCode::OK;
 }
 
