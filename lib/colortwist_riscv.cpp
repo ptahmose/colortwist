@@ -114,7 +114,6 @@ colortwist::StatusCode colorTwistRGB24_RISCV(const void* pSrc, uint32_t width, u
             // ---------------------------------------------------------
             // Path B: GCC 13 / Legacy (Strided Store)
             // ---------------------------------------------------------
-            ptrdiff_t stride = 3;
             __riscv_vsse8_v_u8m1(ptrDst + 0, stride, v_r8, vl);
             __riscv_vsse8_v_u8m1(ptrDst + 1, stride, v_g8, vl);
             __riscv_vsse8_v_u8m1(ptrDst + 2, stride, v_b8, vl);
